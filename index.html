@@ -113,7 +113,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.1</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.2</div></div>
 
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
@@ -443,6 +443,7 @@ function trySnap(cx,cy,type,rot){
   if(!document.getElementById('snap-toggle').checked)return null;
   var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
   var thresh=Math.max(40, ppm*2),best=null,bestD=thresh;
+  console.log('[snap] tiles='+tiles.length+' ppm='+ppm+' thresh='+thresh+' click=('+cx.toFixed(0)+','+cy.toFixed(0)+')');
   tiles.forEach(function(t){
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
     var r=t.rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
@@ -455,9 +456,11 @@ function trySnap(cx,cy,type,rot){
     ];
     candidates.forEach(function(pos){
       var dx=pos.x-cx,dy=pos.y-cy,d=Math.sqrt(dx*dx+dy*dy);
+      console.log('[snap]   candidate=('+pos.x.toFixed(0)+','+pos.y.toFixed(0)+') d='+d.toFixed(1));
       if(d<bestD){bestD=d;best={cx:pos.x,cy:pos.y};}
     });
   });
+  console.log('[snap] result='+JSON.stringify(best));
   return best;
 }
 function getSnapPts(cx,cy,pw,ph,rot){
@@ -472,12 +475,16 @@ function getSnapPts(cx,cy,pw,ph,rot){
 function getEdges(cx,cy,pw,ph,rot){return getSnapPts(cx,cy,pw,ph,rot);}
 function checkOverlap(cx,cy,type,rot,excl){
   var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
+  console.log('[overlap] checking ('+cx.toFixed(0)+','+cy.toFixed(0)+') pw='+pw.toFixed(0)+' ph='+ph.toFixed(0));
   for(var i=0;i<tiles.length;i++){
     var t=tiles[i];if(t===excl)continue;
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
-    // 中心間距離がタイルサイズの半分の和より小さければ重なり
-    if(Math.abs(cx-t.cx)<(pw+tpw)/2-ppm*0.1&&Math.abs(cy-t.cy)<(ph+tph)/2-ppm*0.1)return true;
+    var dx=Math.abs(cx-t.cx),dy=Math.abs(cy-t.cy);
+    var lx=(pw+tpw)/2-ppm*0.1,ly=(ph+tph)/2-ppm*0.1;
+    console.log('[overlap]   tile('+t.cx.toFixed(0)+','+t.cy.toFixed(0)+') dx='+dx.toFixed(1)+' vs '+lx.toFixed(1)+' dy='+dy.toFixed(1)+' vs '+ly.toFixed(1));
+    if(dx<lx&&dy<ly){console.log('[overlap] BLOCKED');return true;}
   }
+  console.log('[overlap] OK');
   return false;
 }
 function showFlash(cx,cy){clearEl(snapG);snapG.appendChild(mkS('circle',{cx:cx,cy:cy,r:'12',fill:'rgba(220,38,38,0.25)',stroke:'#dc2626','stroke-width':'2'}));setTimeout(function(){clearEl(snapG);},350);}
