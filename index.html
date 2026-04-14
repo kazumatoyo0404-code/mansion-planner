@@ -7,13 +7,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{
-  --bg:#1c1c20;--surface:#242428;--surface2:#2c2c32;
-  --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);
-  --text:#eeebe6;--text2:#9e9b96;--text3:#62605c;
-  --blue:#5aabff;--green:#52d478;--pink:#f07ab0;--red:#e85555;--amber:#f5a930;
-}
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);box-sizing:border-box;}
+:root{--bg:#1c1c20;--surface:#242428;--surface2:#2c2c32;--border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);--text:#eeebe6;--text2:#9e9b96;--text3:#62605c;--blue:#5aabff;--green:#52d478;--pink:#f07ab0;--red:#e85555;}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);}
 *{box-sizing:border-box;}
 #app{display:flex;width:100vw;height:100vh;}
 #sidebar{width:272px;flex-shrink:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);z-index:2000;display:flex;flex-direction:column;}
@@ -24,15 +19,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .sb-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
 .sb-sec{padding:12px 16px;border-bottom:1px solid var(--border);}
 .lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
-.field{margin-bottom:7px;}
-.field label{font-size:11px;color:var(--text2);display:block;margin-bottom:3px;}
-.field input,.field select{width:100%;height:32px;padding:0 9px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none;transition:border-color .15s;}
-.field input:focus,.field select:focus{border-color:var(--blue);}
-.field select option{background:#2c2c32;}
 .search-row{display:flex;gap:6px;}
-.search-row input{flex:1;}
-.btn-go{height:32px;padding:0 12px;font-size:11px;font-family:inherit;background:var(--blue);color:#0a0a10;border:none;border-radius:8px;cursor:pointer;font-weight:700;transition:opacity .15s;white-space:nowrap;}
-.btn-go:hover{opacity:.82;}
+.search-row input{flex:1;height:32px;padding:0 9px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none;}
+.search-row input:focus{border-color:var(--blue);}
+.btn-go{height:32px;padding:0 12px;font-size:11px;font-family:inherit;background:var(--blue);color:#0a0a10;border:none;border-radius:8px;cursor:pointer;font-weight:700;}
+.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.slider-row label{font-size:11px;color:var(--text2);white-space:nowrap;min-width:32px;}
+.slider-row input[type=range]{flex:1;accent-color:var(--blue);}
+.slider-val{font-size:11px;font-family:'DM Mono',monospace;color:var(--blue);min-width:36px;text-align:right;}
 .tool-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:4px;border-radius:8px;border:1.5px solid transparent;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500;background:var(--surface2);color:var(--text);transition:all .15s;width:100%;text-align:left;}
 .tool-btn:hover{border-color:var(--border2);}
 .tool-btn .icon{font-size:14px;width:18px;text-align:center;}
@@ -47,12 +41,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .tool-btn.t-erase{background:rgba(232,85,85,.1);}
 .tool-btn.t-erase.active{border-color:var(--red);background:rgba(232,85,85,.22);}
 .tdiv{height:1px;background:var(--border);margin:5px 0;}
-.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.slider-row label{font-size:11px;color:var(--text2);white-space:nowrap;min-width:32px;}
-.slider-row input[type=range]{flex:1;accent-color:var(--blue);}
-.slider-val{font-size:11px;font-family:'DM Mono',monospace;color:var(--blue);min-width:36px;text-align:right;}
-.presets{display:flex;gap:4px;flex-wrap:wrap;}
-.pre-btn{flex:1;min-width:36px;height:24px;font-size:11px;font-family:inherit;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .12s;}
+.presets{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.pre-btn{flex:1;min-width:36px;height:24px;font-size:11px;font-family:inherit;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;cursor:pointer;}
 .pre-btn:hover{background:rgba(90,171,255,.15);color:var(--blue);border-color:var(--blue);}
 .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
 .mc{background:var(--surface2);border-radius:8px;padding:8px 10px;}
@@ -61,15 +51,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .mc .mv .mu{font-size:10px;font-weight:400;color:var(--text3);font-family:inherit;margin-left:1px;}
 .hint{font-size:10px;color:var(--text3);line-height:1.55;margin-top:8px;padding:7px 9px;background:var(--surface2);border-radius:6px;border-left:2px solid var(--border2);}
 .sb-foot{padding:12px 16px;margin-top:auto;border-top:1px solid var(--border);}
-.btn-clear{width:100%;height:32px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.btn-clear{width:100%;height:32px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);cursor:pointer;}
 .btn-clear:hover{background:rgba(232,85,85,.15);border-color:var(--red);color:var(--red);}
 .leaflet-control-attribution{background:rgba(0,0,0,.5)!important;color:#777!important;font-size:10px!important;}
-.leaflet-control-attribution a{color:#999!important;}
 .leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
 .leaflet-control-layers{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;font-size:12px!important;}
 .leaflet-control-layers label{color:var(--text)!important;}
 #hud{position:absolute;bottom:24px;left:10px;z-index:1000;background:rgba(20,20,24,.9);color:var(--text2);font-size:10px;font-family:'DM Mono',monospace;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;}
-#mode-badge{position:absolute;top:10px;left:10px;z-index:1000;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;border:1px solid var(--border2);background:rgba(20,20,24,.85);color:var(--text2);transition:all .2s;pointer-events:none;backdrop-filter:blur(6px);}
+#mode-badge{position:absolute;top:10px;left:10px;z-index:1000;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--border2);background:rgba(20,20,24,.85);color:var(--text2);pointer-events:none;}
 #mode-badge.on{background:rgba(90,171,255,.2);color:var(--blue);border-color:var(--blue);}
 #mode-badge.erase{background:rgba(232,85,85,.2);color:var(--red);border-color:var(--red);}
 </style>
@@ -125,42 +114,95 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 </aside>
 <div id="map-wrap">
   <div id="map"></div>
-  <div id="hud">zoom: <span id="z-lv">17</span> &nbsp;|&nbsp; 1m = <span id="px-m">—</span>px</div>
+  <div id="hud">zoom: <span id="z-lv">17</span> | 1m=<span id="px-m">-</span>px</div>
   <div id="mode-badge">地図パンモード</div>
 </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const map=L.map('map',{zoomControl:true,preferCanvas:false}).setView([35.6896,139.6917],17);
-const gsiStd=L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',{attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
-const gsiPale=L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',{attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
-const gsiPhoto=L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
+var currentTool=null,currentRot=0,tileOpacity=0.50,tiles=[],uidCounter=0,searchMarker=null,svgLayer=null;
+var TILE_DEFS={
+  unit: {w:16.5,d:6,  fill:[90,171,255], stroke:'#5aabff',label:'住戸',    hatch:false},
+  park: {w:2.5, d:5,  fill:[82,212,120], stroke:'#52d478',label:'駐車場',  hatch:false},
+  stair:{w:3,   d:4,  fill:[240,122,176],stroke:'#f07ab0',label:'非常階段',hatch:true}
+};
+var map=L.map('map',{zoomControl:true}).setView([35.6896,139.6917],17);
+var gsiStd  =L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',          {attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
+var gsiPale =L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',         {attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
+var gsiPhoto=L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
 gsiStd.addTo(map);
 L.control.layers({'🗺 標準地図':gsiStd,'🗺 淡色地図':gsiPale,'🛰 航空写真':gsiPhoto},{},{position:'topright',collapsed:false}).addTo(map);
-setTimeout(()=>{map.invalidateSize();},100);
-let searchMarker=null;
-async function doSearch(){const q=document.getElementById('addr').value.trim();if(!q)return;try{const r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+' 日本')+'&format=json&limit=1');const d=await r.json();if(!d.length){alert('住所が見つかりませんでした');return;}const ll=L.latLng(+d[0].lat,+d[0].lon);map.setView(ll,18);if(searchMarker)map.removeLayer(searchMarker);searchMarker=L.marker(ll).addTo(map).bindPopup(d[0].display_name).openPopup();}catch(e){alert('検索に失敗しました');}}
-const SvgLayer=L.Layer.extend({onAdd(map){this._map=map;const pane=map.getPanes().overlayPane;this._svg=document.createElementNS('http://www.w3.org/2000/svg','svg');Object.assign(this._svg.style,{position:'absolute',top:'0',left:'0',width:'100%',height:'100%',pointerEvents:'none',overflow:'visible',zIndex:'400'});this._defs=document.createElementNS('http://www.w3.org/2000/svg','defs');this._svg.appendChild(this._defs);pane.appendChild(this._svg);map.on('zoomend moveend viewreset',this._reset,this);this._reset();},onRemove(map){this._svg.remove();map.off('zoomend moveend viewreset',this._reset,this);},_reset(){const tl=map.containerPointToLayerPoint([0,0]);L.DomUtil.setPosition(this._svg,tl);tiles.forEach(t=>repositionTile(t));},getSvg(){return this._svg;},getDefs(){return this._defs;}});
-const svgLayer=new SvgLayer();svgLayer.addTo(map);
-const TILE_DEFS={unit:{w:16.5,d:6,fill:[90,171,255],stroke:'#5aabff',label:'住戸',hatch:false},park:{w:2.5,d:5,fill:[82,212,120],stroke:'#52d478',label:'駐車場',hatch:false},stair:{w:3,d:4,fill:[240,122,176],stroke:'#f07ab0',label:'非常階段',hatch:true}};
-let currentTool=null,currentRot=0,tileOpacity=0.50,tiles=[],uidCounter=0;
-function mpp(){const lat=map.getCenter().lat;return(156543.03392*Math.cos(lat*Math.PI/180))/Math.pow(2,map.getZoom());}
-function fillColor(def){const[r,g,b]=def.fill;return`rgba(${r},${g},${b},${tileOpacity})`;}
-function createTile(latlng,type,rot){const def=TILE_DEFS[type];const uid='T'+(uidCounter++);const svg=svgLayer.getSvg();const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('id',uid);g.style.pointerEvents='all';g.style.cursor='grab';if(def.hatch){const pid='HP'+uid;const pat=document.createElementNS('http://www.w3.org/2000/svg','pattern');pat.setAttribute('id',pid);pat.setAttribute('patternUnits','userSpaceOnUse');pat.setAttribute('width','10');pat.setAttribute('height','10');pat.setAttribute('patternTransform','rotate(45)');const ln=document.createElementNS('http://www.w3.org/2000/svg','line');ln.setAttribute('x1','0');ln.setAttribute('y1','0');ln.setAttribute('x2','0');ln.setAttribute('y2','10');ln.setAttribute('stroke',def.stroke);ln.setAttribute('stroke-width','2');ln.setAttribute('stroke-opacity','0.25');pat.appendChild(ln);svgLayer.getDefs().appendChild(pat);}function mk(tag,attrs){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);return el;}const rect=mk('rect',{rx:'3',fill:fillColor(def),stroke:def.stroke,'stroke-width':'1.5'});g.appendChild(rect);let hRect=null;if(def.hatch){hRect=mk('rect',{rx:'3',fill:`url(#HP${uid})`});g.appendChild(hRect);}const txt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'Noto Sans JP,sans-serif','font-weight':'700','pointer-events':'none'});txt.textContent=def.label;g.appendChild(txt);const dim=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'DM Mono,monospace','pointer-events':'none',opacity:'0.8'});dim.textContent=`${def.w}x${def.d}m`;g.appendChild(dim);const rh=mk('circle',{r:'8',fill:def.stroke,stroke:'#fff','stroke-width':'1.5',opacity:'0',cursor:'grab'});rh.style.pointerEvents='all';g.appendChild(rh);const rhTxt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-size':'10','pointer-events':'none',opacity:'0'});rhTxt.textContent='↻';g.appendChild(rhTxt);const dh=mk('circle',{r:'9',fill:'#e85555',stroke:'#fff','stroke-width':'1.5',opacity:'0',cursor:'pointer'});dh.style.pointerEvents='all';g.appendChild(dh);const dhTxt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-size':'12','font-weight':'700','pointer-events':'none',opacity:'0'});dhTxt.textContent='x';g.appendChild(dhTxt);const tile={uid,g,rect,hRect,txt,dim,rh,rhTxt,dh,dhTxt,latlng:L.latLng(latlng.lat,latlng.lng),type,rot,def};g.addEventListener('mouseenter',()=>{if(currentTool==='erase'){g.style.cursor='pointer';return;}[rh,rhTxt,dh,dhTxt].forEach(e=>e.setAttribute('opacity','1'));});g.addEventListener('mouseleave',()=>{g.style.cursor='grab';[rh,rhTxt,dh,dhTxt].forEach(e=>e.setAttribute('opacity','0'));});g.addEventListener('click',e=>{if(currentTool==='erase'){e.stopPropagation();deleteTile(tile);}});dh.addEventListener('click',e=>{e.stopPropagation();deleteTile(tile);});setupMoveDrag(g,tile);setupRotDrag(rh,tile);svg.appendChild(g);tiles.push(tile);repositionTile(tile);updateMetrics();}
-function repositionTile(tile){const def=tile.def;const pt=map.latLngToLayerPoint(tile.latlng);const m=mpp();const pw=def.w/m;const ph=def.d/m;tile.rect.setAttribute('x','0');tile.rect.setAttribute('y','0');tile.rect.setAttribute('width',pw);tile.rect.setAttribute('height',ph);tile.rect.setAttribute('fill',fillColor(def));if(tile.hRect){tile.hRect.setAttribute('x','0');tile.hRect.setAttribute('y','0');tile.hRect.setAttribute('width',pw);tile.hRect.setAttribute('height',ph);}const fs=Math.max(8,Math.min(13,Math.min(pw,ph)/4));tile.txt.setAttribute('x',pw/2);tile.txt.setAttribute('y',ph/2-fs*0.75);tile.txt.setAttribute('font-size',fs);tile.dim.setAttribute('x',pw/2);tile.dim.setAttribute('y',ph/2+fs*0.85);tile.dim.setAttribute('font-size',fs*0.8);tile.rh.setAttribute('cx',pw/2);tile.rh.setAttribute('cy',ph+14);tile.rhTxt.setAttribute('x',pw/2);tile.rhTxt.setAttribute('y',ph+14);tile.dh.setAttribute('cx',pw+10);tile.dh.setAttribute('cy',-10);tile.dhTxt.setAttribute('x',pw+10);tile.dhTxt.setAttribute('y',-10);tile.g.setAttribute('transform',`translate(${pt.x},${pt.y}) rotate(${tile.rot}) translate(${-pw/2},${-ph/2})`);updateHUD();}
-function setupMoveDrag(el,tile){let active=false,startCP,startLL;el.addEventListener('mousedown',e=>{if(e.target===tile.rh||e.target===tile.dh)return;if(currentTool==='erase')return;e.stopPropagation();e.preventDefault();active=true;startCP=map.mouseEventToContainerPoint(e);startLL=L.latLng(tile.latlng.lat,tile.latlng.lng);map.dragging.disable();el.style.cursor='grabbing';});document.addEventListener('mousemove',e=>{if(!active)return;const cp=map.mouseEventToContainerPoint(e);const dx=cp.x-startCP.x,dy=cp.y-startCP.y;const m=mpp();tile.latlng=L.latLng(startLL.lat-dy*m/111320,startLL.lng+dx*m/(111320*Math.cos(startLL.lat*Math.PI/180)));repositionTile(tile);});document.addEventListener('mouseup',()=>{if(active){active=false;el.style.cursor='grab';}});}
-function setupRotDrag(handle,tile){handle.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();map.dragging.disable();const cp=map.latLngToContainerPoint(tile.latlng);const sa=Math.atan2(e.clientY-cp.y,e.clientX-cp.x)*180/Math.PI;const sr=tile.rot;function onMove(ev){const c=map.latLngToContainerPoint(tile.latlng);const a=Math.atan2(ev.clientY-c.y,ev.clientX-c.x)*180/Math.PI;tile.rot=((sr+(a-sa))%360+360)%360;repositionTile(tile);}function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);});}
-function deleteTile(tile){tile.g.remove();const pat=document.getElementById('HP'+tile.uid);if(pat)pat.remove();tiles=tiles.filter(t=>t!==tile);updateMetrics();}
-function clearAll(){if(!confirm('全タイルを削除しますか？'))return;[...tiles].forEach(t=>deleteTile(t));}
-function setTool(t){currentTool=t;document.querySelectorAll('.tool-btn').forEach(el=>el.classList.remove('active'));const el=document.getElementById('tool-'+t);if(el)el.classList.add('active');const badge=document.getElementById('mode-badge');if(t==='erase'){badge.textContent='消去モード — タイルをクリック';badge.className='erase';map.dragging.enable();map.getContainer().style.cursor='default';}else{badge.textContent='配置モード — 地図をクリックして配置';badge.className='on';map.dragging.disable();map.getContainer().style.cursor='crosshair';}}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){currentTool=null;document.querySelectorAll('.tool-btn').forEach(el=>el.classList.remove('active'));document.getElementById('mode-badge').textContent='地図パンモード';document.getElementById('mode-badge').className='';map.dragging.enable();map.getContainer().style.cursor='';}});
-map.on('click',e=>{if(!currentTool||currentTool==='erase')return;createTile(e.latlng,currentTool,currentRot);});
+setTimeout(function(){map.invalidateSize();},200);
+var SvgLayer=L.Layer.extend({
+  onAdd:function(m){var pane=m.getPanes().overlayPane;this._svg=document.createElementNS('http://www.w3.org/2000/svg','svg');this._svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:400;';this._defs=document.createElementNS('http://www.w3.org/2000/svg','defs');this._svg.appendChild(this._defs);pane.appendChild(this._svg);m.on('zoomend moveend viewreset',this._reset,this);this._reset();},
+  onRemove:function(m){this._svg.remove();m.off('zoomend moveend viewreset',this._reset,this);},
+  _reset:function(){var tl=map.containerPointToLayerPoint([0,0]);L.DomUtil.setPosition(this._svg,tl);for(var i=0;i<tiles.length;i++)repositionTile(tiles[i]);},
+  getSvg:function(){return this._svg;},getDefs:function(){return this._defs;}
+});
+svgLayer=new SvgLayer();svgLayer.addTo(map);
+function mpp(){var lat=map.getCenter().lat;return(156543.03392*Math.cos(lat*Math.PI/180))/Math.pow(2,map.getZoom());}
+function fillColor(def){return'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+','+tileOpacity+')';}
+function mk(tag,attrs){var el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)el.setAttribute(k,attrs[k]);return el;}
+function createTile(latlng,type,rot){
+  var def=TILE_DEFS[type],uid='T'+(uidCounter++),svg=svgLayer.getSvg();
+  var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('id',uid);g.style.pointerEvents='all';g.style.cursor='grab';
+  if(def.hatch){var pid='HP'+uid;var pat=mk('pattern',{id:pid,patternUnits:'userSpaceOnUse',width:'10',height:'10',patternTransform:'rotate(45)'});var ln=mk('line',{x1:'0',y1:'0',x2:'0',y2:'10',stroke:def.stroke,'stroke-width':'2','stroke-opacity':'0.25'});pat.appendChild(ln);svgLayer.getDefs().appendChild(pat);}
+  var rect=mk('rect',{rx:'3',fill:fillColor(def),stroke:def.stroke,'stroke-width':'1.5'});
+  var hRect=null;
+  if(def.hatch){hRect=mk('rect',{rx:'3',fill:'url(#HP'+uid+')'});g.appendChild(rect);g.appendChild(hRect);}else{g.appendChild(rect);}
+  var txt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'sans-serif','font-weight':'700','pointer-events':'none'});txt.textContent=def.label;g.appendChild(txt);
+  var dim=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none',opacity:'0.8'});dim.textContent=def.w+'x'+def.d+'m';g.appendChild(dim);
+  var rh=mk('circle',{r:'8',fill:def.stroke,stroke:'#fff','stroke-width':'1.5',opacity:'0',cursor:'grab'});rh.style.pointerEvents='all';
+  var rhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-size':'10','pointer-events':'none',opacity:'0'});rhT.textContent='↻';
+  g.appendChild(rh);g.appendChild(rhT);
+  var dh=mk('circle',{r:'9',fill:'#e85555',stroke:'#fff','stroke-width':'1.5',opacity:'0',cursor:'pointer'});dh.style.pointerEvents='all';
+  var dhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-size':'12','font-weight':'700','pointer-events':'none',opacity:'0'});dhT.textContent='x';
+  g.appendChild(dh);g.appendChild(dhT);
+  var tile={uid:uid,g:g,rect:rect,hRect:hRect,txt:txt,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,latlng:L.latLng(latlng.lat,latlng.lng),type:type,rot:rot,def:def};
+  g.addEventListener('mouseenter',function(){if(currentTool==='erase'){g.style.cursor='pointer';return;}[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});});
+  g.addEventListener('mouseleave',function(){g.style.cursor='grab';[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});});
+  g.addEventListener('click',function(e){if(currentTool==='erase'){e.stopPropagation();deleteTile(tile);}});
+  dh.addEventListener('click',function(e){e.stopPropagation();deleteTile(tile);});
+  setupMoveDrag(g,tile);setupRotDrag(rh,tile);
+  svg.appendChild(g);tiles.push(tile);repositionTile(tile);updateMetrics();
+}
+function repositionTile(tile){
+  var def=tile.def,pt=map.latLngToLayerPoint(tile.latlng),m=mpp(),pw=def.w/m,ph=def.d/m;
+  tile.rect.setAttribute('x','0');tile.rect.setAttribute('y','0');tile.rect.setAttribute('width',pw);tile.rect.setAttribute('height',ph);tile.rect.setAttribute('fill',fillColor(def));
+  if(tile.hRect){tile.hRect.setAttribute('x','0');tile.hRect.setAttribute('y','0');tile.hRect.setAttribute('width',pw);tile.hRect.setAttribute('height',ph);}
+  var fs=Math.max(8,Math.min(13,Math.min(pw,ph)/4));
+  tile.txt.setAttribute('x',pw/2);tile.txt.setAttribute('y',ph/2-fs*0.75);tile.txt.setAttribute('font-size',fs);
+  tile.dim.setAttribute('x',pw/2);tile.dim.setAttribute('y',ph/2+fs*0.85);tile.dim.setAttribute('font-size',fs*0.8);
+  tile.rh.setAttribute('cx',pw/2);tile.rh.setAttribute('cy',ph+14);tile.rhT.setAttribute('x',pw/2);tile.rhT.setAttribute('y',ph+14);
+  tile.dh.setAttribute('cx',pw+10);tile.dh.setAttribute('cy',-10);tile.dhT.setAttribute('x',pw+10);tile.dhT.setAttribute('y',-10);
+  tile.g.setAttribute('transform','translate('+pt.x+','+pt.y+') rotate('+tile.rot+') translate('+(-pw/2)+','+(-ph/2)+')');
+  updateHUD();
+}
+function setupMoveDrag(el,tile){
+  var active=false,startCP,startLL;
+  el.addEventListener('mousedown',function(e){if(e.target===tile.rh||e.target===tile.dh)return;if(currentTool==='erase')return;e.stopPropagation();e.preventDefault();active=true;startCP=map.mouseEventToContainerPoint(e);startLL=L.latLng(tile.latlng.lat,tile.latlng.lng);map.dragging.disable();el.style.cursor='grabbing';});
+  document.addEventListener('mousemove',function(e){if(!active)return;var cp=map.mouseEventToContainerPoint(e),m=mpp(),dx=cp.x-startCP.x,dy=cp.y-startCP.y;tile.latlng=L.latLng(startLL.lat-dy*m/111320,startLL.lng+dx*m/(111320*Math.cos(startLL.lat*Math.PI/180)));repositionTile(tile);});
+  document.addEventListener('mouseup',function(){if(active){active=false;el.style.cursor='grab';}});
+}
+function setupRotDrag(handle,tile){
+  handle.addEventListener('mousedown',function(e){e.stopPropagation();e.preventDefault();map.dragging.disable();var cp=map.latLngToContainerPoint(tile.latlng),sa=Math.atan2(e.clientY-cp.y,e.clientX-cp.x)*180/Math.PI,sr=tile.rot;
+    function onMove(ev){var c=map.latLngToContainerPoint(tile.latlng),a=Math.atan2(ev.clientY-c.y,ev.clientX-c.x)*180/Math.PI;tile.rot=((sr+(a-sa))%360+360)%360;repositionTile(tile);}
+    function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
+    document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);});
+}
+function deleteTile(tile){tile.g.remove();var pat=document.getElementById('HP'+tile.uid);if(pat)pat.remove();tiles=tiles.filter(function(t){return t!==tile;});updateMetrics();}
+function clearAll(){if(!confirm('全タイルを削除しますか？'))return;tiles.slice().forEach(function(t){deleteTile(t);});}
+function setTool(t){currentTool=t;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});var el=document.getElementById('tool-'+t);if(el)el.classList.add('active');var badge=document.getElementById('mode-badge');if(t==='erase'){badge.textContent='消去モード — タイルをクリック';badge.className='erase';map.dragging.enable();map.getContainer().style.cursor='default';}else{badge.textContent='配置モード — 地図をクリックして配置';badge.className='on';map.dragging.disable();map.getContainer().style.cursor='crosshair';}}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});document.getElementById('mode-badge').textContent='地図パンモード';document.getElementById('mode-badge').className='';map.dragging.enable();map.getContainer().style.cursor='';}});
+map.on('click',function(e){if(!currentTool||currentTool==='erase')return;createTile(e.latlng,currentTool,currentRot);});
 function setRot(v){currentRot=v;document.getElementById('rot-range').value=v;document.getElementById('rot-val').textContent=v+'°';}
-function onRotSlider(){currentRot=+document.getElementById('rot-range').value;document.getElementById('rot-val').textContent=currentRot+'°';}
-function onOpacity(){tileOpacity=+document.getElementById('op-range').value/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(t=>repositionTile(t));}
+function onRotSlider(){currentRot=parseInt(document.getElementById('rot-range').value);document.getElementById('rot-val').textContent=currentRot+'°';}
+function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(function(t){repositionTile(t);});}
 function updateHUD(){document.getElementById('z-lv').textContent=map.getZoom();document.getElementById('px-m').textContent=(1/mpp()).toFixed(1);}
-function updateMetrics(){let units=0,parks=0,stairs=0,unitA=0;tiles.forEach(t=>{if(t.type==='unit'){units++;unitA+=t.def.w*t.def.d;}if(t.type==='park')parks++;if(t.type==='stair')stairs++;});document.getElementById('metrics').innerHTML=`<div class="mc"><div class="ml">住戸数</div><div class="mv">${units}<span class="mu"> 戸</span></div></div><div class="mc"><div class="ml">駐車区画</div><div class="mv">${parks}<span class="mu"> 台</span></div></div><div class="mc"><div class="ml">非常階段</div><div class="mv">${stairs}<span class="mu"> 箇所</span></div></div><div class="mc"><div class="ml">住戸床面積計</div><div class="mv">${Math.round(unitA).toLocaleString()}<span class="mu"> ㎡</span></div></div>`;}
-map.on('zoomend moveend viewreset',()=>{tiles.forEach(t=>repositionTile(t));updateHUD();});
+function updateMetrics(){var units=0,parks=0,stairs=0,unitA=0;tiles.forEach(function(t){if(t.type==='unit'){units++;unitA+=t.def.w*t.def.d;}if(t.type==='park')parks++;if(t.type==='stair')stairs++;});document.getElementById('metrics').innerHTML='<div class="mc"><div class="ml">住戸数</div><div class="mv">'+units+'<span class="mu"> 戸</span></div></div><div class="mc"><div class="ml">駐車区画</div><div class="mv">'+parks+'<span class="mu"> 台</span></div></div><div class="mc"><div class="ml">非常階段</div><div class="mv">'+stairs+'<span class="mu"> 箇所</span></div></div><div class="mc"><div class="ml">住戸床面積計</div><div class="mv">'+Math.round(unitA).toLocaleString()+'<span class="mu"> ㎡</span></div></div>';}
+async function doSearch(){var q=document.getElementById('addr').value.trim();if(!q)return;try{var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+' 日本')+'&format=json&limit=1');var d=await r.json();if(!d.length){alert('住所が見つかりませんでした');return;}var ll=L.latLng(+d[0].lat,+d[0].lon);map.setView(ll,18);if(searchMarker)map.removeLayer(searchMarker);searchMarker=L.marker(ll).addTo(map).bindPopup(d[0].display_name).openPopup();}catch(e){alert('検索に失敗しました');}}
+map.on('zoomend moveend viewreset',function(){tiles.forEach(function(t){repositionTile(t);});updateHUD();});
 updateMetrics();updateHUD();
 </script>
 </body>
