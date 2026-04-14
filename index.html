@@ -113,7 +113,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.3</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.4</div></div>
 
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
@@ -481,6 +481,28 @@ function trySnap(cx,cy,type,rot){
   console.log('[snap] result='+JSON.stringify(best));
   return best;
 }
+function trySnapMove(cx,cy,type,rot,self){
+  if(!document.getElementById('snap-toggle').checked)return null;
+  var def=getTileDef(self),pw=def.w*ppm,ph=def.d*ppm;
+  var thresh=Math.max(80,ppm*3),best=null,bestD=thresh;
+  tiles.forEach(function(t){
+    if(t===self)return;
+    var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
+    var r=t.rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
+    function rot2(x,y){return{x:x*cos-y*sin+t.cx,y:x*sin+y*cos+t.cy};}
+    var candidates=[
+      rot2(0,-(tph/2+ph/2)),
+      rot2(0, (tph/2+ph/2)),
+      rot2(-(tpw/2+pw/2),0),
+      rot2( (tpw/2+pw/2),0)
+    ];
+    candidates.forEach(function(pos){
+      var dx=pos.x-cx,dy=pos.y-cy,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<bestD){bestD=d;best={cx:pos.x,cy:pos.y};}
+    });
+  });
+  return best;
+}
 function getSnapPts(cx,cy,pw,ph,rot){
   var r=rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
   function r2(x,y){return{x:x*cos-y*sin+cx,y:x*sin+y*cos+cy};}
@@ -647,7 +669,15 @@ function setupMove(el,tile){
   document.addEventListener('mousemove',function(e){
     if(!act)return;
     var dx=(e.clientX-sx)/canvasZoom,dy=(e.clientY-sy)/canvasZoom;
-    scxs.forEach(function(s){s.t.cx=s.cx+dx;s.t.cy=s.cy+dy;reposTile(s.t);});
+    scxs.forEach(function(s){
+      var ncx=s.cx+dx,ncy=s.cy+dy;
+      // ドラッグ中もスナップ（1枚移動時のみ）
+      if(scxs.length===1){
+        var sn=trySnapMove(ncx,ncy,s.t.type,s.t.rot,s.t);
+        if(sn){ncx=sn.cx;ncy=sn.cy;}
+      }
+      s.t.cx=ncx;s.t.cy=ncy;reposTile(s.t);
+    });
   });
   document.addEventListener('mouseup',function(){if(act){act=false;el.style.cursor='grab';saveTileHistory();}});
 }
