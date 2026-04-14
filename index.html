@@ -445,15 +445,22 @@ function trySnap(cx,cy,type,rot){
   var thresh=40,best=null,bestD=thresh;
   tiles.forEach(function(t){
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
-    var te=getSnapPts(t.cx,t.cy,tpw,tph,t.rot);
-    var ne=getSnapPts(cx,cy,pw,ph,rot);
-    te.forEach(function(e){ne.forEach(function(n){
-      var dx=e.x-n.x,dy=e.y-n.y,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<bestD){bestD=d;best={cx:cx+dx,cy:cy+dy};}
-    });});
+    var r=t.rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
+    function rot2(x,y){return{x:x*cos-y*sin+t.cx,y:x*sin+y*cos+t.cy};}
+    var candidates=[
+      rot2(0,-(tph/2+ph/2)),
+      rot2(0, (tph/2+ph/2)),
+      rot2(-(tpw/2+pw/2),0),
+      rot2( (tpw/2+pw/2),0)
+    ];
+    candidates.forEach(function(pos){
+      var dx=pos.x-cx,dy=pos.y-cy,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<bestD){bestD=d;best={cx:pos.x,cy:pos.y};}
+    });
   });
   return best;
-}function getSnapPts(cx,cy,pw,ph,rot){
+}
+function getSnapPts(cx,cy,pw,ph,rot){
   var r=rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
   function r2(x,y){return{x:x*cos-y*sin+cx,y:x*sin+y*cos+cy};}
   // 辺中点4点 + コーナー4点
