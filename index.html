@@ -113,7 +113,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.4</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.5</div></div>
 
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
@@ -132,7 +132,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="lbl">タイルサイズ (m)</div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🏠 住戸</div>
     <div class="row2">
-      <div class="field"><label>幅</label><input type="number" id="unit-w" value="16.5" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.5" oninput="updateDefs()"/></div>
       <div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚗 駐車場</div>
@@ -150,9 +150,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <div class="field"><label>幅</label><input type="number" id="elev-w" value="2" step="0.5" oninput="updateDefs()"/></div>
       <div class="field"><label>奥行</label><input type="number" id="elev-d" value="2" step="0.5" oninput="updateDefs()"/></div>
     </div>
-    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚶 外廊下（初期幅m）</div>
+    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚶 外廊下</div>
     <div class="row2">
-      <div class="field"><label>幅（固定）</label><input type="number" id="corridor-w" value="3" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行（固定）</label><input type="number" id="corridor-w" value="3" step="0.5" oninput="updateDefs()"/></div>
       <div class="field"><label>初期長さ</label><input type="number" id="corridor-d" value="10" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🌿 バルコニー（初期幅m）</div>
@@ -271,7 +271,7 @@ var SNAP_DIST=18;
 var boxSelecting=false,boxStart=null,boxRect=null;
 
 var DEFS={
-  unit:    {w:16.5,d:6,  fill:[37,99,235],   stroke:'#1d4ed8',label:'住戸'},
+  unit:    {w:11.5,d:6,  fill:[37,99,235],   stroke:'#1d4ed8',label:'住戸'},
   park:    {w:2.5, d:5,  fill:[22,163,74],   stroke:'#15803d',label:'駐車場'},
   stair:   {w:3,   d:4,  fill:[219,39,119],  stroke:'#be185d',label:'非常階段'},
   elev:    {w:2,   d:2,  fill:[124,58,237],  stroke:'#6d28d9',label:'EV'},
@@ -484,7 +484,7 @@ function trySnap(cx,cy,type,rot){
 function trySnapMove(cx,cy,type,rot,self){
   if(!document.getElementById('snap-toggle').checked)return null;
   var def=getTileDef(self),pw=def.w*ppm,ph=def.d*ppm;
-  var thresh=Math.max(80,ppm*3),best=null,bestD=thresh;
+  var thresh=Math.max(50,ppm*1.5),best=null,bestD=thresh;
   tiles.forEach(function(t){
     if(t===self)return;
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
@@ -687,13 +687,26 @@ function setupRotH(h,tile){
     e.stopPropagation();e.preventDefault();saveTileHistory();
     var rect=wrap.getBoundingClientRect();
     var tcx=tile.cx*canvasZoom+panX+rect.left,tcy=tile.cy*canvasZoom+panY+rect.top;
-    var sa=Math.atan2(e.clientY-tcy,e.clientX-tcx)*180/Math.PI,sr=tile.rot;
-    // rotate all selected tiles around their own centres
+    var sa=Math.atan2(e.clientY-tcy,e.clientX-tcx)*180/Math.PI;
     var startRots=selectedTiles.map(function(t){return t.rot;});
+    var startPos=selectedTiles.map(function(t){return{cx:t.cx,cy:t.cy};});
+    // グループの重心を計算
+    var gcx=0,gcy=0;
+    selectedTiles.forEach(function(t){gcx+=t.cx;gcy+=t.cy;});
+    gcx/=selectedTiles.length;gcy/=selectedTiles.length;
     function mv(ev){
       var a=Math.atan2(ev.clientY-tcy,ev.clientX-tcx)*180/Math.PI;
-      var delta=(a-sa);
-      selectedTiles.forEach(function(t,i){t.rot=((startRots[i]+delta)%360+360)%360;reposTile(t);});
+      var delta=(a-sa)*Math.PI/180;
+      var cosd=Math.cos(delta),sind=Math.sin(delta);
+      selectedTiles.forEach(function(t,i){
+        // 重心周りに位置を回転
+        var dx=startPos[i].cx-gcx,dy=startPos[i].cy-gcy;
+        t.cx=gcx+dx*cosd-dy*sind;
+        t.cy=gcy+dx*sind+dy*cosd;
+        // 個別の回転角も更新
+        t.rot=((startRots[i]+a-sa)%360+360)%360;
+        reposTile(t);
+      });
     }
     function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
     document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
