@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0055)file:///C:/Users/01-0556356U/Downloads/mansion_v11.html -->
+<!-- saved from url=(0057)file:///C:/Users/01-0556356U/Downloads/mansion_v11_1.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -229,7 +229,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <div id="canvas-wrap">
   <div id="drop-hint"><div class="icon">📄</div><div class="text">PDF地図をここにドロップ</div><div class="sub">縮尺図面を読み込んでタイルを配置できます</div></div>
   <canvas id="map-canvas"></canvas>
-  <svg id="tile-svg"><defs></defs><g></g><g></g><g></g><g style="pointer-events: all;"></g><g></g><g></g><g></g></svg>
+  <svg id="tile-svg"><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
   <div id="mode-badge" class="pan">地図パンモード</div>
   <div id="sel-bar">0個選択中</div>
   <div id="hud">1m=<span id="hud-ppm">10.0</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
@@ -288,7 +288,7 @@ var defsEl=document.createElementNS('http://www.w3.org/2000/svg','defs');svg.app
 var gridG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(gridG);
 var guideG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(guideG);
 var calibG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(calibG);
-var measureG=document.createElementNS('http://www.w3.org/2000/svg','g');measureG.style.pointerEvents='all';svg.appendChild(measureG);
+var measureG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(measureG);
 var tileG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(tileG);
 var snapG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(snapG);
 var boxG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(boxG);
