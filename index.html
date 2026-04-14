@@ -113,7 +113,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.6</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.7</div></div>
 
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
@@ -297,14 +297,24 @@ var snapG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendC
 var boxG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(boxG);
 
 // PDF
-wrap.addEventListener('dragover',function(e){e.preventDefault();wrap.classList.add('dragover');});
-wrap.addEventListener('dragleave',function(){wrap.classList.remove('dragover');});
-wrap.addEventListener('drop',function(e){
+function handleDrop(e){
   e.preventDefault();wrap.classList.remove('dragover');
   var f=e.dataTransfer.files[0];
   if(!f||f.type!=='application/pdf'){alert('PDFをドロップしてください');return;}
   var r=new FileReader();r.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};r.readAsArrayBuffer(f);
-});
+}
+function handleDragOver(e){e.preventDefault();wrap.classList.add('dragover');}
+function handleDragLeave(){wrap.classList.remove('dragover');}
+wrap.addEventListener('dragover',handleDragOver);
+wrap.addEventListener('dragleave',handleDragLeave);
+wrap.addEventListener('drop',handleDrop);
+// SVGとcanvasにも追加（これらがイベントを横取りする場合の対策）
+document.getElementById('tile-svg').addEventListener('dragover',handleDragOver);
+document.getElementById('tile-svg').addEventListener('dragleave',handleDragLeave);
+document.getElementById('tile-svg').addEventListener('drop',handleDrop);
+document.getElementById('map-canvas').addEventListener('dragover',handleDragOver);
+document.getElementById('map-canvas').addEventListener('dragleave',handleDragLeave);
+document.getElementById('map-canvas').addEventListener('drop',handleDrop);
 function loadPdf(data){
   pdfjsLib.getDocument({data:data}).promise.then(function(pdf){return pdf.getPage(1);}).then(function(page){
     var vp=page.getViewport({scale:2});
