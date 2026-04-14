@@ -113,7 +113,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.5</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.6</div></div>
 
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
@@ -152,8 +152,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚶 外廊下</div>
     <div class="row2">
-      <div class="field"><label>奥行（固定）</label><input type="number" id="corridor-w" value="3" step="0.5" oninput="updateDefs()"/></div>
-      <div class="field"><label>初期長さ</label><input type="number" id="corridor-d" value="10" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行（固定）</label><input type="number" id="corridor-w" value="30" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>初期長さ</label><input type="number" id="corridor-d" value="3" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🌿 バルコニー（初期幅m）</div>
     <div class="row2">
@@ -223,6 +223,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="foot-btn" onclick="doPaste()">📌 貼付け</button>
       <button class="foot-btn danger" onclick="clearAll()">🗑 全削除</button>
     </div>
+    <button class="foot-btn" style="width:100%;" onclick="printCanvas()">🖨️ 印刷（比率維持）</button>
+    </div>
   </div>
 </aside>
 
@@ -269,13 +271,14 @@ var freeConfig={name:'フリー',w:4,d:4};
 var SNAP_DIST=18;
 // box-select
 var boxSelecting=false,boxStart=null,boxRect=null;
+var groupLocked=false;
 
 var DEFS={
   unit:    {w:11.5,d:6,  fill:[37,99,235],   stroke:'#1d4ed8',label:'住戸'},
   park:    {w:2.5, d:5,  fill:[22,163,74],   stroke:'#15803d',label:'駐車場'},
   stair:   {w:3,   d:4,  fill:[219,39,119],  stroke:'#be185d',label:'非常階段'},
   elev:    {w:2,   d:2,  fill:[124,58,237],  stroke:'#6d28d9',label:'EV'},
-  corridor:{w:3,   d:10, fill:[8,145,178],   stroke:'#0e7490',label:'外廊下'},
+  corridor:{w:30,  d:3, fill:[8,145,178],   stroke:'#0e7490',label:'外廊下'},
   balcony: {w:10,  d:2,  fill:[5,150,105],   stroke:'#047857',label:'バルコニー'},
   free:    {w:4,   d:4,  fill:[234,88,12],   stroke:'#c2410c',label:'フリー'}
 };
@@ -531,7 +534,10 @@ function showFlash(cx,cy){clearEl(snapG);snapG.appendChild(mkS('circle',{cx:cx,c
 
 // History
 function saveTileHistory(){
-  tileHistory.push(tiles.map(function(t){return{cx:t.cx,cy:t.cy,type:t.type,rot:t.rot,resizableW:t.resizableW,resizableD:t.resizableD,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null};}));
+  tileHistory.push({
+    tiles:tiles.map(function(t){return{cx:t.cx,cy:t.cy,type:t.type,rot:t.rot,resizableW:t.resizableW,resizableD:t.resizableD,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null};}),
+    measures:measureLines.map(function(m){return{pts:[{x:m.pts[0].x,y:m.pts[0].y},{x:m.pts[1].x,y:m.pts[1].y}],dist:m.dist};})
+  });
   if(tileHistory.length>50)tileHistory.shift();
 }
 function doUndo(){
@@ -539,7 +545,8 @@ function doUndo(){
   tiles.slice().forEach(function(t){t.g.remove();var p=document.getElementById('HP'+t.id);if(p)p.remove();});
   tiles=[];selectedTile=null;selectedTiles=[];
   var state=tileHistory.pop();
-  state.forEach(function(s){
+  var tileState=state.tiles||state;
+  tileState.forEach(function(s){
     var tmp=null;
     if(s.freeConfig){tmp=freeConfig;freeConfig=s.freeConfig;}
     var t=createTileInternal(s.cx,s.cy,s.type,s.rot);
@@ -548,6 +555,7 @@ function doUndo(){
     if(tmp)freeConfig=tmp;
     reposTile(t);
   });
+  if(state.measures){measureLines=state.measures;redrawMeasure();}
   updateMetrics();updateSelBar();
 }
 
@@ -621,7 +629,7 @@ function createTileInternal(cx,cy,type,rot){
       if(idx<0)selectedTiles.push(tile);else selectedTiles.splice(idx,1);
       selectedTile=selectedTiles.length===1?selectedTiles[0]:null;
     } else {
-      selectedTiles=[tile];selectedTile=tile;
+      if(!groupLocked){selectedTiles=[tile];selectedTile=tile;}
     }
     tiles.forEach(reposTile);updateSelBar();
   });
@@ -735,8 +743,15 @@ function clearAll(){if(!confirm('全タイルを削除しますか？'))return;s
 // Multi-select helpers
 function updateSelBar(){
   var bar=document.getElementById('sel-bar');
-  if(selectedTiles.length>1){bar.style.display='block';bar.textContent=selectedTiles.length+'個選択中 | ドラッグで移動・↻で回転・Delで削除';}
-  else bar.style.display='none';
+  if(selectedTiles.length>0){
+    bar.style.display='block';
+    var lockTxt=groupLocked?'🔒グループ解除':'🔓グループ化';
+    bar.innerHTML=selectedTiles.length+'個選択中 | <button onclick="toggleGroup()" style="background:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.6);color:#fff;padding:1px 8px;border-radius:10px;cursor:pointer;font-size:10px;font-weight:700;">'+lockTxt+'</button>';
+  } else bar.style.display='none';
+}
+function toggleGroup(){
+  groupLocked=!groupLocked;
+  updateSelBar();
 }
 
 // Copy/Paste (supports multiple)
@@ -762,8 +777,17 @@ function doPaste(){
 // Keyboard
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT')return;
-  if(e.key==='Escape'){currentTool=null;calibMode=false;measureMode=false;guideMode=false;selectedTiles=[];selectedTile=null;tiles.forEach(reposTile);document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});setBadge('pan','地図パンモード');wrap.style.cursor='';updateSelBar();}
+  if(e.key==='Escape'){currentTool=null;calibMode=false;measureMode=false;guideMode=false;if(!groupLocked){selectedTiles=[];selectedTile=null;tiles.forEach(reposTile);}document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});setBadge('pan','地図パンモード');wrap.style.cursor='';updateSelBar();}
   if(e.key==='Delete'||e.key==='Backspace'){if(selectedTiles.length>0){saveTileHistory();selectedTiles.slice().forEach(delTile);}}
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown'){
+    if(selectedTiles.length>0){
+      e.preventDefault();
+      var step=e.shiftKey?ppm:ppm*0.25;
+      var dx=e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0;
+      var dy=e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0;
+      selectedTiles.forEach(function(t){t.cx+=dx;t.cy+=dy;reposTile(t);});
+    }
+  }
   if(e.ctrlKey&&e.key==='z'){e.preventDefault();doUndo();}
   if(e.ctrlKey&&e.key==='c'){e.preventDefault();doCopy();}
   if(e.ctrlKey&&e.key==='v'){e.preventDefault();doPaste();}
@@ -799,6 +823,30 @@ function updateDefs(){
   document.getElementById('dim-stair').textContent=DEFS.stair.w+'×'+DEFS.stair.d+'m';
   document.getElementById('dim-elev').textContent=DEFS.elev.w+'×'+DEFS.elev.d+'m';
   tiles.forEach(reposTile);
+}
+function printCanvas(){
+  var canvas=document.getElementById('map-canvas');
+  var svgEl=document.getElementById('tile-svg');
+  // SVGをcanvasに描画して印刷
+  var tmpCanvas=document.createElement('canvas');
+  tmpCanvas.width=canvas.width;
+  tmpCanvas.height=canvas.height;
+  var tmpCtx=tmpCanvas.getContext('2d');
+  tmpCtx.drawImage(canvas,0,0);
+  // SVGをimgに変換して重ねる
+  var svgData=new XMLSerializer().serializeToString(svgEl);
+  var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
+  var url=URL.createObjectURL(svgBlob);
+  var img=new Image();
+  img.onload=function(){
+    tmpCtx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    var printWin=window.open('','_blank');
+    printWin.document.write('<html><head><title>敷地タイルプランナー</title><style>@page{margin:0;}body{margin:0;padding:0;}img{max-width:100%;max-height:100vh;display:block;}</style></head><body><img src="'+tmpCanvas.toDataURL('image/png')+'"/></body></html>');
+    printWin.document.close();
+    printWin.onload=function(){printWin.print();};
+  };
+  img.src=url;
 }
 function updateMetrics(){
   var u=0,p=0,s=0,ev=0,cor=0,bal=0,fr=0,uA=0,bA=0;
