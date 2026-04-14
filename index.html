@@ -404,7 +404,7 @@ function redrawMeasure(){
   measureLines.forEach(function(ml,i){
     var p=ml.pts;
     measureG.appendChild(mkS('line',{x1:p[0].x,y1:p[0].y,x2:p[1].x,y2:p[1].y,stroke:'#059669','stroke-width':'2','stroke-dasharray':'6,3'}));
-    [p[0],p[1]].forEach(function(pt){measureG.appendChild(mkS('circle',{cx:pt.x,cy:pt.y,r:'4',fill:'#059669',stroke:'white','stroke-width':'1.5'}));});
+   [0,1].forEach(function(pi){var c2=mkS('circle',{cx:p[pi].x,cy:p[pi].y,r:'7',fill:'#059669',stroke:'white','stroke-width':'2',cursor:'move'});c2.style.pointerEvents='all';(function(li,pti){c2.addEventListener('mousedown',function(e){e.stopPropagation();e.preventDefault();function mv(ev){var rect=wrap.getBoundingClientRect();measureLines[li].pts[pti]={x:(ev.clientX-rect.left-panX)/canvasZoom,y:(ev.clientY-rect.top-panY)/canvasZoom};var dx=measureLines[li].pts[1].x-measureLines[li].pts[0].x,dy=measureLines[li].pts[1].y-measureLines[li].pts[0].y;measureLines[li].dist=Math.sqrt(dx*dx+dy*dy)/ppm;redrawMeasure();}function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);});})(i,pi);measureG.appendChild(c2);});
     var mx=(p[0].x+p[1].x)/2,my=(p[0].y+p[1].y)/2;
     measureG.appendChild(mkS('rect',{x:mx-24,y:my-19,width:48,height:17,rx:'4',fill:'rgba(5,150,105,0.92)'}));
     var t=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:mx,y:my-10,fill:'white','font-size':'10','font-weight':'700'});
