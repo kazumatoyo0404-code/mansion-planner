@@ -336,8 +336,8 @@ wrap.addEventListener('mousedown',function(e){
   if(calibMode||measureMode||guideMode)return;
   var rect=wrap.getBoundingClientRect();
   var cx=(e.clientX-rect.left-panX)/canvasZoom,cy=(e.clientY-rect.top-panY)/canvasZoom;
-  if(currentTool==='select'&&e.button===0){
-    // start box select
+  if(currentTool==='select'&&e.button===0&&!e.shiftKey&&(e.target===wrap||e.target===mapCanvas||e.target.tagName==='svg')){
+    // start box select (空白クリック時のみ)
     boxSelecting=true;boxStart={x:cx,y:cy};
     clearEl(boxG);
     e.preventDefault();return;
@@ -442,7 +442,7 @@ function redrawGrid(){
 function trySnap(cx,cy,type,rot){
   if(!document.getElementById('snap-toggle').checked)return null;
   var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
-  var thresh=SNAP_DIST/canvasZoom,best=null,bestD=thresh;
+  var thresh=40,best=null,bestD=thresh;
   tiles.forEach(function(t){
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
     var te=getSnapPts(t.cx,t.cy,tpw,tph,t.rot);
@@ -453,8 +453,7 @@ function trySnap(cx,cy,type,rot){
     });});
   });
   return best;
-}
-function getSnapPts(cx,cy,pw,ph,rot){
+}function getSnapPts(cx,cy,pw,ph,rot){
   var r=rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
   function r2(x,y){return{x:x*cos-y*sin+cx,y:x*sin+y*cos+cy};}
   // 辺中点4点 + コーナー4点
