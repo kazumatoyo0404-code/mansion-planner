@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>敷地タイルプランナー</title>
 <style>
-:root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;}
+:root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;--amber:#d97706;}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);}
 *{box-sizing:border-box;}
 #app{display:flex;width:100vw;height:100vh;}
@@ -34,7 +34,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .slider-val{font-size:11px;font-weight:700;color:var(--blue);min-width:34px;text-align:right;}
 .btn-primary{width:100%;height:32px;font-size:12px;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;margin-bottom:4px;}
 .btn-primary:hover{opacity:.88;}
-.btn-secondary{width:100%;height:30px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:4px;}
+.btn-secondary{height:30px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:0 10px;}
 .btn-secondary:hover{background:var(--border);}
 .calib-status{font-size:11px;padding:6px 8px;border-radius:6px;margin-top:4px;font-weight:600;}
 .calib-status.idle{background:#f0ede8;color:var(--text3);}
@@ -49,378 +49,353 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .tool-btn.t-unit.active{border-color:var(--blue);background:#eff6ff;color:var(--blue);}
 .tool-btn.t-park.active{border-color:var(--green);background:#f0fdf4;color:var(--green);}
 .tool-btn.t-stair.active{border-color:var(--pink);background:#fdf2f8;color:var(--pink);}
+.tool-btn.t-measure.active{border-color:var(--amber);background:#fffbeb;color:var(--amber);}
 .tool-btn.t-erase.active{border-color:var(--red);background:#fef2f2;color:var(--red);}
 .tdiv{height:1px;background:var(--border);margin:4px 0;}
-.presets{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px;}
-.pre-btn{flex:1;min-width:30px;height:24px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;}
-.pre-btn:hover{background:#eff6ff;color:var(--blue);border-color:var(--blue);}
+.rot-btns{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px;}
+.rot-btn{height:28px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;}
+.rot-btn:hover{background:#eff6ff;color:var(--blue);border-color:var(--blue);}
+.rot-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.rot-input-row{display:flex;gap:6px;align-items:center;margin-top:6px;}
+.rot-input-row input{flex:1;height:30px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;}
+.rot-input-row input:focus{border-color:var(--blue);}
+.rot-input-row span{font-size:12px;color:var(--text2);}
+.snap-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.snap-row label{font-size:11px;color:var(--text2);}
+.toggle{position:relative;width:34px;height:18px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:18px;transition:.2s;}
+.tog-sl:before{position:absolute;content:"";height:12px;width:12px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked+.tog-sl{background:var(--blue);}
+.toggle input:checked+.tog-sl:before{transform:translateX(16px);}
 .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
 .mc{background:var(--surface2);border-radius:7px;padding:7px 9px;border:1px solid var(--border);}
 .mc .ml{font-size:9px;color:var(--text3);margin-bottom:2px;font-weight:600;}
-.mc .mv{font-size:18px;font-weight:700;color:var(--text);}
+.mc .mv{font-size:17px;font-weight:700;color:var(--text);}
 .mc .mv .mu{font-size:10px;font-weight:400;color:var(--text3);margin-left:1px;}
 .hint{font-size:10px;color:var(--text3);line-height:1.5;margin-top:6px;padding:6px 8px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--blue);}
 .sb-foot{padding:10px 12px;margin-top:auto;border-top:1px solid var(--border);}
-.btn-danger{width:100%;height:30px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;}
-.btn-danger:hover{background:#fef2f2;border-color:var(--red);color:var(--red);}
+.foot-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
+.foot-btn{height:30px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;}
+.foot-btn:hover{background:var(--surface2);}
+.foot-btn.danger:hover{background:#fef2f2;border-color:var(--red);color:var(--red);}
 #mode-badge{position:absolute;top:10px;left:10px;z-index:100;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:2px solid;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
 #mode-badge.pan{background:rgba(255,255,255,0.95);color:var(--text2);border-color:var(--border);}
 #mode-badge.place{background:rgba(37,99,235,0.95);color:#fff;border-color:var(--blue);}
 #mode-badge.erase{background:rgba(220,38,38,0.95);color:#fff;border-color:var(--red);}
-#mode-badge.calib{background:rgba(217,119,6,0.95);color:#fff;border-color:#d97706;}
+#mode-badge.calib{background:rgba(217,119,6,0.95);color:#fff;border-color:var(--amber);}
+#mode-badge.measure{background:rgba(5,150,105,0.95);color:#fff;border-color:#059669;}
 #hud{position:absolute;bottom:10px;left:10px;z-index:100;background:rgba(255,255,255,0.92);color:var(--text2);font-size:10px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;}
+#shortcut-hint{position:absolute;bottom:10px;right:10px;z-index:100;background:rgba(255,255,255,0.92);color:var(--text3);font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;line-height:1.7;}
 </style>
 </head>
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION</div></div>
-
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v2</div></div>
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">右のエリアにPDFをドラッグ＆ドロップ</div>
-    <div class="lbl" style="margin-top:4px;">📏 縮尺キャリブレーション</div>
-    <button class="btn-primary" onclick="startCalib()">① 2点をクリックして距離を測定</button>
-    <div class="field" style="display:flex;gap:6px;align-items:flex-end;">
-      <div style="flex:1;"><label>実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1"/></div>
-      <button class="btn-secondary" style="width:60px;margin-bottom:0;" onclick="applyCalib()">確定</button>
+    <div class="lbl">📏 キャリブレーション</div>
+    <button class="btn-primary" onclick="startCalib()">① 2点クリックで距離測定</button>
+    <div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:4px;">
+      <div style="flex:1;"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px;">実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1" style="width:100%;height:30px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"/></div>
+      <button class="btn-secondary" onclick="applyCalib()">確定</button>
     </div>
-    <div class="calib-status idle" id="calib-status">PDFをドロップ後にキャリブレーションしてください</div>
-    <div style="font-size:10px;color:var(--text3);margin-top:6px;">現在: 1m = <span id="px-m" style="font-weight:700;color:var(--blue);">-</span> px</div>
-  </div>
-
-  <div class="sb-sec">
-    <div class="lbl">🏠 住戸サイズ (m)</div>
-    <div class="row2">
-      <div class="field"><label>間口（幅）</label><input type="number" id="unit-w" value="16.5" step="0.5" oninput="updateDefs()"/></div>
-      <div class="field"><label>奥行合計</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>外廊下</label><input type="number" id="unit-corridor" value="3" step="0.5"/></div>
-      <div class="field"><label>バルコニー</label><input type="number" id="unit-balcony" value="2" step="0.5"/></div>
-    </div>
+    <div class="calib-status idle" id="calib-status">PDFをドロップ後にキャリブレーション</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;">1m = <span id="px-m" style="font-weight:700;color:var(--blue);">-</span> px</div>
   </div>
   <div class="sb-sec">
-    <div class="lbl">🚗 駐車場サイズ (m)</div>
+    <div class="lbl">タイルサイズ (m)</div>
+    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:4px;">🏠 住戸</div>
+    <div class="row2">
+      <div class="field"><label>幅</label><input type="number" id="unit-w" value="16.5" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div>
+    </div>
+    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:4px;margin-top:4px;">🚗 駐車場</div>
     <div class="row2">
       <div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"/></div>
       <div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"/></div>
     </div>
-  </div>
-  <div class="sb-sec">
-    <div class="lbl">🪜 非常階段サイズ (m)</div>
+    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:4px;margin-top:4px;">🪜 非常階段</div>
     <div class="row2">
       <div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"/></div>
       <div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"/></div>
     </div>
   </div>
-
   <div class="sb-sec">
-    <div class="lbl">透明度</div>
-    <div class="slider-row">
-      <label>薄</label>
-      <input type="range" id="op-range" min="10" max="95" value="60" oninput="onOpacity()"/>
-      <span class="slider-val" id="op-val">60%</span>
-    </div>
+    <div class="lbl">設定</div>
+    <div class="snap-row"><label>🧲 スナップ（くっつく）</label><label class="toggle"><input type="checkbox" id="snap-toggle" checked/><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🚫 重なり防止</label><label class="toggle"><input type="checkbox" id="overlap-toggle" checked/><span class="tog-sl"></span></label></div>
+    <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"/><span class="slider-val" id="op-val">65%</span></div>
   </div>
-
   <div class="sb-sec">
     <div class="lbl">配置ツール</div>
     <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">16.5×6m</span></button>
     <button class="tool-btn t-park" id="tool-park" onclick="setTool('park')"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
     <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">非常階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
+    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool('measure')"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック</span></button>
-    <div style="margin-top:10px;">
-      <div class="lbl">回転角度</div>
-      <div class="slider-row">
-        <label>0°</label>
-        <input type="range" id="rot-range" min="0" max="359" value="0" oninput="onRotSlider()"/>
-        <span class="slider-val" id="rot-val">0°</span>
-      </div>
-      <div class="presets">
-        <button class="pre-btn" onclick="setRot(0)">0°</button>
-        <button class="pre-btn" onclick="setRot(30)">30°</button>
-        <button class="pre-btn" onclick="setRot(45)">45°</button>
-        <button class="pre-btn" onclick="setRot(60)">60°</button>
-        <button class="pre-btn" onclick="setRot(90)">90°</button>
-      </div>
+    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
+  </div>
+  <div class="sb-sec">
+    <div class="lbl">回転角度</div>
+    <div class="rot-btns">
+      <button class="rot-btn active" id="rot-0" onclick="setRot(0)">0°</button>
+      <button class="rot-btn" id="rot-30" onclick="setRot(30)">30°</button>
+      <button class="rot-btn" id="rot-45" onclick="setRot(45)">45°</button>
+      <button class="rot-btn" id="rot-90" onclick="setRot(90)">90°</button>
+      <button class="rot-btn" id="rot-last" onclick="setRotLast()" title="直前と同じ角度">前回</button>
+    </div>
+    <div class="rot-input-row">
+      <input type="number" id="rot-custom" value="0" min="0" max="359" oninput="setRotCustom()"/>
+      <span>°（直接入力）</span>
     </div>
   </div>
-
   <div class="sb-sec">
     <div class="lbl">配置サマリー</div>
     <div class="metrics-grid" id="metrics"></div>
-    <div class="hint">① PDFをドロップ → ② 2点クリックで距離入力 → ③ ツール選択してクリック配置。ホイールでズーム。ESCでパンモード。</div>
+    <div class="hint">Ctrl+Z:元に戻す　Ctrl+C:コピー　Ctrl+V:貼付　Del:削除　ESC:パンモード</div>
   </div>
   <div class="sb-foot">
-    <button class="btn-danger" onclick="clearAll()">🗑 全タイルを削除</button>
+    <div class="foot-btns">
+      <button class="foot-btn" onclick="doUndo()">↩ 元に戻す</button>
+      <button class="foot-btn" onclick="doCopy()">📋 コピー</button>
+      <button class="foot-btn" onclick="doPaste()">📌 貼付け</button>
+      <button class="foot-btn danger" onclick="clearAll()">🗑 全削除</button>
+    </div>
   </div>
 </aside>
-
 <div id="canvas-wrap">
-  <div id="drop-hint">
-    <div class="icon">📄</div>
-    <div class="text">PDF地図をここにドロップ</div>
-    <div class="sub">1/500などの縮尺図面を読み込めます</div>
-  </div>
+  <div id="drop-hint"><div class="icon">📄</div><div class="text">PDF地図をここにドロップ</div><div class="sub">縮尺図面を読み込んでタイルを配置できます</div></div>
   <canvas id="map-canvas"></canvas>
   <svg id="tile-svg"></svg>
   <div id="mode-badge" class="pan">地図パンモード</div>
-  <div id="hud">1m = <span id="hud-ppm">-</span>px ｜ zoom <span id="hud-zoom">100</span>%</div>
+  <div id="hud">1m=<span id="hud-ppm">-</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
+  <div id="shortcut-hint">Ctrl+Z 元に戻す | Ctrl+C コピー | Ctrl+V 貼付け<br>Del 削除 | ESC パンモード | ↻ドラッグで回転</div>
 </div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-// ── State ──
-var ppm=10; // pixels per meter (calibrated)
-var canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
+var ppm=10,canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
 var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
-var currentTool=null,currentRot=0,tileOpacity=0.60;
-var tiles=[],uid=0;
-
-// Calibration state
-var calibMode=false,calibPts=[],calibLine=null;
-
+var currentTool=null,currentRot=0,lastRot=0,tileOpacity=0.65;
+var tiles=[],uid=0,selectedTile=null,copiedTile=null,history=[];
+var calibMode=false,calibPts=[];
+var measureMode=false,measurePts=[],measureLines=[];
+var SNAP_DIST=14;
 var DEFS={
   unit: {w:16.5,d:6,  fill:[37,99,235],  stroke:'#1d4ed8',label:'住戸'},
   park: {w:2.5, d:5,  fill:[22,163,74],  stroke:'#15803d',label:'駐車場'},
   stair:{w:3,   d:4,  fill:[219,39,119], stroke:'#be185d',label:'非常階段'}
 };
-
 var wrap=document.getElementById('canvas-wrap');
 var mapCanvas=document.getElementById('map-canvas');
 var ctx=mapCanvas.getContext('2d');
 var svg=document.getElementById('tile-svg');
-var defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
-svg.appendChild(defs);
-var calibG=document.createElementNS('http://www.w3.org/2000/svg','g');
-svg.appendChild(calibG);
-var tileG=document.createElementNS('http://www.w3.org/2000/svg','g');
-svg.appendChild(tileG);
+var defsEl=document.createElementNS('http://www.w3.org/2000/svg','defs');svg.appendChild(defsEl);
+var calibG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(calibG);
+var measureG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(measureG);
+var tileG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(tileG);
+var snapG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(snapG);
 
-// ── PDF drop ──
 wrap.addEventListener('dragover',function(e){e.preventDefault();wrap.classList.add('dragover');});
 wrap.addEventListener('dragleave',function(){wrap.classList.remove('dragover');});
 wrap.addEventListener('drop',function(e){
   e.preventDefault();wrap.classList.remove('dragover');
   var f=e.dataTransfer.files[0];
   if(!f||f.type!=='application/pdf'){alert('PDFをドロップしてください');return;}
-  var r=new FileReader();
-  r.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};
-  r.readAsArrayBuffer(f);
+  var r=new FileReader();r.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};r.readAsArrayBuffer(f);
 });
-
 function loadPdf(data){
-  pdfjsLib.getDocument({data:data}).promise.then(function(pdf){
-    return pdf.getPage(1);
-  }).then(function(page){
+  pdfjsLib.getDocument({data:data}).promise.then(function(pdf){return pdf.getPage(1);}).then(function(page){
     var vp=page.getViewport({scale:2});
-    mapCanvas.width=vp.width; mapCanvas.height=vp.height;
-    svg.setAttribute('width',vp.width); svg.setAttribute('height',vp.height);
+    mapCanvas.width=vp.width;mapCanvas.height=vp.height;
+    svg.setAttribute('width',vp.width);svg.setAttribute('height',vp.height);
     return page.render({canvasContext:ctx,viewport:vp}).promise;
   }).then(function(){
-    pdfLoaded=true;
-    document.getElementById('drop-hint').style.display='none';
-    fitCanvas();
-    setCalibStatus('step1','① 地図上の2点をクリックしてください（1点目）');
+    pdfLoaded=true;document.getElementById('drop-hint').style.display='none';fitCanvas();
+    setCalibStatus('step1','① 地図上の2点をクリック（1点目）');
   }).catch(function(e){alert('エラー: '+e.message);});
 }
-
 function fitCanvas(){
   var ww=wrap.clientWidth,wh=wrap.clientHeight;
   canvasZoom=Math.min(ww/mapCanvas.width,wh/mapCanvas.height)*0.92;
-  panX=(ww-mapCanvas.width*canvasZoom)/2;
-  panY=(wh-mapCanvas.height*canvasZoom)/2;
-  applyTf();
+  panX=(ww-mapCanvas.width*canvasZoom)/2;panY=(wh-mapCanvas.height*canvasZoom)/2;applyTf();
 }
 function applyTf(){
   var t='translate('+panX+'px,'+panY+'px) scale('+canvasZoom+')';
-  mapCanvas.style.transform=t; svg.style.transform=t;
+  mapCanvas.style.transform=t;svg.style.transform=t;
   document.getElementById('hud-zoom').textContent=Math.round(canvasZoom*100);
-  tiles.forEach(reposTile);
-  redrawCalibLine();
+  tiles.forEach(reposTile);redrawCalib();redrawMeasure();
 }
-
-// ── Wheel zoom ──
 wrap.addEventListener('wheel',function(e){
   e.preventDefault();
   var rect=wrap.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
   var f=e.deltaY>0?0.85:1.18,nz=Math.max(0.05,Math.min(20,canvasZoom*f));
-  panX=mx-(mx-panX)*(nz/canvasZoom); panY=my-(my-panY)*(nz/canvasZoom);
-  canvasZoom=nz; applyTf();
+  panX=mx-(mx-panX)*(nz/canvasZoom);panY=my-(my-panY)*(nz/canvasZoom);canvasZoom=nz;applyTf();
 },{passive:false});
-
-// ── Pan ──
 wrap.addEventListener('mousedown',function(e){
-  if(calibMode) return;
+  if(calibMode||measureMode)return;
   if(!currentTool||e.button===1){
-    isPanning=true; panSX=e.clientX; panSY=e.clientY; panSPX=panX; panSPY=panY;
-    wrap.style.cursor='grabbing'; e.preventDefault();
+    isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();
   }
 });
-document.addEventListener('mousemove',function(e){
-  if(!isPanning)return;
-  panX=panSPX+(e.clientX-panSX); panY=panSPY+(e.clientY-panSY);
-  applyTf();
-});
-document.addEventListener('mouseup',function(){
-  if(isPanning){isPanning=false; wrap.style.cursor=currentTool?'crosshair':'';}
-});
-
-// ── Click handler ──
+document.addEventListener('mousemove',function(e){if(!isPanning)return;panX=panSPX+(e.clientX-panSX);panY=panSPY+(e.clientY-panSY);applyTf();});
+document.addEventListener('mouseup',function(){if(isPanning){isPanning=false;wrap.style.cursor=currentTool?'crosshair':'';}});
 wrap.addEventListener('click',function(e){
   if(isPanning)return;
   var rect=wrap.getBoundingClientRect();
-  var cx=(e.clientX-rect.left-panX)/canvasZoom;
-  var cy=(e.clientY-rect.top-panY)/canvasZoom;
-
+  var cx=(e.clientX-rect.left-panX)/canvasZoom,cy=(e.clientY-rect.top-panY)/canvasZoom;
   if(calibMode){
-    calibPts.push({x:cx,y:cy});
-    redrawCalibLine();
-    if(calibPts.length===1){
-      setCalibStatus('step2','② 2点目をクリックしてください');
-    } else if(calibPts.length>=2){
-      setCalibStatus('done','✓ 2点選択完了。距離を入力して「確定」を押してください');
-      calibMode=false;
-      setBadge('pan','地図パンモード');
-      wrap.style.cursor='';
+    calibPts.push({x:cx,y:cy});redrawCalib();
+    if(calibPts.length===1)setCalibStatus('step2','② 2点目をクリック');
+    else if(calibPts.length>=2){setCalibStatus('done','✓ 2点選択完了。距離入力→確定');calibMode=false;setBadge('pan','地図パンモード');wrap.style.cursor='';}
+    return;
+  }
+  if(measureMode){
+    measurePts.push({x:cx,y:cy});redrawMeasure();
+    if(measurePts.length>=2){
+      var dx=measurePts[1].x-measurePts[0].x,dy=measurePts[1].y-measurePts[0].y;
+      var m=Math.sqrt(dx*dx+dy*dy)/ppm;
+      measureLines.push({pts:measurePts.slice(),dist:m});measurePts=[];redrawMeasure();
+      document.getElementById('hud-extra').textContent='測定: '+m.toFixed(2)+'m';
     }
     return;
   }
-
-  if(!currentTool||currentTool==='erase')return;
+  if(!currentTool||currentTool==='erase'||currentTool==='measure')return;
   if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
-  createTile(cx,cy,currentTool,currentRot);
+  var snapped=trySnap(cx,cy,currentTool,currentRot);
+  if(snapped){cx=snapped.cx;cy=snapped.cy;}
+  if(document.getElementById('overlap-toggle').checked&&checkOverlap(cx,cy,currentTool,currentRot,null)){
+    showFlash(cx,cy);return;
+  }
+  saveHistory();createTile(cx,cy,currentTool,currentRot);lastRot=currentRot;
 });
-
-// ── Calibration ──
 function startCalib(){
   if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
-  calibMode=true; calibPts=[];
-  clearCalibLine();
-  setCalibStatus('step1','① 地図上の2点をクリックしてください（1点目）');
-  setBadge('calib','キャリブレーション — 1点目をクリック');
-  wrap.style.cursor='crosshair';
-  currentTool=null;
+  calibMode=true;calibPts=[];clearEl(calibG);
+  setCalibStatus('step1','① 地図上の2点をクリック（1点目）');
+  setBadge('calib','キャリブレーション');wrap.style.cursor='crosshair';currentTool=null;
   document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
 }
-
 function applyCalib(){
-  if(calibPts.length<2){alert('先に地図上の2点をクリックしてください');return;}
+  if(calibPts.length<2){alert('先に2点をクリックしてください');return;}
   var dist=parseFloat(document.getElementById('calib-dist').value);
   if(!dist||dist<=0){alert('正しい距離を入力してください');return;}
   var dx=calibPts[1].x-calibPts[0].x,dy=calibPts[1].y-calibPts[0].y;
-  var pxDist=Math.sqrt(dx*dx+dy*dy);
-  ppm=pxDist/dist;
+  ppm=Math.sqrt(dx*dx+dy*dy)/dist;
   document.getElementById('px-m').textContent=ppm.toFixed(1);
   document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
-  setCalibStatus('done','✓ キャリブレーション完了！ 1m = '+ppm.toFixed(1)+'px');
+  setCalibStatus('done','✓ 完了！ 1m='+ppm.toFixed(1)+'px');
   tiles.forEach(reposTile);
 }
-
-function setCalibStatus(cls,msg){
-  var el=document.getElementById('calib-status');
-  el.className='calib-status '+cls; el.textContent=msg;
-}
-
-function redrawCalibLine(){
-  clearCalibLine();
-  if(calibPts.length===0)return;
-  var pts=calibPts;
-  // draw dots
-  pts.forEach(function(p){
-    var c=mkS('circle',{cx:p.x,cy:p.y,r:'6',fill:'#f59e0b',stroke:'white','stroke-width':'2'});
-    calibG.appendChild(c);
-  });
-  if(pts.length>=2){
-    var l=mkS('line',{x1:pts[0].x,y1:pts[0].y,x2:pts[1].x,y2:pts[1].y,stroke:'#f59e0b','stroke-width':'2','stroke-dasharray':'6,3'});
-    calibG.appendChild(l);
-    // distance label
-    var mx=(pts[0].x+pts[1].x)/2,my=(pts[0].y+pts[1].y)/2;
-    var dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
-    var pxd=Math.sqrt(dx*dx+dy*dy);
-    var t=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:mx,y:my-14,fill:'#92400e','font-size':'12','font-weight':'700','paint-order':'stroke',stroke:'white','stroke-width':'3'});
-    t.textContent=pxd.toFixed(0)+'px';
-    calibG.appendChild(t);
+function setCalibStatus(cls,msg){var el=document.getElementById('calib-status');el.className='calib-status '+cls;el.textContent=msg;}
+function redrawCalib(){
+  clearEl(calibG);
+  calibPts.forEach(function(p){calibG.appendChild(mkS('circle',{cx:p.x,cy:p.y,r:'5',fill:'#f59e0b',stroke:'white','stroke-width':'2'}));});
+  if(calibPts.length>=2){
+    calibG.appendChild(mkS('line',{x1:calibPts[0].x,y1:calibPts[0].y,x2:calibPts[1].x,y2:calibPts[1].y,stroke:'#f59e0b','stroke-width':'2','stroke-dasharray':'5,3'}));
+    var dx=calibPts[1].x-calibPts[0].x,dy=calibPts[1].y-calibPts[0].y;
+    var t=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:(calibPts[0].x+calibPts[1].x)/2,y:(calibPts[0].y+calibPts[1].y)/2-12,fill:'#92400e','font-size':'11','font-weight':'700','paint-order':'stroke',stroke:'white','stroke-width':'3'});
+    t.textContent=Math.sqrt(dx*dx+dy*dy).toFixed(0)+'px';calibG.appendChild(t);
   }
 }
-function clearCalibLine(){
-  while(calibG.firstChild)calibG.removeChild(calibG.firstChild);
+function redrawMeasure(){
+  clearEl(measureG);
+  measureLines.forEach(function(ml){
+    var p=ml.pts;
+    measureG.appendChild(mkS('line',{x1:p[0].x,y1:p[0].y,x2:p[1].x,y2:p[1].y,stroke:'#059669','stroke-width':'2','stroke-dasharray':'6,3'}));
+    [p[0],p[1]].forEach(function(pt){measureG.appendChild(mkS('circle',{cx:pt.x,cy:pt.y,r:'4',fill:'#059669',stroke:'white','stroke-width':'1.5'}));});
+    var mx=(p[0].x+p[1].x)/2,my=(p[0].y+p[1].y)/2;
+    measureG.appendChild(mkS('rect',{x:mx-24,y:my-19,width:48,height:17,rx:'4',fill:'rgba(5,150,105,0.92)'}));
+    var t=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:mx,y:my-10,fill:'white','font-size':'10','font-weight':'700'});
+    t.textContent=ml.dist.toFixed(2)+'m';measureG.appendChild(t);
+  });
+  if(measurePts.length>0){
+    measureG.appendChild(mkS('circle',{cx:measurePts[0].x,cy:measurePts[0].y,r:'5',fill:'#059669',stroke:'white','stroke-width':'2'}));
+    var t=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:measurePts[0].x,y:measurePts[0].y-14,fill:'#065f46','font-size':'10','font-weight':'700','paint-order':'stroke',stroke:'white','stroke-width':'3'});
+    t.textContent='2点目をクリック';measureG.appendChild(t);
+  }
 }
-
-// ── SVG helper ──
-function mkS(tag,attrs){
-  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
-  for(var k in attrs)el.setAttribute(k,attrs[k]);
-  return el;
+function trySnap(cx,cy,type,rot){
+  if(!document.getElementById('snap-toggle').checked)return null;
+  var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
+  var thresh=SNAP_DIST/canvasZoom,best=null,bestD=thresh;
+  tiles.forEach(function(t){
+    var td=DEFS[t.type],tpw=td.w*ppm,tph=td.d*ppm;
+    var te=getEdges(t.cx,t.cy,tpw,tph,t.rot);
+    var ne=getEdges(cx,cy,pw,ph,rot);
+    te.forEach(function(e){ne.forEach(function(n){var dx=e.x-n.x,dy=e.y-n.y,d=Math.sqrt(dx*dx+dy*dy);if(d<bestD){bestD=d;best={cx:cx+dx,cy:cy+dy};}});});
+  });
+  return best;
 }
+function getEdges(cx,cy,pw,ph,rot){
+  var r=rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
+  function r2(x,y){return{x:x*cos-y*sin+cx,y:x*sin+y*cos+cy};}
+  return[r2(0,-ph/2),r2(0,ph/2),r2(-pw/2,0),r2(pw/2,0)];
+}
+function checkOverlap(cx,cy,type,rot,excl){
+  var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
+  for(var i=0;i<tiles.length;i++){
+    var t=tiles[i];if(t===excl)continue;
+    var td=DEFS[t.type],tpw=td.w*ppm,tph=td.d*ppm;
+    if(Math.abs(cx-t.cx)<(pw+tpw)/2-2&&Math.abs(cy-t.cy)<(ph+tph)/2-2)return true;
+  }
+  return false;
+}
+function showFlash(cx,cy){
+  clearEl(snapG);
+  snapG.appendChild(mkS('circle',{cx:cx,cy:cy,r:'12',fill:'rgba(220,38,38,0.25)',stroke:'#dc2626','stroke-width':'2'}));
+  setTimeout(function(){clearEl(snapG);},350);
+}
+function saveHistory(){
+  history.push(tiles.map(function(t){return{cx:t.cx,cy:t.cy,type:t.type,rot:t.rot};}));
+  if(history.length>50)history.shift();
+}
+function doUndo(){
+  if(history.length===0)return;
+  tiles.slice().forEach(function(t){t.g.remove();var p=document.getElementById('HP'+t.id);if(p)p.remove();});
+  tiles=[];selectedTile=null;
+  var state=history.pop();
+  state.forEach(function(s){createTileInternal(s.cx,s.cy,s.type,s.rot);});
+  updateMetrics();
+}
+function mkS(tag,attrs){var el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)el.setAttribute(k,attrs[k]);return el;}
+function clearEl(el){while(el.firstChild)el.removeChild(el.firstChild);}
 function fc(def){return'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+','+tileOpacity+')';}
-
-// ── Create tile ──
-function createTile(cx,cy,type,rot){
+function createTile(cx,cy,type,rot){createTileInternal(cx,cy,type,rot);updateMetrics();}
+function createTileInternal(cx,cy,type,rot){
   var def=DEFS[type],id='T'+(uid++);
   var g=document.createElementNS('http://www.w3.org/2000/svg','g');
-  g.style.pointerEvents='all'; g.style.cursor='grab';
-
+  g.style.pointerEvents='all';g.style.cursor='grab';
   if(type==='stair'){
     var pid='HP'+id,pat=mkS('pattern',{id:pid,patternUnits:'userSpaceOnUse',width:'8',height:'8',patternTransform:'rotate(45)'});
     pat.appendChild(mkS('line',{x1:'0',y1:'0',x2:'0',y2:'8',stroke:def.stroke,'stroke-width':'2','stroke-opacity':'0.25'}));
-    defs.appendChild(pat);
+    defsEl.appendChild(pat);
   }
-
-  // メインRect（塗り+枠）
-  var rect=mkS('rect',{rx:'3',fill:fc(def),stroke:def.stroke,'stroke-width':'1.5','stroke-opacity':'0.6'});
-  g.appendChild(rect);
-  var hr=null;
-  if(type==='stair'){hr=mkS('rect',{rx:'3',fill:'url(#HP'+id+')'});g.appendChild(hr);}
-
+  var rect=mkS('rect',{rx:'3',fill:fc(def),stroke:def.stroke,'stroke-width':'1.5','stroke-opacity':'0.5'});g.appendChild(rect);
+  var hr=null;if(type==='stair'){hr=mkS('rect',{rx:'3',fill:'url(#HP'+id+')'});g.appendChild(hr);}
   var lbl=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke',stroke:'white','stroke-width':'4'});
-  lbl.textContent=def.label; g.appendChild(lbl);
+  lbl.textContent=def.label;g.appendChild(lbl);
   var dim=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none','paint-order':'stroke',stroke:'white','stroke-width':'3',opacity:'0.9'});
   g.appendChild(dim);
-
-  // 回転ハンドル
-  var rh=mkS('circle',{r:'9',fill:def.stroke,stroke:'white','stroke-width':'2',opacity:'0'});
-  rh.style.pointerEvents='all'; g.appendChild(rh);
-  var rhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'700','pointer-events':'none',opacity:'0'});
-  rhT.textContent='↻'; g.appendChild(rhT);
-
-  // 削除ハンドル
-  var dh=mkS('circle',{r:'10',fill:'#dc2626',stroke:'white','stroke-width':'2',opacity:'0'});
-  dh.style.pointerEvents='all'; g.appendChild(dh);
-  var dhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','pointer-events':'none',opacity:'0'});
-  dhT.textContent='×'; g.appendChild(dhT);
-
+  var rh=mkS('circle',{r:'9',fill:def.stroke,stroke:'white','stroke-width':'2',opacity:'0'});rh.style.pointerEvents='all';g.appendChild(rh);
+  var rhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'700','pointer-events':'none',opacity:'0'});rhT.textContent='↻';g.appendChild(rhT);
+  var dh=mkS('circle',{r:'10',fill:'#dc2626',stroke:'white','stroke-width':'2',opacity:'0'});dh.style.pointerEvents='all';g.appendChild(dh);
+  var dhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','pointer-events':'none',opacity:'0'});dhT.textContent='×';g.appendChild(dhT);
   var tile={id:id,g:g,rect:rect,hr:hr,lbl:lbl,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,cx:cx,cy:cy,type:type,rot:rot};
-
-  g.addEventListener('mouseenter',function(){
-    if(currentTool==='erase'){g.style.cursor='pointer';return;}
-    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});
-  });
-  g.addEventListener('mouseleave',function(){
-    g.style.cursor='grab';
-    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});
-  });
-  g.addEventListener('click',function(e){if(currentTool==='erase'){e.stopPropagation();delTile(tile);}});
-  dh.addEventListener('click',function(e){e.stopPropagation();delTile(tile);});
-  setupMove(g,tile);
-  setupRot(rh,tile);
-
-  tileG.appendChild(g);
-  tiles.push(tile);
-  reposTile(tile);
-  updateMetrics();
+  g.addEventListener('mouseenter',function(){if(currentTool==='erase'){g.style.cursor='pointer';return;}[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});});
+  g.addEventListener('mouseleave',function(){g.style.cursor='grab';[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});});
+  g.addEventListener('click',function(e){if(currentTool==='erase'){e.stopPropagation();saveHistory();delTile(tile);}else{e.stopPropagation();selectTile(tile);}});
+  dh.addEventListener('click',function(e){e.stopPropagation();saveHistory();delTile(tile);});
+  setupMove(g,tile);setupRotH(rh,tile);
+  tileG.appendChild(g);tiles.push(tile);reposTile(tile);
 }
-
 function reposTile(t){
   var def=DEFS[t.type],pw=def.w*ppm,ph=def.d*ppm;
-  t.rect.setAttribute('x','0');t.rect.setAttribute('y','0');
-  t.rect.setAttribute('width',pw);t.rect.setAttribute('height',ph);
-  t.rect.setAttribute('fill',fc(def));
+  t.rect.setAttribute('x','0');t.rect.setAttribute('y','0');t.rect.setAttribute('width',pw);t.rect.setAttribute('height',ph);t.rect.setAttribute('fill',fc(def));
   if(t.hr){t.hr.setAttribute('x','0');t.hr.setAttribute('y','0');t.hr.setAttribute('width',pw);t.hr.setAttribute('height',ph);}
   var fs=Math.max(9,Math.min(15,Math.min(pw,ph)/3.5));
   t.lbl.setAttribute('x',pw/2);t.lbl.setAttribute('y',ph/2-fs*0.75);t.lbl.setAttribute('font-size',fs);
@@ -429,104 +404,89 @@ function reposTile(t){
   t.rh.setAttribute('cx',pw/2);t.rh.setAttribute('cy',ph+15);t.rhT.setAttribute('x',pw/2);t.rhT.setAttribute('y',ph+15);
   t.dh.setAttribute('cx',pw+12);t.dh.setAttribute('cy',-12);t.dhT.setAttribute('x',pw+12);t.dhT.setAttribute('y',-12);
   t.g.setAttribute('transform','translate('+t.cx+','+t.cy+') rotate('+t.rot+',0,0) translate('+(-pw/2)+','+(-ph/2)+')');
+  t.rect.setAttribute('stroke-width',t===selectedTile?'3':'1.5');
+  t.rect.setAttribute('stroke-opacity',t===selectedTile?'1':'0.5');
 }
-
+function selectTile(t){selectedTile=t;tiles.forEach(reposTile);}
 function setupMove(el,tile){
   var act=false,sx,sy,scx,scy;
   el.addEventListener('mousedown',function(e){
     if(e.target===tile.rh||e.target===tile.dh)return;
     if(currentTool==='erase')return;
-    e.stopPropagation();e.preventDefault();
-    act=true;sx=e.clientX;sy=e.clientY;scx=tile.cx;scy=tile.cy;
-    el.style.cursor='grabbing';
+    e.stopPropagation();e.preventDefault();act=true;sx=e.clientX;sy=e.clientY;scx=tile.cx;scy=tile.cy;el.style.cursor='grabbing';selectTile(tile);
   });
   document.addEventListener('mousemove',function(e){
     if(!act)return;
-    tile.cx=scx+(e.clientX-sx)/canvasZoom;
-    tile.cy=scy+(e.clientY-sy)/canvasZoom;
+    var ncx=scx+(e.clientX-sx)/canvasZoom,ncy=scy+(e.clientY-sy)/canvasZoom;
+    var sn=trySnap(ncx,ncy,tile.type,tile.rot);
+    if(sn){tile.cx=sn.cx;tile.cy=sn.cy;}else{tile.cx=ncx;tile.cy=ncy;}
     reposTile(tile);
   });
-  document.addEventListener('mouseup',function(){if(act){act=false;el.style.cursor='grab';}});
+  document.addEventListener('mouseup',function(){if(act){act=false;el.style.cursor='grab';saveHistory();}});
 }
-
-function setupRot(h,tile){
+function setupRotH(h,tile){
   h.addEventListener('mousedown',function(e){
-    e.stopPropagation();e.preventDefault();
+    e.stopPropagation();e.preventDefault();saveHistory();
     var rect=wrap.getBoundingClientRect();
-    var tcx=tile.cx*canvasZoom+panX+rect.left;
-    var tcy=tile.cy*canvasZoom+panY+rect.top;
+    var tcx=tile.cx*canvasZoom+panX+rect.left,tcy=tile.cy*canvasZoom+panY+rect.top;
     var sa=Math.atan2(e.clientY-tcy,e.clientX-tcx)*180/Math.PI,sr=tile.rot;
-    function mv(ev){
-      var a=Math.atan2(ev.clientY-tcy,ev.clientX-tcx)*180/Math.PI;
-      tile.rot=((sr+(a-sa))%360+360)%360; reposTile(tile);
-    }
+    function mv(ev){var a=Math.atan2(ev.clientY-tcy,ev.clientX-tcx)*180/Math.PI;tile.rot=((sr+(a-sa))%360+360)%360;reposTile(tile);}
     function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
     document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
   });
 }
-
 function delTile(t){
-  t.g.remove();
-  var p=document.getElementById('HP'+t.id);if(p)p.remove();
-  tiles=tiles.filter(function(x){return x!==t;});
-  updateMetrics();
+  t.g.remove();var p=document.getElementById('HP'+t.id);if(p)p.remove();
+  tiles=tiles.filter(function(x){return x!==t;});if(selectedTile===t)selectedTile=null;updateMetrics();
 }
-function clearAll(){
-  if(!confirm('全タイルを削除しますか？'))return;
-  tiles.slice().forEach(delTile);
-}
-
+function clearAll(){if(!confirm('全タイルを削除しますか？'))return;saveHistory();tiles.slice().forEach(delTile);}
+function doCopy(){if(!selectedTile){alert('先にタイルをクリックして選択してください');return;}copiedTile={type:selectedTile.type,rot:selectedTile.rot,cx:selectedTile.cx,cy:selectedTile.cy};document.getElementById('hud-extra').textContent='コピー済み';}
+function doPaste(){if(!copiedTile){alert('先にタイルをコピーしてください');return;}saveHistory();createTile(copiedTile.cx+20/canvasZoom,copiedTile.cy+20/canvasZoom,copiedTile.type,copiedTile.rot);}
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT')return;
+  if(e.key==='Escape'){currentTool=null;calibMode=false;measureMode=false;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});setBadge('pan','地図パンモード');wrap.style.cursor='';}
+  if(e.key==='Delete'||e.key==='Backspace'){if(selectedTile){saveHistory();delTile(selectedTile);}}
+  if(e.ctrlKey&&e.key==='z'){e.preventDefault();doUndo();}
+  if(e.ctrlKey&&e.key==='c'){e.preventDefault();doCopy();}
+  if(e.ctrlKey&&e.key==='v'){e.preventDefault();doPaste();}
+});
 function setTool(t){
-  currentTool=t; calibMode=false;
+  currentTool=t;calibMode=false;measureMode=(t==='measure');if(measureMode)measurePts=[];
   document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
   var el=document.getElementById('tool-'+t);if(el)el.classList.add('active');
   if(t==='erase'){setBadge('erase','消去モード');wrap.style.cursor='default';}
+  else if(t==='measure'){setBadge('measure','距離測定 — 2点クリック');wrap.style.cursor='crosshair';}
   else{setBadge('place','配置モード — クリックで配置');wrap.style.cursor='crosshair';}
 }
-function setBadge(cls,txt){
-  var b=document.getElementById('mode-badge');b.className=cls;b.textContent=txt;
+function setBadge(cls,txt){var b=document.getElementById('mode-badge');b.className=cls;b.textContent=txt;}
+function setRot(v){
+  currentRot=v;document.getElementById('rot-custom').value=v;
+  document.querySelectorAll('.rot-btn').forEach(function(el){el.classList.remove('active');});
+  var m={'0':'rot-0','30':'rot-30','45':'rot-45','90':'rot-90'};
+  if(m[String(v)]){var el=document.getElementById(m[String(v)]);if(el)el.classList.add('active');}
 }
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){
-    currentTool=null;calibMode=false;
-    document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
-    setBadge('pan','地図パンモード');wrap.style.cursor='';
-  }
-});
-
-function setRot(v){currentRot=v;document.getElementById('rot-range').value=v;document.getElementById('rot-val').textContent=v+'°';}
-function onRotSlider(){currentRot=parseInt(document.getElementById('rot-range').value);document.getElementById('rot-val').textContent=currentRot+'°';}
+function setRotLast(){setRot(lastRot);}
+function setRotCustom(){var v=parseInt(document.getElementById('rot-custom').value)||0;currentRot=((v%360)+360)%360;document.querySelectorAll('.rot-btn').forEach(function(el){el.classList.remove('active');});}
 function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
-
 function updateDefs(){
-  DEFS.unit.w=parseFloat(document.getElementById('unit-w').value)||16.5;
-  DEFS.unit.d=parseFloat(document.getElementById('unit-d').value)||6;
-  DEFS.park.w=parseFloat(document.getElementById('park-w').value)||2.5;
-  DEFS.park.d=parseFloat(document.getElementById('park-d').value)||5;
-  DEFS.stair.w=parseFloat(document.getElementById('stair-w').value)||3;
-  DEFS.stair.d=parseFloat(document.getElementById('stair-d').value)||4;
+  DEFS.unit.w=parseFloat(document.getElementById('unit-w').value)||16.5;DEFS.unit.d=parseFloat(document.getElementById('unit-d').value)||6;
+  DEFS.park.w=parseFloat(document.getElementById('park-w').value)||2.5;DEFS.park.d=parseFloat(document.getElementById('park-d').value)||5;
+  DEFS.stair.w=parseFloat(document.getElementById('stair-w').value)||3;DEFS.stair.d=parseFloat(document.getElementById('stair-d').value)||4;
   document.getElementById('dim-unit').textContent=DEFS.unit.w+'×'+DEFS.unit.d+'m';
   document.getElementById('dim-park').textContent=DEFS.park.w+'×'+DEFS.park.d+'m';
   document.getElementById('dim-stair').textContent=DEFS.stair.w+'×'+DEFS.stair.d+'m';
   tiles.forEach(reposTile);
 }
-
 function updateMetrics(){
   var u=0,p=0,s=0,a=0;
-  tiles.forEach(function(t){
-    if(t.type==='unit'){u++;a+=DEFS.unit.w*DEFS.unit.d;}
-    if(t.type==='park')p++;
-    if(t.type==='stair')s++;
-  });
+  tiles.forEach(function(t){if(t.type==='unit'){u++;a+=DEFS.unit.w*DEFS.unit.d;}if(t.type==='park')p++;if(t.type==='stair')s++;});
   document.getElementById('metrics').innerHTML=
     '<div class="mc"><div class="ml">住戸数</div><div class="mv">'+u+'<span class="mu">戸</span></div></div>'+
     '<div class="mc"><div class="ml">駐車区画</div><div class="mv">'+p+'<span class="mu">台</span></div></div>'+
     '<div class="mc"><div class="ml">非常階段</div><div class="mv">'+s+'<span class="mu">箇所</span></div></div>'+
-    '<div class="mc"><div class="ml">床面積計</div><div class="mv">'+Math.round(a).toLocaleString()+'<span class="mu">㎡</span></div></div>';
+    '<div class="mc"><div class="ml">住戸床面積</div><div class="mv">'+Math.round(a).toLocaleString()+'<span class="mu">㎡</span></div></div>';
 }
-
-updateDefs();updateMetrics();
-document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
+updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
 </script>
 </body>
 </html>
