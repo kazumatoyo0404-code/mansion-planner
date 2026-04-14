@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>敷地タイルプランナー</title>
 <style>
-:root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;--amber:#d97706;}
+:root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);}
 *{box-sizing:border-box;}
 #app{display:flex;width:100vw;height:100vh;}
 #sidebar{width:260px;flex-shrink:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;box-shadow:2px 0 8px rgba(0,0,0,0.08);}
-#canvas-wrap{flex:1;height:100vh;position:relative;overflow:hidden;background:#e8e4dc;}
-#canvas-wrap.dragover{background:#dbeafe;}
+#canvas-wrap{flex:1;height:100vh;position:relative;overflow:hidden;background:#888;}
+#canvas-wrap.dragover{background:#bfdbfe;}
 #drop-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;}
 #drop-hint .icon{font-size:48px;margin-bottom:12px;}
-#drop-hint .text{font-size:16px;font-weight:700;color:var(--text2);}
-#drop-hint .sub{font-size:12px;color:var(--text3);margin-top:4px;}
-#map-canvas{position:absolute;top:0;left:0;transform-origin:0 0;}
+#drop-hint .text{font-size:16px;font-weight:700;color:#fff;}
+#drop-hint .sub{font-size:12px;color:#ddd;margin-top:4px;}
+#map-canvas{position:absolute;top:0;left:0;transform-origin:0 0;box-shadow:0 4px 24px rgba(0,0,0,0.4);}
 #tile-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;transform-origin:0 0;}
 .sb-head{padding:14px 14px 12px;border-bottom:2px solid var(--blue);background:var(--blue);}
 .sb-title{font-size:14px;font-weight:700;color:#fff;}
@@ -28,10 +28,19 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .field input{width:100%;height:30px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;}
 .field input:focus{border-color:var(--blue);}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.slider-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
-.slider-row label{font-size:11px;color:var(--text2);white-space:nowrap;min-width:28px;}
+.slider-row{display:flex;align-items:center;gap:6px;}
+.slider-row label{font-size:11px;color:var(--text2);white-space:nowrap;}
 .slider-row input[type=range]{flex:1;accent-color:var(--blue);}
-.slider-val{font-size:11px;font-weight:700;color:var(--blue);min-width:32px;text-align:right;}
+.slider-val{font-size:11px;font-weight:700;color:var(--blue);min-width:34px;text-align:right;}
+.btn-primary{width:100%;height:32px;font-size:12px;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;margin-bottom:4px;}
+.btn-primary:hover{opacity:.88;}
+.btn-secondary{width:100%;height:30px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:4px;}
+.btn-secondary:hover{background:var(--border);}
+.calib-status{font-size:11px;padding:6px 8px;border-radius:6px;margin-top:4px;font-weight:600;}
+.calib-status.idle{background:#f0ede8;color:var(--text3);}
+.calib-status.step1{background:#fef3c7;color:#92400e;}
+.calib-status.step2{background:#dbeafe;color:#1e40af;}
+.calib-status.done{background:#dcfce7;color:#166534;}
 .tool-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;margin-bottom:3px;border-radius:7px;border:2px solid transparent;cursor:pointer;font-size:12px;font-weight:600;background:var(--surface2);color:var(--text);transition:all .12s;width:100%;text-align:left;}
 .tool-btn:hover{border-color:var(--border);}
 .tool-btn .icon{font-size:14px;width:18px;text-align:center;}
@@ -52,27 +61,34 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .mc .mv .mu{font-size:10px;font-weight:400;color:var(--text3);margin-left:1px;}
 .hint{font-size:10px;color:var(--text3);line-height:1.5;margin-top:6px;padding:6px 8px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--blue);}
 .sb-foot{padding:10px 12px;margin-top:auto;border-top:1px solid var(--border);}
-.btn-clear{width:100%;height:30px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;margin-bottom:6px;}
-.btn-clear:hover{background:#fef2f2;border-color:var(--red);color:var(--red);}
-#mode-badge{position:absolute;top:10px;left:10px;z-index:100;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:2px solid;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.btn-danger{width:100%;height:30px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;}
+.btn-danger:hover{background:#fef2f2;border-color:var(--red);color:var(--red);}
+#mode-badge{position:absolute;top:10px;left:10px;z-index:100;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:2px solid;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
 #mode-badge.pan{background:rgba(255,255,255,0.95);color:var(--text2);border-color:var(--border);}
-#mode-badge.on{background:rgba(37,99,235,0.95);color:#fff;border-color:var(--blue);}
+#mode-badge.place{background:rgba(37,99,235,0.95);color:#fff;border-color:var(--blue);}
 #mode-badge.erase{background:rgba(220,38,38,0.95);color:#fff;border-color:var(--red);}
-#hud{position:absolute;bottom:10px;left:10px;z-index:100;background:rgba(255,255,255,0.9);color:var(--text2);font-size:10px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);pointer-events:none;}
+#mode-badge.calib{background:rgba(217,119,6,0.95);color:#fff;border-color:#d97706;}
+#hud{position:absolute;bottom:10px;left:10px;z-index:100;background:rgba(255,255,255,0.92);color:var(--text2);font-size:10px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;}
 </style>
 </head>
 <body>
 <div id="app">
 <aside id="sidebar">
   <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION</div></div>
+
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
-    <div class="field">
-      <label>縮尺（例: 500 → 1/500）</label>
-      <input type="number" id="scale-input" value="500" min="1" oninput="updateScale()"/>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">右のエリアにPDFをドラッグ＆ドロップ</div>
+    <div class="lbl" style="margin-top:4px;">📏 縮尺キャリブレーション</div>
+    <button class="btn-primary" onclick="startCalib()">① 2点をクリックして距離を測定</button>
+    <div class="field" style="display:flex;gap:6px;align-items:flex-end;">
+      <div style="flex:1;"><label>実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1"/></div>
+      <button class="btn-secondary" style="width:60px;margin-bottom:0;" onclick="applyCalib()">確定</button>
     </div>
-    <div style="font-size:10px;color:var(--text3);">右のエリアにPDFをドラッグ＆ドロップ</div>
+    <div class="calib-status idle" id="calib-status">PDFをドロップ後にキャリブレーションしてください</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;">現在: 1m = <span id="px-m" style="font-weight:700;color:var(--blue);">-</span> px</div>
   </div>
+
   <div class="sb-sec">
     <div class="lbl">🏠 住戸サイズ (m)</div>
     <div class="row2">
@@ -98,14 +114,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"/></div>
     </div>
   </div>
+
   <div class="sb-sec">
     <div class="lbl">透明度</div>
     <div class="slider-row">
       <label>薄</label>
-      <input type="range" id="op-range" min="20" max="95" value="70" oninput="onOpacity()"/>
-      <span class="slider-val" id="op-val">70%</span>
+      <input type="range" id="op-range" min="10" max="95" value="60" oninput="onOpacity()"/>
+      <span class="slider-val" id="op-val">60%</span>
     </div>
   </div>
+
   <div class="sb-sec">
     <div class="lbl">配置ツール</div>
     <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">16.5×6m</span></button>
@@ -129,15 +147,17 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       </div>
     </div>
   </div>
+
   <div class="sb-sec">
     <div class="lbl">配置サマリー</div>
     <div class="metrics-grid" id="metrics"></div>
-    <div class="hint">PDFをドロップ→縮尺確認→ツール選択→クリックで配置。ドラッグで移動・↻で回転・×で削除。ホイールでズーム。</div>
+    <div class="hint">① PDFをドロップ → ② 2点クリックで距離入力 → ③ ツール選択してクリック配置。ホイールでズーム。ESCでパンモード。</div>
   </div>
   <div class="sb-foot">
-    <button class="btn-clear" onclick="clearAll()">🗑 全タイルを削除</button>
+    <button class="btn-danger" onclick="clearAll()">🗑 全タイルを削除</button>
   </div>
 </aside>
+
 <div id="canvas-wrap">
   <div id="drop-hint">
     <div class="icon">📄</div>
@@ -147,64 +167,67 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   <canvas id="map-canvas"></canvas>
   <svg id="tile-svg"></svg>
   <div id="mode-badge" class="pan">地図パンモード</div>
-  <div id="hud">縮尺 1/<span id="scale-disp">500</span> | 1m=<span id="px-m">-</span>px | <span id="zoom-lv">100</span>%</div>
+  <div id="hud">1m = <span id="hud-ppm">-</span>px ｜ zoom <span id="hud-zoom">100</span>%</div>
 </div>
 </div>
 
-<!-- PDF.js CDN (正しいURL) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-// PDF.js worker設定
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-var currentTool=null,currentRot=0,tileOpacity=0.70,tiles=[],uidCounter=0;
-var mapScale=500,canvasZoom=1.0,panX=0,panY=0,pdfLoaded=false;
+// ── State ──
+var ppm=10; // pixels per meter (calibrated)
+var canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
 var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
-var PDF_RENDER_SCALE=2.0,PDF_DPI=96;
+var currentTool=null,currentRot=0,tileOpacity=0.60;
+var tiles=[],uid=0;
+
+// Calibration state
+var calibMode=false,calibPts=[],calibLine=null;
 
 var DEFS={
-  unit: {w:16.5,d:6,  fill:[37,99,235],  stroke:'#2563eb',label:'住戸'},
-  park: {w:2.5, d:5,  fill:[22,163,74],  stroke:'#16a34a',label:'駐車場'},
-  stair:{w:3,   d:4,  fill:[219,39,119], stroke:'#db2777',label:'非常階段'}
+  unit: {w:16.5,d:6,  fill:[37,99,235],  stroke:'#1d4ed8',label:'住戸'},
+  park: {w:2.5, d:5,  fill:[22,163,74],  stroke:'#15803d',label:'駐車場'},
+  stair:{w:3,   d:4,  fill:[219,39,119], stroke:'#be185d',label:'非常階段'}
 };
 
 var wrap=document.getElementById('canvas-wrap');
 var mapCanvas=document.getElementById('map-canvas');
 var ctx=mapCanvas.getContext('2d');
 var svg=document.getElementById('tile-svg');
-var defsEl=document.createElementNS('http://www.w3.org/2000/svg','defs');
-svg.appendChild(defsEl);
+var defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+svg.appendChild(defs);
+var calibG=document.createElementNS('http://www.w3.org/2000/svg','g');
+svg.appendChild(calibG);
+var tileG=document.createElementNS('http://www.w3.org/2000/svg','g');
+svg.appendChild(tileG);
 
-// ドラッグ&ドロップ
+// ── PDF drop ──
 wrap.addEventListener('dragover',function(e){e.preventDefault();wrap.classList.add('dragover');});
 wrap.addEventListener('dragleave',function(){wrap.classList.remove('dragover');});
 wrap.addEventListener('drop',function(e){
   e.preventDefault();wrap.classList.remove('dragover');
-  var file=e.dataTransfer.files[0];
-  if(!file||file.type!=='application/pdf'){alert('PDFファイルをドロップしてください');return;}
-  var reader=new FileReader();
-  reader.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};
-  reader.readAsArrayBuffer(file);
+  var f=e.dataTransfer.files[0];
+  if(!f||f.type!=='application/pdf'){alert('PDFをドロップしてください');return;}
+  var r=new FileReader();
+  r.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};
+  r.readAsArrayBuffer(f);
 });
 
 function loadPdf(data){
   pdfjsLib.getDocument({data:data}).promise.then(function(pdf){
     return pdf.getPage(1);
   }).then(function(page){
-    var vp=page.getViewport({scale:PDF_RENDER_SCALE});
-    mapCanvas.width=vp.width;
-    mapCanvas.height=vp.height;
-    svg.setAttribute('width',vp.width);
-    svg.setAttribute('height',vp.height);
+    var vp=page.getViewport({scale:2});
+    mapCanvas.width=vp.width; mapCanvas.height=vp.height;
+    svg.setAttribute('width',vp.width); svg.setAttribute('height',vp.height);
     return page.render({canvasContext:ctx,viewport:vp}).promise;
   }).then(function(){
     pdfLoaded=true;
     document.getElementById('drop-hint').style.display='none';
     fitCanvas();
-  }).catch(function(e){
-    alert('PDF読み込みエラー: '+e.message);
-    console.error(e);
-  });
+    setCalibStatus('step1','① 地図上の2点をクリックしてください（1点目）');
+  }).catch(function(e){alert('エラー: '+e.message);});
 }
 
 function fitCanvas(){
@@ -212,73 +235,269 @@ function fitCanvas(){
   canvasZoom=Math.min(ww/mapCanvas.width,wh/mapCanvas.height)*0.92;
   panX=(ww-mapCanvas.width*canvasZoom)/2;
   panY=(wh-mapCanvas.height*canvasZoom)/2;
-  applyTransform();
+  applyTf();
 }
-
-function applyTransform(){
+function applyTf(){
   var t='translate('+panX+'px,'+panY+'px) scale('+canvasZoom+')';
-  mapCanvas.style.transform=t;
-  svg.style.transform=t;
-  document.getElementById('zoom-lv').textContent=Math.round(canvasZoom*100);
-  updateHUD();
+  mapCanvas.style.transform=t; svg.style.transform=t;
+  document.getElementById('hud-zoom').textContent=Math.round(canvasZoom*100);
   tiles.forEach(reposTile);
+  redrawCalibLine();
 }
 
-// ホイールズーム
+// ── Wheel zoom ──
 wrap.addEventListener('wheel',function(e){
   e.preventDefault();
-  var rect=wrap.getBoundingClientRect();
-  var mx=e.clientX-rect.left,my=e.clientY-rect.top;
-  var factor=e.deltaY>0?0.85:1.18;
-  var nz=Math.max(0.05,Math.min(20,canvasZoom*factor));
-  panX=mx-(mx-panX)*(nz/canvasZoom);
-  panY=my-(my-panY)*(nz/canvasZoom);
-  canvasZoom=nz;
-  applyTransform();
+  var rect=wrap.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  var f=e.deltaY>0?0.85:1.18,nz=Math.max(0.05,Math.min(20,canvasZoom*f));
+  panX=mx-(mx-panX)*(nz/canvasZoom); panY=my-(my-panY)*(nz/canvasZoom);
+  canvasZoom=nz; applyTf();
 },{passive:false});
 
-// パン
+// ── Pan ──
 wrap.addEventListener('mousedown',function(e){
+  if(calibMode) return;
   if(!currentTool||e.button===1){
-    isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;
-    wrap.style.cursor='grabbing';e.preventDefault();
+    isPanning=true; panSX=e.clientX; panSY=e.clientY; panSPX=panX; panSPY=panY;
+    wrap.style.cursor='grabbing'; e.preventDefault();
   }
 });
 document.addEventListener('mousemove',function(e){
   if(!isPanning)return;
-  panX=panSPX+(e.clientX-panSX);panY=panSPY+(e.clientY-panSY);
-  applyTransform();
+  panX=panSPX+(e.clientX-panSX); panY=panSPY+(e.clientY-panSY);
+  applyTf();
 });
-document.addEventListener('mouseup',function(e){
-  if(isPanning){isPanning=false;wrap.style.cursor=currentTool?'crosshair':'';}
+document.addEventListener('mouseup',function(){
+  if(isPanning){isPanning=false; wrap.style.cursor=currentTool?'crosshair':'';}
 });
 
-// クリックでタイル配置
+// ── Click handler ──
 wrap.addEventListener('click',function(e){
-  if(isPanning||!currentTool||currentTool==='erase')return;
-  if(!pdfLoaded){alert('先にPDF地図をドロップしてください');return;}
+  if(isPanning)return;
   var rect=wrap.getBoundingClientRect();
   var cx=(e.clientX-rect.left-panX)/canvasZoom;
   var cy=(e.clientY-rect.top-panY)/canvasZoom;
+
+  if(calibMode){
+    calibPts.push({x:cx,y:cy});
+    redrawCalibLine();
+    if(calibPts.length===1){
+      setCalibStatus('step2','② 2点目をクリックしてください');
+    } else if(calibPts.length>=2){
+      setCalibStatus('done','✓ 2点選択完了。距離を入力して「確定」を押してください');
+      calibMode=false;
+      setBadge('pan','地図パンモード');
+      wrap.style.cursor='';
+    }
+    return;
+  }
+
+  if(!currentTool||currentTool==='erase')return;
+  if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
   createTile(cx,cy,currentTool,currentRot);
 });
 
-function pxPerMeter(){
-  // PDF render scale=2, DPI=96
-  // 1 paper mm = 2*96/25.4 px on canvas
-  // 1 actual meter = mapScale*1000 mm on paper → mapScale*1000 * 2*96/25.4 px
-  return mapScale*1000*(PDF_RENDER_SCALE*PDF_DPI/25.4)/1000;
-  // = mapScale * PDF_RENDER_SCALE * PDF_DPI / 25.4
+// ── Calibration ──
+function startCalib(){
+  if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
+  calibMode=true; calibPts=[];
+  clearCalibLine();
+  setCalibStatus('step1','① 地図上の2点をクリックしてください（1点目）');
+  setBadge('calib','キャリブレーション — 1点目をクリック');
+  wrap.style.cursor='crosshair';
+  currentTool=null;
+  document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
 }
 
-function updateScale(){
-  mapScale=parseFloat(document.getElementById('scale-input').value)||500;
-  document.getElementById('scale-disp').textContent=mapScale;
-  updateHUD();tiles.forEach(reposTile);
+function applyCalib(){
+  if(calibPts.length<2){alert('先に地図上の2点をクリックしてください');return;}
+  var dist=parseFloat(document.getElementById('calib-dist').value);
+  if(!dist||dist<=0){alert('正しい距離を入力してください');return;}
+  var dx=calibPts[1].x-calibPts[0].x,dy=calibPts[1].y-calibPts[0].y;
+  var pxDist=Math.sqrt(dx*dx+dy*dy);
+  ppm=pxDist/dist;
+  document.getElementById('px-m').textContent=ppm.toFixed(1);
+  document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
+  setCalibStatus('done','✓ キャリブレーション完了！ 1m = '+ppm.toFixed(1)+'px');
+  tiles.forEach(reposTile);
 }
-function updateHUD(){
-  document.getElementById('px-m').textContent=pxPerMeter().toFixed(1);
+
+function setCalibStatus(cls,msg){
+  var el=document.getElementById('calib-status');
+  el.className='calib-status '+cls; el.textContent=msg;
 }
+
+function redrawCalibLine(){
+  clearCalibLine();
+  if(calibPts.length===0)return;
+  var pts=calibPts;
+  // draw dots
+  pts.forEach(function(p){
+    var c=mkS('circle',{cx:p.x,cy:p.y,r:'6',fill:'#f59e0b',stroke:'white','stroke-width':'2'});
+    calibG.appendChild(c);
+  });
+  if(pts.length>=2){
+    var l=mkS('line',{x1:pts[0].x,y1:pts[0].y,x2:pts[1].x,y2:pts[1].y,stroke:'#f59e0b','stroke-width':'2','stroke-dasharray':'6,3'});
+    calibG.appendChild(l);
+    // distance label
+    var mx=(pts[0].x+pts[1].x)/2,my=(pts[0].y+pts[1].y)/2;
+    var dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+    var pxd=Math.sqrt(dx*dx+dy*dy);
+    var t=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:mx,y:my-14,fill:'#92400e','font-size':'12','font-weight':'700','paint-order':'stroke',stroke:'white','stroke-width':'3'});
+    t.textContent=pxd.toFixed(0)+'px';
+    calibG.appendChild(t);
+  }
+}
+function clearCalibLine(){
+  while(calibG.firstChild)calibG.removeChild(calibG.firstChild);
+}
+
+// ── SVG helper ──
+function mkS(tag,attrs){
+  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(var k in attrs)el.setAttribute(k,attrs[k]);
+  return el;
+}
+function fc(def){return'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+','+tileOpacity+')';}
+
+// ── Create tile ──
+function createTile(cx,cy,type,rot){
+  var def=DEFS[type],id='T'+(uid++);
+  var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.style.pointerEvents='all'; g.style.cursor='grab';
+
+  if(type==='stair'){
+    var pid='HP'+id,pat=mkS('pattern',{id:pid,patternUnits:'userSpaceOnUse',width:'8',height:'8',patternTransform:'rotate(45)'});
+    pat.appendChild(mkS('line',{x1:'0',y1:'0',x2:'0',y2:'8',stroke:def.stroke,'stroke-width':'2','stroke-opacity':'0.25'}));
+    defs.appendChild(pat);
+  }
+
+  // メインRect（塗り+枠）
+  var rect=mkS('rect',{rx:'3',fill:fc(def),stroke:def.stroke,'stroke-width':'1.5','stroke-opacity':'0.6'});
+  g.appendChild(rect);
+  var hr=null;
+  if(type==='stair'){hr=mkS('rect',{rx:'3',fill:'url(#HP'+id+')'});g.appendChild(hr);}
+
+  var lbl=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke',stroke:'white','stroke-width':'4'});
+  lbl.textContent=def.label; g.appendChild(lbl);
+  var dim=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none','paint-order':'stroke',stroke:'white','stroke-width':'3',opacity:'0.9'});
+  g.appendChild(dim);
+
+  // 回転ハンドル
+  var rh=mkS('circle',{r:'9',fill:def.stroke,stroke:'white','stroke-width':'2',opacity:'0'});
+  rh.style.pointerEvents='all'; g.appendChild(rh);
+  var rhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'700','pointer-events':'none',opacity:'0'});
+  rhT.textContent='↻'; g.appendChild(rhT);
+
+  // 削除ハンドル
+  var dh=mkS('circle',{r:'10',fill:'#dc2626',stroke:'white','stroke-width':'2',opacity:'0'});
+  dh.style.pointerEvents='all'; g.appendChild(dh);
+  var dhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','pointer-events':'none',opacity:'0'});
+  dhT.textContent='×'; g.appendChild(dhT);
+
+  var tile={id:id,g:g,rect:rect,hr:hr,lbl:lbl,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,cx:cx,cy:cy,type:type,rot:rot};
+
+  g.addEventListener('mouseenter',function(){
+    if(currentTool==='erase'){g.style.cursor='pointer';return;}
+    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});
+  });
+  g.addEventListener('mouseleave',function(){
+    g.style.cursor='grab';
+    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});
+  });
+  g.addEventListener('click',function(e){if(currentTool==='erase'){e.stopPropagation();delTile(tile);}});
+  dh.addEventListener('click',function(e){e.stopPropagation();delTile(tile);});
+  setupMove(g,tile);
+  setupRot(rh,tile);
+
+  tileG.appendChild(g);
+  tiles.push(tile);
+  reposTile(tile);
+  updateMetrics();
+}
+
+function reposTile(t){
+  var def=DEFS[t.type],pw=def.w*ppm,ph=def.d*ppm;
+  t.rect.setAttribute('x','0');t.rect.setAttribute('y','0');
+  t.rect.setAttribute('width',pw);t.rect.setAttribute('height',ph);
+  t.rect.setAttribute('fill',fc(def));
+  if(t.hr){t.hr.setAttribute('x','0');t.hr.setAttribute('y','0');t.hr.setAttribute('width',pw);t.hr.setAttribute('height',ph);}
+  var fs=Math.max(9,Math.min(15,Math.min(pw,ph)/3.5));
+  t.lbl.setAttribute('x',pw/2);t.lbl.setAttribute('y',ph/2-fs*0.75);t.lbl.setAttribute('font-size',fs);
+  t.dim.textContent=def.w+'×'+def.d+'m';
+  t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph/2+fs*0.8);t.dim.setAttribute('font-size',fs*0.8);
+  t.rh.setAttribute('cx',pw/2);t.rh.setAttribute('cy',ph+15);t.rhT.setAttribute('x',pw/2);t.rhT.setAttribute('y',ph+15);
+  t.dh.setAttribute('cx',pw+12);t.dh.setAttribute('cy',-12);t.dhT.setAttribute('x',pw+12);t.dhT.setAttribute('y',-12);
+  t.g.setAttribute('transform','translate('+t.cx+','+t.cy+') rotate('+t.rot+',0,0) translate('+(-pw/2)+','+(-ph/2)+')');
+}
+
+function setupMove(el,tile){
+  var act=false,sx,sy,scx,scy;
+  el.addEventListener('mousedown',function(e){
+    if(e.target===tile.rh||e.target===tile.dh)return;
+    if(currentTool==='erase')return;
+    e.stopPropagation();e.preventDefault();
+    act=true;sx=e.clientX;sy=e.clientY;scx=tile.cx;scy=tile.cy;
+    el.style.cursor='grabbing';
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!act)return;
+    tile.cx=scx+(e.clientX-sx)/canvasZoom;
+    tile.cy=scy+(e.clientY-sy)/canvasZoom;
+    reposTile(tile);
+  });
+  document.addEventListener('mouseup',function(){if(act){act=false;el.style.cursor='grab';}});
+}
+
+function setupRot(h,tile){
+  h.addEventListener('mousedown',function(e){
+    e.stopPropagation();e.preventDefault();
+    var rect=wrap.getBoundingClientRect();
+    var tcx=tile.cx*canvasZoom+panX+rect.left;
+    var tcy=tile.cy*canvasZoom+panY+rect.top;
+    var sa=Math.atan2(e.clientY-tcy,e.clientX-tcx)*180/Math.PI,sr=tile.rot;
+    function mv(ev){
+      var a=Math.atan2(ev.clientY-tcy,ev.clientX-tcx)*180/Math.PI;
+      tile.rot=((sr+(a-sa))%360+360)%360; reposTile(tile);
+    }
+    function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+}
+
+function delTile(t){
+  t.g.remove();
+  var p=document.getElementById('HP'+t.id);if(p)p.remove();
+  tiles=tiles.filter(function(x){return x!==t;});
+  updateMetrics();
+}
+function clearAll(){
+  if(!confirm('全タイルを削除しますか？'))return;
+  tiles.slice().forEach(delTile);
+}
+
+function setTool(t){
+  currentTool=t; calibMode=false;
+  document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
+  var el=document.getElementById('tool-'+t);if(el)el.classList.add('active');
+  if(t==='erase'){setBadge('erase','消去モード');wrap.style.cursor='default';}
+  else{setBadge('place','配置モード — クリックで配置');wrap.style.cursor='crosshair';}
+}
+function setBadge(cls,txt){
+  var b=document.getElementById('mode-badge');b.className=cls;b.textContent=txt;
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    currentTool=null;calibMode=false;
+    document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
+    setBadge('pan','地図パンモード');wrap.style.cursor='';
+  }
+});
+
+function setRot(v){currentRot=v;document.getElementById('rot-range').value=v;document.getElementById('rot-val').textContent=v+'°';}
+function onRotSlider(){currentRot=parseInt(document.getElementById('rot-range').value);document.getElementById('rot-val').textContent=currentRot+'°';}
+function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
+
 function updateDefs(){
   DEFS.unit.w=parseFloat(document.getElementById('unit-w').value)||16.5;
   DEFS.unit.d=parseFloat(document.getElementById('unit-d').value)||6;
@@ -292,149 +511,6 @@ function updateDefs(){
   tiles.forEach(reposTile);
 }
 
-function fc(def){
-  var f=def.fill;
-  return'rgba('+f[0]+','+f[1]+','+f[2]+','+tileOpacity+')';
-}
-function mk(tag,attrs){
-  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
-  for(var k in attrs)el.setAttribute(k,attrs[k]);
-  return el;
-}
-
-function createTile(cx,cy,type,rot){
-  var def=DEFS[type],uid='T'+(uidCounter++);
-  var g=document.createElementNS('http://www.w3.org/2000/svg','g');
-  g.style.pointerEvents='all';g.style.cursor='grab';
-
-  if(type==='stair'){
-    var pid='HP'+uid;
-    var pat=mk('pattern',{id:pid,patternUnits:'userSpaceOnUse',width:'8',height:'8',patternTransform:'rotate(45)'});
-    pat.appendChild(mk('line',{x1:'0',y1:'0',x2:'0',y2:'8',stroke:def.stroke,'stroke-width':'1.5','stroke-opacity':'0.3'}));
-    defsEl.appendChild(pat);
-  }
-
-  var rect=mk('rect',{rx:'2',fill:fc(def),stroke:def.stroke,'stroke-width':'2'});g.appendChild(rect);
-  var hRect=null;
-  if(type==='stair'){hRect=mk('rect',{rx:'2',fill:'url(#HP'+uid+')'});g.appendChild(hRect);}
-
-  var txt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke','stroke':'white','stroke-width':'3'});
-  txt.textContent=def.label;g.appendChild(txt);
-  var dim=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none','paint-order':'stroke','stroke':'white','stroke-width':'2',opacity:'0.85'});
-  dim.textContent=def.w+'×'+def.d+'m';g.appendChild(dim);
-
-  var rh=mk('circle',{r:'9',fill:def.stroke,stroke:'white','stroke-width':'2',opacity:'0'});
-  rh.style.pointerEvents='all';g.appendChild(rh);
-  var rhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'700','pointer-events':'none',opacity:'0'});
-  rhT.textContent='↻';g.appendChild(rhT);
-
-  var dh=mk('circle',{r:'10',fill:'#dc2626',stroke:'white','stroke-width':'2',opacity:'0'});
-  dh.style.pointerEvents='all';g.appendChild(dh);
-  var dhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','pointer-events':'none',opacity:'0'});
-  dhT.textContent='×';g.appendChild(dhT);
-
-  var tile={uid:uid,g:g,rect:rect,hRect:hRect,txt:txt,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,cx:cx,cy:cy,type:type,rot:rot};
-
-  g.addEventListener('mouseenter',function(){
-    if(currentTool==='erase'){g.style.cursor='pointer';return;}
-    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});
-  });
-  g.addEventListener('mouseleave',function(){
-    g.style.cursor='grab';
-    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});
-  });
-  g.addEventListener('click',function(e){
-    if(currentTool==='erase'){e.stopPropagation();delTile(tile);}
-  });
-  dh.addEventListener('click',function(e){e.stopPropagation();delTile(tile);});
-  setupMove(g,tile);
-  setupRotDrag(rh,tile);
-
-  svg.appendChild(g);tiles.push(tile);reposTile(tile);updateMetrics();
-}
-
-function reposTile(t){
-  var def=DEFS[t.type],ppm=pxPerMeter();
-  var pw=def.w*ppm,ph=def.d*ppm;
-  t.rect.setAttribute('x','0');t.rect.setAttribute('y','0');
-  t.rect.setAttribute('width',pw);t.rect.setAttribute('height',ph);
-  t.rect.setAttribute('fill',fc(def));
-  if(t.hRect){t.hRect.setAttribute('x','0');t.hRect.setAttribute('y','0');t.hRect.setAttribute('width',pw);t.hRect.setAttribute('height',ph);}
-  var fs=Math.max(8,Math.min(14,Math.min(pw,ph)/3.5));
-  t.txt.setAttribute('x',pw/2);t.txt.setAttribute('y',ph/2-fs*0.7);t.txt.setAttribute('font-size',fs);
-  t.dim.textContent=def.w+'×'+def.d+'m';
-  t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph/2+fs*0.8);t.dim.setAttribute('font-size',fs*0.82);
-  t.rh.setAttribute('cx',pw/2);t.rh.setAttribute('cy',ph+14);t.rhT.setAttribute('x',pw/2);t.rhT.setAttribute('y',ph+14);
-  t.dh.setAttribute('cx',pw+12);t.dh.setAttribute('cy',-12);t.dhT.setAttribute('x',pw+12);t.dhT.setAttribute('y',-12);
-  t.g.setAttribute('transform','translate('+t.cx+','+t.cy+') rotate('+t.rot+',0,0) translate('+(-pw/2)+','+(-ph/2)+')');
-}
-
-function setupMove(el,tile){
-  var act=false,sX,sY,sCX,sCY;
-  el.addEventListener('mousedown',function(e){
-    if(e.target===tile.rh||e.target===tile.dh)return;
-    if(currentTool==='erase')return;
-    e.stopPropagation();e.preventDefault();
-    act=true;sX=e.clientX;sY=e.clientY;sCX=tile.cx;sCY=tile.cy;
-    el.style.cursor='grabbing';
-  });
-  document.addEventListener('mousemove',function(e){
-    if(!act)return;
-    tile.cx=sCX+(e.clientX-sX)/canvasZoom;
-    tile.cy=sCY+(e.clientY-sY)/canvasZoom;
-    reposTile(tile);
-  });
-  document.addEventListener('mouseup',function(){if(act){act=false;el.style.cursor='grab';}});
-}
-
-function setupRotDrag(h,tile){
-  h.addEventListener('mousedown',function(e){
-    e.stopPropagation();e.preventDefault();
-    var rect=wrap.getBoundingClientRect();
-    var tcx=tile.cx*canvasZoom+panX+rect.left;
-    var tcy=tile.cy*canvasZoom+panY+rect.top;
-    var sa=Math.atan2(e.clientY-tcy,e.clientX-tcx)*180/Math.PI,sr=tile.rot;
-    function mv(ev){
-      var a=Math.atan2(ev.clientY-tcy,ev.clientX-tcx)*180/Math.PI;
-      tile.rot=((sr+(a-sa))%360+360)%360;reposTile(tile);
-    }
-    function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
-    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
-  });
-}
-
-function delTile(t){
-  t.g.remove();
-  var p=document.getElementById('HP'+t.uid);if(p)p.remove();
-  tiles=tiles.filter(function(x){return x!==t;});
-  updateMetrics();
-}
-function clearAll(){
-  if(!confirm('全タイルを削除しますか？'))return;
-  tiles.slice().forEach(delTile);
-}
-
-function setTool(t){
-  currentTool=t;
-  document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
-  var el=document.getElementById('tool-'+t);if(el)el.classList.add('active');
-  var b=document.getElementById('mode-badge');
-  if(t==='erase'){b.textContent='消去モード';b.className='erase';wrap.style.cursor='default';}
-  else{b.textContent='配置モード — クリックで配置';b.className='on';wrap.style.cursor='crosshair';}
-}
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){
-    currentTool=null;
-    document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
-    document.getElementById('mode-badge').textContent='地図パンモード';
-    document.getElementById('mode-badge').className='pan';
-    wrap.style.cursor='';
-  }
-});
-
-function setRot(v){currentRot=v;document.getElementById('rot-range').value=v;document.getElementById('rot-val').textContent=v+'°';}
-function onRotSlider(){currentRot=parseInt(document.getElementById('rot-range').value);document.getElementById('rot-val').textContent=currentRot+'°';}
-function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
 function updateMetrics(){
   var u=0,p=0,s=0,a=0;
   tiles.forEach(function(t){
@@ -449,7 +525,8 @@ function updateMetrics(){
     '<div class="mc"><div class="ml">床面積計</div><div class="mv">'+Math.round(a).toLocaleString()+'<span class="mu">㎡</span></div></div>';
 }
 
-updateDefs();updateMetrics();updateHUD();
+updateDefs();updateMetrics();
+document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
 </script>
 </body>
 </html>
