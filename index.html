@@ -4,112 +4,127 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>敷地タイルプランナー</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#1c1c20;--surface:#242428;--surface2:#2c2c32;--border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);--text:#eeebe6;--text2:#9e9b96;--text3:#62605c;--blue:#5aabff;--green:#52d478;--pink:#f07ab0;--red:#e85555;}
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);}
+:root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;--amber:#d97706;}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);}
 *{box-sizing:border-box;}
 #app{display:flex;width:100vw;height:100vh;}
-#sidebar{width:272px;flex-shrink:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);z-index:2000;display:flex;flex-direction:column;}
-#map-wrap{flex:1;height:100vh;position:relative;min-width:0;}
-#map{position:absolute;top:0;left:0;right:0;bottom:0;}
-.sb-head{padding:16px 16px 12px;border-bottom:1px solid var(--border);}
-.sb-title{font-size:14px;font-weight:700;letter-spacing:.05em;}
-.sb-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
-.sb-sec{padding:12px 16px;border-bottom:1px solid var(--border);}
-.lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
-.search-row{display:flex;gap:6px;}
-.search-row input{flex:1;height:32px;padding:0 9px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);outline:none;}
-.search-row input:focus{border-color:var(--blue);}
-.btn-go{height:32px;padding:0 12px;font-size:11px;font-family:inherit;background:var(--blue);color:#0a0a10;border:none;border-radius:8px;cursor:pointer;font-weight:700;}
-.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.slider-row label{font-size:11px;color:var(--text2);white-space:nowrap;min-width:32px;}
+#sidebar{width:260px;flex-shrink:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;box-shadow:2px 0 8px rgba(0,0,0,0.08);}
+#canvas-wrap{flex:1;height:100vh;position:relative;overflow:hidden;background:#e8e4dc;}
+#canvas-wrap.dragover{background:#dbeafe;}
+#drop-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+#drop-hint .icon{font-size:48px;margin-bottom:12px;}
+#drop-hint .text{font-size:16px;font-weight:700;color:var(--text2);}
+#drop-hint .sub{font-size:12px;color:var(--text3);margin-top:4px;}
+#map-canvas{position:absolute;top:0;left:0;cursor:default;}
+#tile-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
+.sb-head{padding:14px 14px 12px;border-bottom:2px solid var(--blue);background:var(--blue);}
+.sb-title{font-size:14px;font-weight:700;color:#fff;}
+.sb-sub{font-size:10px;color:rgba(255,255,255,0.7);margin-top:2px;}
+.sb-sec{padding:10px 12px;border-bottom:1px solid var(--border);}
+.lbl{font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;}
+.field{margin-bottom:6px;}
+.field label{font-size:11px;color:var(--text2);display:block;margin-bottom:3px;}
+.field input{width:100%;height:30px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;}
+.field input:focus{border-color:var(--blue);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.slider-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.slider-row label{font-size:11px;color:var(--text2);white-space:nowrap;min-width:28px;}
 .slider-row input[type=range]{flex:1;accent-color:var(--blue);}
-.slider-val{font-size:11px;font-family:'DM Mono',monospace;color:var(--blue);min-width:36px;text-align:right;}
-.tool-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:4px;border-radius:8px;border:1.5px solid transparent;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500;background:var(--surface2);color:var(--text);transition:all .15s;width:100%;text-align:left;}
-.tool-btn:hover{border-color:var(--border2);}
+.slider-val{font-size:11px;font-weight:700;color:var(--blue);min-width:32px;text-align:right;}
+.tool-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;margin-bottom:3px;border-radius:7px;border:2px solid transparent;cursor:pointer;font-size:12px;font-weight:600;background:var(--surface2);color:var(--text);transition:all .12s;width:100%;text-align:left;}
+.tool-btn:hover{border-color:var(--border);}
 .tool-btn .icon{font-size:14px;width:18px;text-align:center;}
 .tool-btn .tname{flex:1;}
-.tool-btn .tdim{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);}
-.tool-btn.t-unit{background:rgba(90,171,255,.12);}
-.tool-btn.t-unit.active{border-color:var(--blue);background:rgba(90,171,255,.25);}
-.tool-btn.t-park{background:rgba(82,212,120,.12);}
-.tool-btn.t-park.active{border-color:var(--green);background:rgba(82,212,120,.25);}
-.tool-btn.t-stair{background:rgba(240,122,176,.12);}
-.tool-btn.t-stair.active{border-color:var(--pink);background:rgba(240,122,176,.25);}
-.tool-btn.t-erase{background:rgba(232,85,85,.1);}
-.tool-btn.t-erase.active{border-color:var(--red);background:rgba(232,85,85,.22);}
-.tool-btn.t-boundary{background:rgba(255,200,50,.1);}
-.tool-btn.t-boundary.active{border-color:#ffc832;background:rgba(255,200,50,.25);}
-.tdiv{height:1px;background:var(--border);margin:5px 0;}
-.presets{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
-.pre-btn{flex:1;min-width:36px;height:24px;font-size:11px;font-family:inherit;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;cursor:pointer;}
-.pre-btn:hover{background:rgba(90,171,255,.15);color:var(--blue);border-color:var(--blue);}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.toggle-row label{font-size:11px;color:var(--text2);}
-.toggle{position:relative;width:36px;height:20px;}
-.toggle input{opacity:0;width:0;height:0;}
-.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--surface2);border-radius:20px;transition:.2s;}
-.toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:var(--text3);border-radius:50%;transition:.2s;}
-.toggle input:checked+.toggle-slider{background:var(--blue);}
-.toggle input:checked+.toggle-slider:before{transform:translateX(16px);background:#fff;}
-.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.mc{background:var(--surface2);border-radius:8px;padding:8px 10px;}
-.mc .ml{font-size:9px;color:var(--text3);margin-bottom:2px;}
-.mc .mv{font-size:17px;font-weight:700;font-family:'DM Mono',monospace;}
-.mc .mv .mu{font-size:10px;font-weight:400;color:var(--text3);font-family:inherit;margin-left:1px;}
-.hint{font-size:10px;color:var(--text3);line-height:1.55;margin-top:8px;padding:7px 9px;background:var(--surface2);border-radius:6px;border-left:2px solid var(--border2);}
-.sb-foot{padding:12px 16px;margin-top:auto;border-top:1px solid var(--border);}
-.btn-clear{width:100%;height:32px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);cursor:pointer;}
-.btn-clear:hover{background:rgba(232,85,85,.15);border-color:var(--red);color:var(--red);}
-.leaflet-control-attribution{background:rgba(0,0,0,.5)!important;color:#777!important;font-size:10px!important;}
-.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
-.leaflet-control-layers{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;font-size:12px!important;}
-.leaflet-control-layers label{color:var(--text)!important;}
-#hud{position:absolute;bottom:24px;left:10px;z-index:1000;background:rgba(20,20,24,.9);color:var(--text2);font-size:10px;font-family:'DM Mono',monospace;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;}
-#mode-badge{position:absolute;top:10px;left:10px;z-index:1000;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--border2);background:rgba(20,20,24,.85);color:var(--text2);pointer-events:none;}
-#mode-badge.on{background:rgba(90,171,255,.2);color:var(--blue);border-color:var(--blue);}
-#mode-badge.erase{background:rgba(232,85,85,.2);color:var(--red);border-color:var(--red);}
-#mode-badge.boundary{background:rgba(255,200,50,.2);color:#ffc832;border-color:#ffc832;}
+.tool-btn .tdim{font-size:10px;color:var(--text3);font-weight:400;}
+.tool-btn.t-unit.active{border-color:var(--blue);background:#eff6ff;color:var(--blue);}
+.tool-btn.t-park.active{border-color:var(--green);background:#f0fdf4;color:var(--green);}
+.tool-btn.t-stair.active{border-color:var(--pink);background:#fdf2f8;color:var(--pink);}
+.tool-btn.t-erase.active{border-color:var(--red);background:#fef2f2;color:var(--red);}
+.tdiv{height:1px;background:var(--border);margin:4px 0;}
+.presets{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px;}
+.pre-btn{flex:1;min-width:30px;height:24px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;}
+.pre-btn:hover{background:#eff6ff;color:var(--blue);border-color:var(--blue);}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.mc{background:var(--surface2);border-radius:7px;padding:7px 9px;border:1px solid var(--border);}
+.mc .ml{font-size:9px;color:var(--text3);margin-bottom:2px;font-weight:600;}
+.mc .mv{font-size:18px;font-weight:700;color:var(--text);}
+.mc .mv .mu{font-size:10px;font-weight:400;color:var(--text3);margin-left:1px;}
+.hint{font-size:10px;color:var(--text3);line-height:1.5;margin-top:6px;padding:6px 8px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--blue);}
+.sb-foot{padding:10px 12px;margin-top:auto;border-top:1px solid var(--border);}
+.btn-clear{width:100%;height:30px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;margin-bottom:6px;}
+.btn-clear:hover{background:#fef2f2;border-color:var(--red);color:var(--red);}
+#mode-badge{position:absolute;top:10px;left:10px;z-index:100;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:2px solid;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+#mode-badge.pan{background:rgba(255,255,255,0.95);color:var(--text2);border-color:var(--border);}
+#mode-badge.on{background:rgba(37,99,235,0.95);color:#fff;border-color:var(--blue);}
+#mode-badge.erase{background:rgba(220,38,38,0.95);color:#fff;border-color:var(--red);}
+#hud{position:absolute;bottom:10px;left:10px;z-index:100;background:rgba(255,255,255,0.9);color:var(--text2);font-size:10px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);pointer-events:none;}
+#scale-info{position:absolute;bottom:10px;right:10px;z-index:100;background:rgba(255,255,255,0.9);color:var(--text2);font-size:10px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);pointer-events:none;}
 </style>
 </head>
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">MAP OVERLAY EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION</div></div>
+
   <div class="sb-sec">
-    <div class="lbl">住所検索</div>
-    <div class="search-row">
-      <input type="text" id="addr" placeholder="例: 宇都宮市大通り1-1" onkeydown="if(event.key==='Enter')doSearch()"/>
-      <button class="btn-go" onclick="doSearch()">検索</button>
+    <div class="lbl">📄 PDF地図</div>
+    <div class="field">
+      <label>縮尺（例: 500 → 1/500）</label>
+      <input type="number" id="scale-input" value="500" min="1" oninput="updateScale()"/>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;">PDFを右のエリアにドラッグ＆ドロップ</div>
+  </div>
+
+  <div class="sb-sec">
+    <div class="lbl">🏠 住戸サイズ (m)</div>
+    <div class="row2">
+      <div class="field"><label>間口（幅）</label><input type="number" id="unit-w" value="16.5" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>外廊下</label><input type="number" id="unit-corridor" value="3" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>バルコニー</label><input type="number" id="unit-balcony" value="2" step="0.5" oninput="updateDefs()"/></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px;">※奥行=専有+廊下+バルコニー 合計: <span id="unit-total">6</span>m</div>
+  </div>
+
+  <div class="sb-sec">
+    <div class="lbl">🚗 駐車場サイズ (m)</div>
+    <div class="row2">
+      <div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"/></div>
     </div>
   </div>
+
   <div class="sb-sec">
-    <div class="lbl">タイル透明度</div>
+    <div class="lbl">🪜 非常階段サイズ (m)</div>
+    <div class="row2">
+      <div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"/></div>
+    </div>
+  </div>
+
+  <div class="sb-sec">
+    <div class="lbl">透明度</div>
     <div class="slider-row">
-      <label>不透明</label>
-      <input type="range" id="op-range" min="15" max="90" value="65" oninput="onOpacity()"/>
-      <span class="slider-val" id="op-val">65%</span>
-    </div>
-    <div class="lbl" style="margin-top:8px;">補助線</div>
-    <div class="toggle-row">
-      <label>5mグリッド</label>
-      <label class="toggle"><input type="checkbox" id="grid-toggle" checked onchange="toggleGrid()"/><span class="toggle-slider"></span></label>
+      <label>薄</label>
+      <input type="range" id="op-range" min="20" max="95" value="70" oninput="onOpacity()"/>
+      <span class="slider-val" id="op-val">70%</span>
     </div>
   </div>
+
   <div class="sb-sec">
     <div class="lbl">配置ツール</div>
-    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim">16.5×6m</span></button>
-    <button class="tool-btn t-park" id="tool-park" onclick="setTool('park')"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim">2.5×5m</span></button>
-    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">非常階段</span><span class="tdim">3×4m</span></button>
-    <button class="tool-btn t-boundary" id="tool-boundary" onclick="setTool('boundary')"><span class="icon">📐</span><span class="tname">敷地境界線</span><span class="tdim">右クリックで確定</span></button>
+    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">16.5×6m</span></button>
+    <button class="tool-btn t-park" id="tool-park" onclick="setTool('park')"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
+    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">非常階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">タイルをクリック</span></button>
-    <div style="margin-top:12px;">
-      <div class="lbl">配置時の回転角度</div>
+    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック</span></button>
+    <div style="margin-top:10px;">
+      <div class="lbl">回転角度</div>
       <div class="slider-row">
-        <label>角度</label>
+        <label>0°</label>
         <input type="range" id="rot-range" min="0" max="359" value="0" oninput="onRotSlider()"/>
         <span class="slider-val" id="rot-val">0°</span>
       </div>
@@ -122,286 +137,350 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       </div>
     </div>
   </div>
+
   <div class="sb-sec">
     <div class="lbl">配置サマリー</div>
     <div class="metrics-grid" id="metrics"></div>
-    <div class="hint">ツール選択→地図クリックで配置。タイルをドラッグで移動、↻で回転、×で削除。境界線は右クリックで確定。ESCで地図パンに戻る。</div>
+    <div class="hint">PDFをドロップ→縮尺確認→ツール選択→クリックで配置。タイルはドラッグで移動・↻で回転・×で削除。</div>
   </div>
-  <div class="sb-foot"><button class="btn-clear" onclick="clearAll()">全タイルを削除</button></div>
-</aside>
-<div id="map-wrap">
-  <div id="map"></div>
-  <div id="hud">zoom: <span id="z-lv">19</span> | 1m=<span id="px-m">-</span>px</div>
-  <div id="mode-badge">地図パンモード</div>
-</div>
-</div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-var currentTool=null,currentRot=0,tileOpacity=0.65,tiles=[],uidCounter=0,searchMarker=null,svgLayer=null;
-var showGrid=true;
-var boundaryPoints=[],boundaryPolyline=null,boundaryPolygons=[];
 
-var TILE_DEFS={
-  unit: {w:16.5,d:6,  fill:[90,171,255], stroke:'#5aabff',label:'住戸',    hatch:false},
-  park: {w:2.5, d:5,  fill:[82,212,120], stroke:'#52d478',label:'駐車場',  hatch:false},
-  stair:{w:3,   d:4,  fill:[240,122,176],stroke:'#f07ab0',label:'非常階段',hatch:true}
+  <div class="sb-foot">
+    <button class="btn-clear" onclick="clearAll()">🗑 全タイルを削除</button>
+  </div>
+</aside>
+
+<div id="canvas-wrap">
+  <div id="drop-hint">
+    <div class="icon">📄</div>
+    <div class="text">PDF地図をここにドロップ</div>
+    <div class="sub">1/500などの縮尺図面を読み込めます</div>
+  </div>
+  <canvas id="map-canvas"></canvas>
+  <svg id="tile-svg"></svg>
+  <div id="mode-badge" class="pan">地図パンモード</div>
+  <div id="hud">1m = <span id="px-m">-</span>px | zoom: <span id="zoom-lv">100</span>%</div>
+  <div id="scale-info">縮尺: 1/<span id="scale-disp">500</span></div>
+</div>
+</div>
+
+<script src="https://unpkg.com/pdf.js@3.11.174/build/pdf.min.js"></script>
+<script>
+// PDF.js worker
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://unpkg.com/pdf.js@3.11.174/build/pdf.worker.min.js';
+
+var currentTool=null,currentRot=0,tileOpacity=0.70,tiles=[],uidCounter=0;
+var mapScale=500; // 縮尺分母
+var canvasZoom=1.0,panX=0,panY=0;
+var pdfLoaded=false;
+var isPanning=false,panStartX=0,panStartY=0,panStartPX=0,panStartPY=0;
+
+// タイル定義（メートル）
+var DEFS={
+  unit: {w:16.5,d:6,  fill:'rgba(37,99,235,OP)',  stroke:'#2563eb',label:'住戸'},
+  park: {w:2.5, d:5,  fill:'rgba(22,163,74,OP)',   stroke:'#16a34a',label:'駐車場'},
+  stair:{w:3,   d:4,  fill:'rgba(219,39,119,OP)',  stroke:'#db2777',label:'非常階段'}
 };
 
-// Map — zoom 19
-var map=L.map('map',{zoomControl:true}).setView([35.6896,139.6917],19);
-var gsiStd  =L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',          {attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
-var gsiPale =L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',         {attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
-var gsiPhoto=L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',maxZoom:18});
-gsiStd.addTo(map);
-L.control.layers({'🗺 標準地図':gsiStd,'🗺 淡色地図':gsiPale,'🛰 航空写真':gsiPhoto},{},{position:'topright',collapsed:false}).addTo(map);
-setTimeout(function(){map.invalidateSize();},200);
+var wrap=document.getElementById('canvas-wrap');
+var mapCanvas=document.getElementById('map-canvas');
+var ctx=mapCanvas.getContext('2d');
+var svg=document.getElementById('tile-svg');
+var defsEl=document.createElementNS('http://www.w3.org/2000/svg','defs');
+svg.appendChild(defsEl);
 
-// SVG Layer
-var SvgLayer=L.Layer.extend({
-  onAdd:function(m){
-    var pane=m.getPanes().overlayPane;
-    this._svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    this._svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:400;';
-    this._defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
-    this._svg.appendChild(this._defs);
-    // grid group (behind tiles)
-    this._gridG=document.createElementNS('http://www.w3.org/2000/svg','g');
-    this._gridG.setAttribute('id','grid-layer');
-    this._svg.appendChild(this._gridG);
-    // boundary group
-    this._boundaryG=document.createElementNS('http://www.w3.org/2000/svg','g');
-    this._svg.appendChild(this._boundaryG);
-    // tile group
-    this._tileG=document.createElementNS('http://www.w3.org/2000/svg','g');
-    this._svg.appendChild(this._tileG);
-    pane.appendChild(this._svg);
-    m.on('zoomend moveend viewreset',this._reset,this);
-    this._reset();
-  },
-  onRemove:function(m){this._svg.remove();m.off('zoomend moveend viewreset',this._reset,this);},
-  _reset:function(){
-    var tl=map.containerPointToLayerPoint([0,0]);
-    L.DomUtil.setPosition(this._svg,tl);
-    for(var i=0;i<tiles.length;i++) repositionTile(tiles[i]);
-    drawGrid();
-    redrawBoundaries();
-  },
-  getSvg:function(){return this._svg;},
-  getDefs:function(){return this._defs;},
-  getTileG:function(){return this._tileG;},
-  getGridG:function(){return this._gridG;},
-  getBoundaryG:function(){return this._boundaryG;}
+// ── PDF読み込み ──
+wrap.addEventListener('dragover',function(e){e.preventDefault();wrap.classList.add('dragover');});
+wrap.addEventListener('dragleave',function(){wrap.classList.remove('dragover');});
+wrap.addEventListener('drop',function(e){
+  e.preventDefault();wrap.classList.remove('dragover');
+  var file=e.dataTransfer.files[0];
+  if(!file||file.type!=='application/pdf'){alert('PDFファイルをドロップしてください');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){loadPdf(ev.target.result);};
+  reader.readAsArrayBuffer(file);
 });
-svgLayer=new SvgLayer();
-svgLayer.addTo(map);
 
-// 5m Grid
-function drawGrid(){
-  var g=svgLayer.getGridG();
-  while(g.firstChild) g.removeChild(g.firstChild);
-  if(!showGrid) return;
-  var size=5; // metres
-  var bounds=map.getBounds();
-  var ne=bounds.getNorthEast(), sw=bounds.getSouthWest();
-  var mppV=mpp();
-  // lat/lng steps
-  var dLat=size/111320;
-  var dLng=size/(111320*Math.cos(map.getCenter().lat*Math.PI/180));
-  var startLat=Math.floor(sw.lat/dLat)*dLat;
-  var startLng=Math.floor(sw.lng/dLng)*dLng;
-  var mapSize=map.getSize();
-
-  // horizontal lines
-  for(var lat=startLat; lat<=ne.lat+dLat; lat+=dLat){
-    var p1=map.latLngToLayerPoint([lat, sw.lng]);
-    var p2=map.latLngToLayerPoint([lat, ne.lng]);
-    var line=document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
-    line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
-    line.setAttribute('stroke','rgba(100,160,255,0.25)');
-    line.setAttribute('stroke-width','0.5');
-    g.appendChild(line);
-  }
-  // vertical lines
-  for(var lng=startLng; lng<=ne.lng+dLng; lng+=dLng){
-    var p1=map.latLngToLayerPoint([sw.lat, lng]);
-    var p2=map.latLngToLayerPoint([ne.lat, lng]);
-    var line=document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
-    line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
-    line.setAttribute('stroke','rgba(100,160,255,0.25)');
-    line.setAttribute('stroke-width','0.5');
-    g.appendChild(line);
-  }
-}
-function toggleGrid(){
-  showGrid=document.getElementById('grid-toggle').checked;
-  drawGrid();
+function loadPdf(data){
+  if(!window.pdfjsLib){alert('PDF.jsが読み込まれていません');return;}
+  pdfjsLib.getDocument({data:data}).promise.then(function(pdf){
+    pdf.getPage(1).then(function(page){
+      var vp=page.getViewport({scale:2.0});
+      mapCanvas.width=vp.width;
+      mapCanvas.height=vp.height;
+      page.render({canvasContext:ctx,viewport:vp}).promise.then(function(){
+        pdfLoaded=true;
+        document.getElementById('drop-hint').style.display='none';
+        fitCanvas();
+        updateScale();
+      });
+    });
+  }).catch(function(e){alert('PDF読み込みエラー: '+e.message);});
 }
 
-// Boundary drawing
-function redrawBoundaries(){
-  var g=svgLayer.getBoundaryG();
-  while(g.firstChild) g.removeChild(g.firstChild);
-  // completed polygons
-  for(var i=0;i<boundaryPolygons.length;i++){
-    var pts=boundaryPolygons[i];
-    if(pts.length<2) continue;
-    var d='';
-    for(var j=0;j<pts.length;j++){
-      var p=map.latLngToLayerPoint(pts[j]);
-      d+=(j===0?'M':'L')+p.x+' '+p.y;
-    }
-    d+='Z';
-    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d',d);
-    path.setAttribute('fill','rgba(255,200,50,0.08)');
-    path.setAttribute('stroke','#ffc832');
-    path.setAttribute('stroke-width','2');
-    path.setAttribute('stroke-dasharray','6,3');
-    g.appendChild(path);
-  }
-  // in-progress line
-  if(boundaryPoints.length>1){
-    var pts=boundaryPoints;
-    var d='';
-    for(var j=0;j<pts.length;j++){
-      var p=map.latLngToLayerPoint(pts[j]);
-      d+=(j===0?'M':'L')+p.x+' '+p.y;
-    }
-    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d',d);
-    path.setAttribute('fill','none');
-    path.setAttribute('stroke','#ffc832');
-    path.setAttribute('stroke-width','2');
-    path.setAttribute('stroke-dasharray','6,3');
-    g.appendChild(path);
-  }
+function fitCanvas(){
+  var ww=wrap.clientWidth,wh=wrap.clientHeight;
+  var scaleX=ww/mapCanvas.width,scaleY=wh/mapCanvas.height;
+  canvasZoom=Math.min(scaleX,scaleY)*0.9;
+  panX=(ww-mapCanvas.width*canvasZoom)/2;
+  panY=(wh-mapCanvas.height*canvasZoom)/2;
+  applyTransform();
 }
 
-// Helpers
-function mpp(){var lat=map.getCenter().lat;return(156543.03392*Math.cos(lat*Math.PI/180))/Math.pow(2,map.getZoom());}
-function fillColor(def){return'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+','+tileOpacity+')';}
-function mk(tag,attrs){var el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)el.setAttribute(k,attrs[k]);return el;}
-
-// Create Tile
-function createTile(latlng,type,rot){
-  var def=TILE_DEFS[type],uid='T'+(uidCounter++),tileG=svgLayer.getTileG();
-  var g=document.createElementNS('http://www.w3.org/2000/svg','g');
-  g.setAttribute('id',uid);g.style.pointerEvents='all';g.style.cursor='grab';
-  if(def.hatch){var pid='HP'+uid;var pat=mk('pattern',{id:pid,patternUnits:'userSpaceOnUse',width:'10',height:'10',patternTransform:'rotate(45)'});var ln=mk('line',{x1:'0',y1:'0',x2:'0',y2:'10',stroke:def.stroke,'stroke-width':'2','stroke-opacity':'0.25'});pat.appendChild(ln);svgLayer.getDefs().appendChild(pat);}
-  var rect=mk('rect',{rx:'3',fill:fillColor(def),stroke:def.stroke,'stroke-width':'1.5'});
-  var hRect=null;
-  if(def.hatch){hRect=mk('rect',{rx:'3',fill:'url(#HP'+uid+')'});g.appendChild(rect);g.appendChild(hRect);}else{g.appendChild(rect);}
-  var txt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'sans-serif','font-weight':'700','pointer-events':'none'});txt.textContent=def.label;g.appendChild(txt);
-  var dim=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none',opacity:'0.8'});dim.textContent=def.w+'x'+def.d+'m';g.appendChild(dim);
-  var rh=mk('circle',{r:'8',fill:def.stroke,stroke:'#fff','stroke-width':'1.5',opacity:'0',cursor:'grab'});rh.style.pointerEvents='all';
-  var rhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-size':'10','pointer-events':'none',opacity:'0'});rhT.textContent='↻';
-  g.appendChild(rh);g.appendChild(rhT);
-  var dh=mk('circle',{r:'9',fill:'#e85555',stroke:'#fff','stroke-width':'1.5',opacity:'0',cursor:'pointer'});dh.style.pointerEvents='all';
-  var dhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-size':'12','font-weight':'700','pointer-events':'none',opacity:'0'});dhT.textContent='x';
-  g.appendChild(dh);g.appendChild(dhT);
-  var tile={uid:uid,g:g,rect:rect,hRect:hRect,txt:txt,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,latlng:L.latLng(latlng.lat,latlng.lng),type:type,rot:rot,def:def};
-  g.addEventListener('mouseenter',function(){if(currentTool==='erase'){g.style.cursor='pointer';return;}[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});});
-  g.addEventListener('mouseleave',function(){g.style.cursor='grab';[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});});
-  g.addEventListener('click',function(e){if(currentTool==='erase'){e.stopPropagation();deleteTile(tile);}});
-  dh.addEventListener('click',function(e){e.stopPropagation();deleteTile(tile);});
-  setupMoveDrag(g,tile);setupRotDrag(rh,tile);
-  tileG.appendChild(g);tiles.push(tile);repositionTile(tile);updateMetrics();
-}
-
-function repositionTile(tile){
-  var def=tile.def,pt=map.latLngToLayerPoint(tile.latlng),m=mpp(),pw=def.w/m,ph=def.d/m;
-  tile.rect.setAttribute('x','0');tile.rect.setAttribute('y','0');tile.rect.setAttribute('width',pw);tile.rect.setAttribute('height',ph);tile.rect.setAttribute('fill',fillColor(def));
-  if(tile.hRect){tile.hRect.setAttribute('x','0');tile.hRect.setAttribute('y','0');tile.hRect.setAttribute('width',pw);tile.hRect.setAttribute('height',ph);}
-  var fs=Math.max(8,Math.min(13,Math.min(pw,ph)/4));
-  tile.txt.setAttribute('x',pw/2);tile.txt.setAttribute('y',ph/2-fs*0.75);tile.txt.setAttribute('font-size',fs);
-  tile.dim.setAttribute('x',pw/2);tile.dim.setAttribute('y',ph/2+fs*0.85);tile.dim.setAttribute('font-size',fs*0.8);
-  tile.rh.setAttribute('cx',pw/2);tile.rh.setAttribute('cy',ph+14);tile.rhT.setAttribute('x',pw/2);tile.rhT.setAttribute('y',ph+14);
-  tile.dh.setAttribute('cx',pw+10);tile.dh.setAttribute('cy',-10);tile.dhT.setAttribute('x',pw+10);tile.dhT.setAttribute('y',-10);
-  tile.g.setAttribute('transform','translate('+pt.x+','+pt.y+') rotate('+tile.rot+') translate('+(-pw/2)+','+(-ph/2)+')');
+function applyTransform(){
+  mapCanvas.style.transform='translate('+panX+'px,'+panY+'px) scale('+canvasZoom+')';
+  mapCanvas.style.transformOrigin='0 0';
+  svg.style.transform='translate('+panX+'px,'+panY+'px) scale('+canvasZoom+')';
+  svg.style.transformOrigin='0 0';
+  // SVGサイズをcanvasに合わせる
+  svg.setAttribute('width',mapCanvas.width);
+  svg.setAttribute('height',mapCanvas.height);
+  document.getElementById('zoom-lv').textContent=Math.round(canvasZoom*100);
   updateHUD();
+  tiles.forEach(reposTile);
 }
 
-function setupMoveDrag(el,tile){
-  var active=false,startCP,startLL;
-  el.addEventListener('mousedown',function(e){if(e.target===tile.rh||e.target===tile.dh)return;if(currentTool==='erase')return;e.stopPropagation();e.preventDefault();active=true;startCP=map.mouseEventToContainerPoint(e);startLL=L.latLng(tile.latlng.lat,tile.latlng.lng);map.dragging.disable();el.style.cursor='grabbing';});
-  document.addEventListener('mousemove',function(e){if(!active)return;var cp=map.mouseEventToContainerPoint(e),m=mpp(),dx=cp.x-startCP.x,dy=cp.y-startCP.y;tile.latlng=L.latLng(startLL.lat-dy*m/111320,startLL.lng+dx*m/(111320*Math.cos(startLL.lat*Math.PI/180)));repositionTile(tile);});
-  document.addEventListener('mouseup',function(){if(active){active=false;el.style.cursor='grab';}});
+// ── ズーム（ホイール）──
+wrap.addEventListener('wheel',function(e){
+  e.preventDefault();
+  var rect=wrap.getBoundingClientRect();
+  var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  var delta=e.deltaY>0?0.85:1.18;
+  var newZoom=Math.max(0.1,Math.min(10,canvasZoom*delta));
+  panX=mx-(mx-panX)*(newZoom/canvasZoom);
+  panY=my-(my-panY)*(newZoom/canvasZoom);
+  canvasZoom=newZoom;
+  applyTransform();
+},{passive:false});
+
+// ── パン（MiddleMouseまたは地図パンモード）──
+wrap.addEventListener('mousedown',function(e){
+  if(!currentTool||(e.button===1)){
+    isPanning=true;
+    panStartX=e.clientX;panStartY=e.clientY;
+    panStartPX=panX;panStartPY=panY;
+    wrap.style.cursor='grabbing';
+    e.preventDefault();
+  }
+});
+document.addEventListener('mousemove',function(e){
+  if(!isPanning)return;
+  panX=panStartPX+(e.clientX-panStartX);
+  panY=panStartPY+(e.clientY-panStartY);
+  applyTransform();
+});
+document.addEventListener('mouseup',function(){
+  if(isPanning){isPanning=false;wrap.style.cursor='';}
+});
+
+// ── クリックでタイル配置 ──
+wrap.addEventListener('click',function(e){
+  if(!currentTool||currentTool==='erase'||isPanning)return;
+  if(!pdfLoaded){alert('先にPDF地図をドロップしてください');return;}
+  var rect=wrap.getBoundingClientRect();
+  var cx=(e.clientX-rect.left-panX)/canvasZoom;
+  var cy=(e.clientY-rect.top-panY)/canvasZoom;
+  createTile(cx,cy,currentTool,currentRot);
+});
+
+// ── スケール計算 ──
+// PDF render scale=2.0, so 1px on canvas = 1/(2*96) inch = 1/192 inch
+// 1inch = 25.4mm, so 1px = 25.4/192 mm on paper
+// actual = paper_mm * mapScale / 1000 m
+var PDF_RENDER_SCALE=2.0;
+var PDF_DPI=96;
+function pxPerMeter(){
+  // mm per px on paper
+  var mmPerPx=25.4/PDF_DPI/PDF_RENDER_SCALE;
+  // actual meters per mm on paper = mapScale/1000
+  var mPerPx=mmPerPx*mapScale/1000;
+  return 1/mPerPx;
 }
-function setupRotDrag(handle,tile){
-  handle.addEventListener('mousedown',function(e){e.stopPropagation();e.preventDefault();map.dragging.disable();var cp=map.latLngToContainerPoint(tile.latlng),sa=Math.atan2(e.clientY-cp.y,e.clientX-cp.x)*180/Math.PI,sr=tile.rot;
-    function onMove(ev){var c=map.latLngToContainerPoint(tile.latlng),a=Math.atan2(ev.clientY-c.y,ev.clientX-c.x)*180/Math.PI;tile.rot=((sr+(a-sa))%360+360)%360;repositionTile(tile);}
-    function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
-    document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);});
+function updateScale(){
+  mapScale=parseFloat(document.getElementById('scale-input').value)||500;
+  document.getElementById('scale-disp').textContent=mapScale;
+  updateHUD();
+  tiles.forEach(reposTile);
+}
+function updateHUD(){
+  document.getElementById('px-m').textContent=pxPerMeter().toFixed(1);
 }
 
-function deleteTile(tile){tile.g.remove();var pat=document.getElementById('HP'+tile.uid);if(pat)pat.remove();tiles=tiles.filter(function(t){return t!==tile;});updateMetrics();}
-function clearAll(){if(!confirm('全タイルを削除しますか？'))return;tiles.slice().forEach(function(t){deleteTile(t);});boundaryPolygons=[];boundaryPoints=[];redrawBoundaries();}
+// ── タイル定義更新 ──
+function updateDefs(){
+  var w=parseFloat(document.getElementById('unit-w').value)||16.5;
+  var d=parseFloat(document.getElementById('unit-d').value)||6;
+  DEFS.unit.w=w;DEFS.unit.d=d;
+  DEFS.park.w=parseFloat(document.getElementById('park-w').value)||2.5;
+  DEFS.park.d=parseFloat(document.getElementById('park-d').value)||5;
+  DEFS.stair.w=parseFloat(document.getElementById('stair-w').value)||3;
+  DEFS.stair.d=parseFloat(document.getElementById('stair-d').value)||4;
+  document.getElementById('dim-unit').textContent=DEFS.unit.w+'×'+DEFS.unit.d+'m';
+  document.getElementById('dim-park').textContent=DEFS.park.w+'×'+DEFS.park.d+'m';
+  document.getElementById('dim-stair').textContent=DEFS.stair.w+'×'+DEFS.stair.d+'m';
+  document.getElementById('unit-total').textContent=DEFS.unit.d;
+  tiles.forEach(reposTile);
+}
+
+// ── SVGヘルパー ──
+function mk(tag,attrs){
+  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(var k in attrs)el.setAttribute(k,attrs[k]);
+  return el;
+}
+
+// ── タイル作成 ──
+function createTile(cx,cy,type,rot){
+  var def=DEFS[type];
+  var uid='T'+(uidCounter++);
+  var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.style.pointerEvents='all';
+  g.style.cursor='grab';
+
+  if(type==='stair'){
+    var pid='HP'+uid;
+    var pat=mk('pattern',{id:pid,patternUnits:'userSpaceOnUse',width:'8',height:'8',patternTransform:'rotate(45)'});
+    var ln=mk('line',{x1:'0',y1:'0',x2:'0',y2:'8',stroke:def.stroke,'stroke-width':'1.5','stroke-opacity':'0.3'});
+    pat.appendChild(ln);defsEl.appendChild(pat);
+  }
+
+  var rect=mk('rect',{rx:'2',fill:def.fill.replace('OP',tileOpacity),stroke:def.stroke,'stroke-width':'2'});
+  g.appendChild(rect);
+  var hRect=null;
+  if(type==='stair'){hRect=mk('rect',{rx:'2',fill:'url(#HP'+uid+')'});g.appendChild(hRect);}
+
+  var txt=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke','stroke':'white','stroke-width':'3'});
+  txt.textContent=def.label;g.appendChild(txt);
+  var dim=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none','paint-order':'stroke','stroke':'white','stroke-width':'2',opacity:'0.9'});
+  dim.textContent=def.w+'×'+def.d+'m';g.appendChild(dim);
+
+  var rh=mk('circle',{r:'9',fill:def.stroke,stroke:'white','stroke-width':'2',opacity:'0'});
+  rh.style.pointerEvents='all';g.appendChild(rh);
+  var rhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'700','pointer-events':'none',opacity:'0'});
+  rhT.textContent='↻';g.appendChild(rhT);
+
+  var dh=mk('circle',{r:'10',fill:'#dc2626',stroke:'white','stroke-width':'2',opacity:'0'});
+  dh.style.pointerEvents='all';g.appendChild(dh);
+  var dhT=mk('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'13','font-weight':'700','pointer-events':'none',opacity:'0'});
+  dhT.textContent='×';g.appendChild(dhT);
+
+  var tile={uid:uid,g:g,rect:rect,hRect:hRect,txt:txt,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,cx:cx,cy:cy,type:type,rot:rot};
+
+  g.addEventListener('mouseenter',function(){
+    if(currentTool==='erase'){g.style.cursor='pointer';return;}
+    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});
+  });
+  g.addEventListener('mouseleave',function(){
+    g.style.cursor='grab';
+    [rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});
+  });
+  g.addEventListener('click',function(e){
+    if(currentTool==='erase'){e.stopPropagation();delTile(tile);}
+  });
+  dh.addEventListener('click',function(e){e.stopPropagation();delTile(tile);});
+  setupMove(g,tile);
+  setupRotDrag(rh,tile);
+
+  svg.appendChild(g);
+  tiles.push(tile);
+  reposTile(tile);
+  updateMetrics();
+}
+
+function reposTile(t){
+  var def=DEFS[t.type];
+  var ppm=pxPerMeter();
+  var pw=def.w*ppm,ph=def.d*ppm;
+  t.rect.setAttribute('x','0');t.rect.setAttribute('y','0');
+  t.rect.setAttribute('width',pw);t.rect.setAttribute('height',ph);
+  t.rect.setAttribute('fill',def.fill.replace('OP',tileOpacity));
+  if(t.hRect){t.hRect.setAttribute('x','0');t.hRect.setAttribute('y','0');t.hRect.setAttribute('width',pw);t.hRect.setAttribute('height',ph);}
+  var fs=Math.max(8,Math.min(14,Math.min(pw,ph)/3.5));
+  t.txt.setAttribute('x',pw/2);t.txt.setAttribute('y',ph/2-fs*0.7);t.txt.setAttribute('font-size',fs);
+  t.dim.textContent=def.w+'×'+def.d+'m';
+  t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph/2+fs*0.8);t.dim.setAttribute('font-size',fs*0.82);
+  t.rh.setAttribute('cx',pw/2);t.rh.setAttribute('cy',ph+14);t.rhT.setAttribute('x',pw/2);t.rhT.setAttribute('y',ph+14);
+  t.dh.setAttribute('cx',pw+12);t.dh.setAttribute('cy',-12);t.dhT.setAttribute('x',pw+12);t.dhT.setAttribute('y',-12);
+  t.g.setAttribute('transform','translate('+t.cx+','+t.cy+') rotate('+t.rot+',0,0) translate('+(-pw/2)+','+(-ph/2)+')');
+}
+
+function setupMove(el,tile){
+  var act=false,sX,sY,sCX,sCY;
+  el.addEventListener('mousedown',function(e){
+    if(e.target===tile.rh||e.target===tile.dh)return;
+    if(currentTool==='erase')return;
+    e.stopPropagation();e.preventDefault();
+    act=true;sX=e.clientX;sY=e.clientY;sCX=tile.cx;sCY=tile.cy;
+    el.style.cursor='grabbing';
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!act)return;
+    var dx=(e.clientX-sX)/canvasZoom,dy=(e.clientY-sY)/canvasZoom;
+    tile.cx=sCX+dx;tile.cy=sCY+dy;
+    reposTile(tile);
+  });
+  document.addEventListener('mouseup',function(){if(act){act=false;el.style.cursor='grab';}});
+}
+
+function setupRotDrag(h,tile){
+  h.addEventListener('mousedown',function(e){
+    e.stopPropagation();e.preventDefault();
+    // タイル中心のスクリーン座標
+    var def=DEFS[tile.type],ppm=pxPerMeter();
+    var tcx=tile.cx*canvasZoom+panX,tcy=tile.cy*canvasZoom+panY;
+    var rect=wrap.getBoundingClientRect();
+    var sa=Math.atan2(e.clientY-rect.top-tcy,e.clientX-rect.left-tcx)*180/Math.PI,sr=tile.rot;
+    function mv(ev){
+      var a=Math.atan2(ev.clientY-rect.top-tcy,ev.clientX-rect.left-tcx)*180/Math.PI;
+      tile.rot=((sr+(a-sa))%360+360)%360;reposTile(tile);
+    }
+    function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+}
+
+function delTile(t){
+  t.g.remove();
+  var p=document.getElementById('HP'+t.uid);if(p)p.remove();
+  tiles=tiles.filter(function(x){return x!==t;});
+  updateMetrics();
+}
+function clearAll(){
+  if(!confirm('全タイルを削除しますか？'))return;
+  tiles.slice().forEach(delTile);
+}
 
 function setTool(t){
   currentTool=t;
   document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
   var el=document.getElementById('tool-'+t);if(el)el.classList.add('active');
-  var badge=document.getElementById('mode-badge');
-  if(t==='erase'){badge.textContent='消去モード — タイルをクリック';badge.className='erase';map.dragging.enable();map.getContainer().style.cursor='default';}
-  else if(t==='boundary'){badge.textContent='境界線モード — クリックで頂点 / 右クリックで確定';badge.className='boundary';map.dragging.disable();map.getContainer().style.cursor='crosshair';}
-  else{badge.textContent='配置モード — 地図をクリックして配置';badge.className='on';map.dragging.disable();map.getContainer().style.cursor='crosshair';}
+  var b=document.getElementById('mode-badge');
+  if(t==='erase'){b.textContent='消去モード';b.className='erase';wrap.style.cursor='default';}
+  else{b.textContent='配置モード — クリックで配置';b.className='on';wrap.style.cursor='crosshair';}
 }
-
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
-    if(currentTool==='boundary'&&boundaryPoints.length>0){boundaryPoints=[];redrawBoundaries();return;}
     currentTool=null;
     document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
     document.getElementById('mode-badge').textContent='地図パンモード';
-    document.getElementById('mode-badge').className='';
-    map.dragging.enable();map.getContainer().style.cursor='';
-  }
-});
-
-map.on('click',function(e){
-  if(!currentTool) return;
-  if(currentTool==='erase') return;
-  if(currentTool==='boundary'){
-    boundaryPoints.push(e.latlng);
-    redrawBoundaries();
-    return;
-  }
-  createTile(e.latlng,currentTool,currentRot);
-});
-
-map.on('contextmenu',function(e){
-  if(currentTool==='boundary'){
-    if(boundaryPoints.length>=2){
-      boundaryPolygons.push(boundaryPoints.slice());
-    }
-    boundaryPoints=[];
-    redrawBoundaries();
-    e.originalEvent.preventDefault();
+    document.getElementById('mode-badge').className='pan';
+    wrap.style.cursor='';
   }
 });
 
 function setRot(v){currentRot=v;document.getElementById('rot-range').value=v;document.getElementById('rot-val').textContent=v+'°';}
 function onRotSlider(){currentRot=parseInt(document.getElementById('rot-range').value);document.getElementById('rot-val').textContent=currentRot+'°';}
-function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(function(t){repositionTile(t);});}
-function updateHUD(){document.getElementById('z-lv').textContent=map.getZoom();document.getElementById('px-m').textContent=(1/mpp()).toFixed(1);}
+function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
 function updateMetrics(){
-  var units=0,parks=0,stairs=0,unitA=0;
-  tiles.forEach(function(t){if(t.type==='unit'){units++;unitA+=t.def.w*t.def.d;}if(t.type==='park')parks++;if(t.type==='stair')stairs++;});
+  var u=0,p=0,s=0,a=0;
+  tiles.forEach(function(t){if(t.type==='unit'){u++;a+=DEFS.unit.w*DEFS.unit.d;}if(t.type==='park')p++;if(t.type==='stair')s++;});
   document.getElementById('metrics').innerHTML=
-    '<div class="mc"><div class="ml">住戸数</div><div class="mv">'+units+'<span class="mu"> 戸</span></div></div>'+
-    '<div class="mc"><div class="ml">駐車区画</div><div class="mv">'+parks+'<span class="mu"> 台</span></div></div>'+
-    '<div class="mc"><div class="ml">非常階段</div><div class="mv">'+stairs+'<span class="mu"> 箇所</span></div></div>'+
-    '<div class="mc"><div class="ml">住戸床面積計</div><div class="mv">'+Math.round(unitA).toLocaleString()+'<span class="mu"> ㎡</span></div></div>';
+    '<div class="mc"><div class="ml">住戸数</div><div class="mv">'+u+'<span class="mu">戸</span></div></div>'+
+    '<div class="mc"><div class="ml">駐車区画</div><div class="mv">'+p+'<span class="mu">台</span></div></div>'+
+    '<div class="mc"><div class="ml">非常階段</div><div class="mv">'+s+'<span class="mu">箇所</span></div></div>'+
+    '<div class="mc"><div class="ml">床面積計</div><div class="mv">'+Math.round(a).toLocaleString()+'<span class="mu">㎡</span></div></div>';
 }
-async function doSearch(){
-  var q=document.getElementById('addr').value.trim();if(!q)return;
-  try{var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+' 日本')+'&format=json&limit=1');var d=await r.json();if(!d.length){alert('住所が見つかりませんでした');return;}var ll=L.latLng(+d[0].lat,+d[0].lon);map.setView(ll,19);if(searchMarker)map.removeLayer(searchMarker);searchMarker=L.marker(ll).addTo(map).bindPopup(d[0].display_name).openPopup();}
-  catch(e){alert('検索に失敗しました');}
-}
-map.on('zoomend moveend viewreset',function(){tiles.forEach(function(t){repositionTile(t);});drawGrid();redrawBoundaries();updateHUD();});
-updateMetrics();updateHUD();
+
+updateDefs();updateMetrics();updateHUD();
 </script>
 </body>
 </html>
