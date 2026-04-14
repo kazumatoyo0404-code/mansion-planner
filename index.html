@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- saved from url=(0057)file:///C:/Users/01-0556356U/Downloads/mansion_v11_2.html -->
-<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>敷地タイルプランナー</title>
 <style>
 :root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;--amber:#d97706;--purple:#7c3aed;--orange:#ea580c;--cyan:#0891b2;}
@@ -121,7 +121,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="lbl">📏 キャリブレーション</div>
     <button class="btn-primary" onclick="startCalib()">① 2点クリックで距離測定</button>
     <div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:4px;">
-      <div style="flex:1;"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:2px;">実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1" style="width:100%;height:28px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"></div>
+      <div style="flex:1;"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:2px;">実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1" style="width:100%;height:28px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"/></div>
       <button class="btn-sm" onclick="applyCalib()">確定</button>
     </div>
     <div class="calib-status idle" id="calib-status">PDFをドロップ後にキャリブレーション</div>
@@ -132,63 +132,63 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="lbl">タイルサイズ (m)</div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🏠 住戸</div>
     <div class="row2">
-      <div class="field"><label>幅</label><input type="number" id="unit-w" value="16.5" step="0.5" oninput="updateDefs()"></div>
-      <div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"></div>
+      <div class="field"><label>幅</label><input type="number" id="unit-w" value="16.5" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚗 駐車場</div>
     <div class="row2">
-      <div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"></div>
-      <div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"></div>
+      <div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🪜 非常階段</div>
     <div class="row2">
-      <div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"></div>
-      <div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"></div>
+      <div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🛗 EV</div>
     <div class="row2">
-      <div class="field"><label>幅</label><input type="number" id="elev-w" value="2" step="0.5" oninput="updateDefs()"></div>
-      <div class="field"><label>奥行</label><input type="number" id="elev-d" value="2" step="0.5" oninput="updateDefs()"></div>
+      <div class="field"><label>幅</label><input type="number" id="elev-w" value="2" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>奥行</label><input type="number" id="elev-d" value="2" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚶 外廊下（初期幅m）</div>
     <div class="row2">
-      <div class="field"><label>幅（固定）</label><input type="number" id="corridor-w" value="3" step="0.5" oninput="updateDefs()"></div>
-      <div class="field"><label>初期長さ</label><input type="number" id="corridor-d" value="10" step="0.5" oninput="updateDefs()"></div>
+      <div class="field"><label>幅（固定）</label><input type="number" id="corridor-w" value="3" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>初期長さ</label><input type="number" id="corridor-d" value="10" step="0.5" oninput="updateDefs()"/></div>
     </div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🌿 バルコニー（初期幅m）</div>
     <div class="row2">
-      <div class="field"><label>奥行（固定）</label><input type="number" id="balcony-d" value="2" step="0.5" oninput="updateDefs()"></div>
-      <div class="field"><label>初期長さ</label><input type="number" id="balcony-w" value="10" step="0.5" oninput="updateDefs()"></div>
+      <div class="field"><label>奥行（固定）</label><input type="number" id="balcony-d" value="2" step="0.5" oninput="updateDefs()"/></div>
+      <div class="field"><label>初期長さ</label><input type="number" id="balcony-w" value="10" step="0.5" oninput="updateDefs()"/></div>
     </div>
   </div>
 
   <div class="sb-sec">
     <div class="lbl">表示設定</div>
-    <div class="snap-row"><label>🧲 スナップ</label><label class="toggle"><input type="checkbox" id="snap-toggle" checked=""><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>🚫 重なり防止</label><label class="toggle"><input type="checkbox" id="overlap-toggle" checked=""><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>📐 グリッド表示</label><label class="toggle"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🧲 スナップ</label><label class="toggle"><input type="checkbox" id="snap-toggle" checked/><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🚫 重なり防止</label><label class="toggle"><input type="checkbox" id="overlap-toggle" checked/><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>📐 グリッド表示</label><label class="toggle"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"/><span class="tog-sl"></span></label></div>
     <div class="field" id="grid-size-field" style="display:none;margin-top:2px;">
       <label>グリッド間隔 (m)</label>
-      <input type="number" id="grid-size" value="5" min="1" step="1" oninput="redrawGrid()">
+      <input type="number" id="grid-size" value="5" min="1" step="1" oninput="redrawGrid()"/>
     </div>
-    <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"><span class="slider-val" id="op-val">65%</span></div>
+    <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"/><span class="slider-val" id="op-val">65%</span></div>
   </div>
 
   <div class="sb-sec">
     <div class="lbl">配置ツール</div>
-    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool(&#39;unit&#39;)"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">16.5×6m</span></button>
-    <button class="tool-btn t-park" id="tool-park" onclick="setTool(&#39;park&#39;)"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
-    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool(&#39;stair&#39;)"><span class="icon">🪜</span><span class="tname">非常階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
-    <button class="tool-btn t-elev" id="tool-elev" onclick="setTool(&#39;elev&#39;)"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
-    <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool(&#39;corridor&#39;)"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで調整</span></button>
-    <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool(&#39;balcony&#39;)"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで調整</span></button>
+    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">16.5×6m</span></button>
+    <button class="tool-btn t-park" id="tool-park" onclick="setTool('park')"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
+    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">非常階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
+    <button class="tool-btn t-elev" id="tool-elev" onclick="setTool('elev')"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
+    <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool('corridor')"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで調整</span></button>
+    <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool('balcony')"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで調整</span></button>
     <button class="tool-btn t-free" id="tool-free" onclick="openFreeModal()"><span class="icon">✏️</span><span class="tname">フリータイル</span><span class="tdim">名前・サイズ自由</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-select" id="tool-select" onclick="setTool(&#39;select&#39;)"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
-    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool(&#39;measure&#39;)"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
-    <button class="tool-btn t-guide" id="tool-guide" onclick="setTool(&#39;guide&#39;)"><span class="icon">📌</span><span class="tname">補助線</span><span class="tdim">2点クリック</span></button>
+    <button class="tool-btn t-select" id="tool-select" onclick="setTool('select')"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
+    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool('measure')"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
+    <button class="tool-btn t-guide" id="tool-guide" onclick="setTool('guide')"><span class="icon">📌</span><span class="tname">補助線</span><span class="tdim">2点クリック</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool(&#39;erase&#39;)"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
+    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
     <div style="display:flex;gap:4px;margin-top:4px;">
       <button class="btn-sm" style="flex:1;" onclick="clearMeasures()">測定線を全消去</button>
       <button class="btn-sm" style="flex:1;" onclick="clearGuides()">補助線を全消去</button>
@@ -205,14 +205,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="rot-btn" id="rot-last" onclick="setRotLast()">前回</button>
     </div>
     <div class="rot-input-row">
-      <input type="number" id="rot-custom" value="0" min="0" max="359" oninput="setRotCustom()">
+      <input type="number" id="rot-custom" value="0" min="0" max="359" oninput="setRotCustom()"/>
       <span>° 直接入力</span>
     </div>
   </div>
 
   <div class="sb-sec">
     <div class="lbl">配置サマリー</div>
-    <div class="metrics-grid" id="metrics"><div class="mc"><div class="ml">住戸数</div><div class="mv">0<span class="mu">戸</span></div></div><div class="mc"><div class="ml">駐車区画</div><div class="mv">0<span class="mu">台</span></div></div><div class="mc"><div class="ml">非常階段</div><div class="mv">0<span class="mu">箇所</span></div></div><div class="mc"><div class="ml">EV</div><div class="mv">0<span class="mu">基</span></div></div><div class="mc"><div class="ml">住戸床面積</div><div class="mv">0<span class="mu">㎡</span></div></div><div class="mc"><div class="ml">建築面積計</div><div class="mv">0<span class="mu">㎡</span></div></div></div>
+    <div class="metrics-grid" id="metrics"></div>
     <div class="hint">Ctrl+Z 元に戻す | Ctrl+C コピー | Ctrl+V 貼付け | Del 削除 | ESC パンモード | Shift+クリックで複数選択</div>
   </div>
 
@@ -229,20 +229,20 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <div id="canvas-wrap">
   <div id="drop-hint"><div class="icon">📄</div><div class="text">PDF地図をここにドロップ</div><div class="sub">縮尺図面を読み込んでタイルを配置できます</div></div>
   <canvas id="map-canvas"></canvas>
-  <svg id="tile-svg"><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
+  <svg id="tile-svg"></svg>
   <div id="mode-badge" class="pan">地図パンモード</div>
   <div id="sel-bar">0個選択中</div>
-  <div id="hud">1m=<span id="hud-ppm">10.0</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
+  <div id="hud">1m=<span id="hud-ppm">-</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
   <div id="shortcut-hint">Ctrl+Z 元に戻す | Ctrl+C コピー | Ctrl+V 貼付け<br>Del 削除 | ESC パンモード | Shift+クリック 複数選択</div>
 </div>
 
 <div id="free-modal">
   <div id="free-modal-inner">
     <h3>✏️ フリータイル設定</h3>
-    <input type="text" id="free-name" placeholder="名前（例: 管理室）" maxlength="10">
+    <input type="text" id="free-name" placeholder="名前（例: 管理室）" maxlength="10"/>
     <div class="row2">
-      <div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.5" min="0.5"></div>
-      <div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.5" min="0.5"></div>
+      <div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.5" min="0.5"/></div>
+      <div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.5" min="0.5"/></div>
     </div>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="closeFreeModal()">キャンセル</button>
@@ -441,22 +441,38 @@ function redrawGrid(){
 // Snap
 function trySnap(cx,cy,type,rot){
   if(!document.getElementById('snap-toggle').checked)return null;
-  var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm,thresh=SNAP_DIST/canvasZoom,best=null,bestD=thresh;
+  var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
+  var thresh=SNAP_DIST/canvasZoom,best=null,bestD=thresh;
   tiles.forEach(function(t){
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
-    var te=getEdges(t.cx,t.cy,tpw,tph,t.rot),ne=getEdges(cx,cy,pw,ph,rot);
-    te.forEach(function(e){ne.forEach(function(n){var dx=e.x-n.x,dy=e.y-n.y,d=Math.sqrt(dx*dx+dy*dy);if(d<bestD){bestD=d;best={cx:cx+dx,cy:cy+dy};}});});
+    var te=getSnapPts(t.cx,t.cy,tpw,tph,t.rot);
+    var ne=getSnapPts(cx,cy,pw,ph,rot);
+    te.forEach(function(e){ne.forEach(function(n){
+      var dx=e.x-n.x,dy=e.y-n.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<bestD){bestD=d;best={cx:cx+dx,cy:cy+dy};}
+    });});
   });
   return best;
 }
-function getEdges(cx,cy,pw,ph,rot){
+function getSnapPts(cx,cy,pw,ph,rot){
   var r=rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
   function r2(x,y){return{x:x*cos-y*sin+cx,y:x*sin+y*cos+cy};}
-  return[r2(0,-ph/2),r2(0,ph/2),r2(-pw/2,0),r2(pw/2,0)];
+  // 辺中点4点 + コーナー4点
+  return[
+    r2(0,-ph/2),r2(0,ph/2),r2(-pw/2,0),r2(pw/2,0),
+    r2(-pw/2,-ph/2),r2(pw/2,-ph/2),r2(-pw/2,ph/2),r2(pw/2,ph/2)
+  ];
 }
+function getEdges(cx,cy,pw,ph,rot){return getSnapPts(cx,cy,pw,ph,rot);}
 function checkOverlap(cx,cy,type,rot,excl){
   var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
-  for(var i=0;i<tiles.length;i++){var t=tiles[i];if(t===excl)continue;var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;if(Math.abs(cx-t.cx)<(pw+tpw)/2-2&&Math.abs(cy-t.cy)<(ph+tph)/2-2)return true;}
+  // 中心間距離でAABB判定（回転考慮なし・簡易版）
+  for(var i=0;i<tiles.length;i++){
+    var t=tiles[i];if(t===excl)continue;
+    var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
+    var overlapX=(pw+tpw)/2-1,overlapY=(ph+tph)/2-1;
+    if(Math.abs(cx-t.cx)<overlapX&&Math.abs(cy-t.cy)<overlapY)return true;
+  }
   return false;
 }
 function showFlash(cx,cy){clearEl(snapG);snapG.appendChild(mkS('circle',{cx:cx,cy:cy,r:'12',fill:'rgba(220,38,38,0.25)',stroke:'#dc2626','stroke-width':'2'}));setTimeout(function(){clearEl(snapG);},350);}
@@ -733,6 +749,5 @@ function updateMetrics(){
 }
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
 </script>
-
-
-</body></html>
+</body>
+</html>
