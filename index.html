@@ -109,7 +109,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v5.6</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v5.7</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -331,21 +331,28 @@ wrap.addEventListener('wheel',function(e){
 },{passive:false});
 
 // ── マウス操作 ──
+var panMoved=false;
 wrap.addEventListener('mousedown',function(e){
   if(calibMode||measureMode||guideMode||polyMode||setbackMode)return;
   var rect=wrap.getBoundingClientRect();
   var cx=(e.clientX-rect.left-panX)/canvasZoom,cy=(e.clientY-rect.top-panY)/canvasZoom;
-  // ホイールクリック or 左クリック（ツールなし or タイルでない場所）でパン
-  if(e.button===1){isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();return;}
+  if(e.button===1){
+    isPanning=true;panMoved=false;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();return;
+  }
   if(currentTool==='select'&&e.button===0&&!e.shiftKey&&(e.target===wrap||e.target===mapCanvas)){
     boxSelecting=true;boxStart={x:cx,y:cy};clearEl(boxG);e.preventDefault();return;
   }
   if(e.button===0&&(e.target===wrap||e.target===mapCanvas)){
-    isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();
+    isPanning=true;panMoved=false;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;e.preventDefault();
   }
 });
 document.addEventListener('mousemove',function(e){
-  if(isPanning){panX=panSPX+(e.clientX-panSX);panY=panSPY+(e.clientY-panSY);applyTf();return;}
+  if(isPanning){
+    var dx=e.clientX-panSX,dy=e.clientY-panSY;
+    if(!panMoved&&Math.sqrt(dx*dx+dy*dy)>5){panMoved=true;wrap.style.cursor='grabbing';}
+    if(panMoved){panX=panSPX+dx;panY=panSPY+dy;applyTf();}
+    return;
+  }
   if(setbackMode&&polyDone){
     var r2=wrap.getBoundingClientRect();
     var ne=nearestEdge((e.clientX-r2.left-panX)/canvasZoom,(e.clientY-r2.top-panY)/canvasZoom);
@@ -362,7 +369,12 @@ document.addEventListener('mousemove',function(e){
   }
 });
 document.addEventListener('mouseup',function(e){
-  if(isPanning){isPanning=false;wasPanning=true;wrap.style.cursor=currentTool?'crosshair':'';setTimeout(function(){wasPanning=false;},10);}
+  if(isPanning){
+    wasPanning=panMoved;
+    isPanning=false;panMoved=false;
+    wrap.style.cursor=currentTool?'crosshair':'';
+    if(wasPanning)setTimeout(function(){wasPanning=false;},10);
+  }
   if(boxSelecting){
     boxSelecting=false;clearEl(boxG);
     if(boxRect&&(boxRect.w>5||boxRect.h>5)){
