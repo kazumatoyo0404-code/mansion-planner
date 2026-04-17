@@ -113,18 +113,18 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">PDF MAP EDITION v4.6</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー</div><div class="sb-sub">POLYGON SETBACK EDITION v5.1</div></div>
 
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:5px;">ドラッグ＆ドロップ または↓ボタンで読込</div>
-    <label style="display:block;width:100%;cursor:pointer;margin-bottom:4px;">
+    <label style="display:block;width:100%;cursor:pointer;margin-bottom:6px;">
       <span style="display:block;text-align:center;height:32px;line-height:32px;font-size:12px;font-weight:700;background:var(--blue);color:#fff;border-radius:6px;">📂 PDFファイルを選択</span>
       <input type="file" id="pdf-file-input" accept="application/pdf,.pdf" style="display:none;" onchange="onPdfFileInput(this)"/>
     </label>
     <div class="lbl">📏 キャリブレーション</div>
     <button class="btn-primary" onclick="startCalib()">① 2点クリックで距離測定</button>
-    <div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:4px;">
+    <div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:4px;margin-top:4px;">
       <div style="flex:1;"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:2px;">実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1" style="width:100%;height:28px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"/></div>
       <button class="btn-sm" onclick="applyCalib()">確定</button>
     </div>
@@ -316,17 +316,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-// pdfjs workerをインラインで設定（CDN接続問題を回避）
-if(typeof pdfjsLib !== 'undefined'){
-  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-} else {
-  // フォールバック: window.onloadで再試行
-  window.addEventListener('load', function(){
-    if(typeof pdfjsLib !== 'undefined'){
-      pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-  });
-}
+if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 
 var ppm=10,canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
 var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
@@ -339,7 +329,6 @@ var guideMode=false,guidePts=[],guideLines=[];
 var showGrid=false;
 var freeConfig={name:'フリー',w:4,d:4};
 var SNAP_DIST=18;
-// box-select
 var boxSelecting=false,boxStart=null,boxRect=null;
 var groupLocked=false;
 // ポリゴン
@@ -373,32 +362,19 @@ var tileG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendC
 var snapG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(snapG);
 var boxG=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(boxG);
 
-// PDF
+// PDF読み込み
 wrap.addEventListener('dragover',function(e){e.preventDefault();wrap.classList.add('dragover');});
 wrap.addEventListener('dragleave',function(){wrap.classList.remove('dragover');});
 wrap.addEventListener('drop',function(e){
   e.preventDefault();wrap.classList.remove('dragover');
   var f=e.dataTransfer.files[0];
-  if(!f){alert('ファイルをドロップしてください');return;}
-  if(f.type!=='application/pdf'&&!f.name.toLowerCase().endsWith('.pdf')){alert('PDFファイルをドロップしてください');return;}
+  if(!f||(!f.type.includes('pdf')&&!f.name.toLowerCase().endsWith('.pdf'))){alert('PDFをドロップしてください');return;}
   readPdfFile(f);
 });
-function onPdfFileInput(input){
-  if(!input.files||!input.files[0])return;
-  readPdfFile(input.files[0]);
-  input.value='';
-}
-function readPdfFile(f){
-  var r=new FileReader();
-  r.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};
-  r.onerror=function(){alert('ファイル読み込みエラー');};
-  r.readAsArrayBuffer(f);
-}
+function onPdfFileInput(inp){if(!inp.files||!inp.files[0])return;readPdfFile(inp.files[0]);inp.value='';}
+function readPdfFile(f){var r=new FileReader();r.onload=function(ev){loadPdf(new Uint8Array(ev.target.result));};r.onerror=function(){alert('読み込みエラー');};r.readAsArrayBuffer(f);}
 function loadPdf(data){
-  if(typeof pdfjsLib === 'undefined'){
-    alert('PDF.jsライブラリが読み込まれていません。\nインターネット接続を確認して再読み込みしてください。');
-    return;
-  }
+  if(typeof pdfjsLib==='undefined'){alert('PDF.jsが読み込まれていません。インターネット接続を確認してください。');return;}
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   document.getElementById('drop-hint').innerHTML='<div class="icon">⏳</div><div class="text">読み込み中...</div>';
   pdfjsLib.getDocument({data:data}).promise.then(function(pdf){return pdf.getPage(1);}).then(function(page){
@@ -411,7 +387,7 @@ function loadPdf(data){
     setCalibStatus('step1','① 地図上の2点をクリック（1点目）');
   }).catch(function(err){
     document.getElementById('drop-hint').innerHTML='<div class="icon">📄</div><div class="text">PDF地図をここにドロップ</div><div class="sub">縮尺図面を読み込んでタイルを配置できます</div>';
-    alert('PDF読み込みエラー: '+err.message+'\n\nPDFが破損していないか、パスワードがかかっていないか確認してください。');
+    alert('PDF読み込みエラー: '+err.message);
   });
 }
 function fitCanvas(){
@@ -437,7 +413,7 @@ wrap.addEventListener('mousedown',function(e){
   if(calibMode||measureMode||guideMode||polyMode||setbackMode)return;
   var rect=wrap.getBoundingClientRect();
   var cx=(e.clientX-rect.left-panX)/canvasZoom,cy=(e.clientY-rect.top-panY)/canvasZoom;
-  if(currentTool==='select'&&e.button===0&&!e.shiftKey&&(e.target===wrap||e.target===mapCanvas||e.target.tagName==='svg')){
+  if(currentTool==='select'&&e.button===0&&!e.shiftKey&&(e.target===wrap||e.target.tagName==='svg'||e.target.tagName==='SVG')){
     // start box select (空白クリック時のみ)
     boxSelecting=true;boxStart={x:cx,y:cy};
     clearEl(boxG);
@@ -564,7 +540,6 @@ function clearGuides(){guideLines=[];guidePts=[];redrawGuides();}
 
 // ==================== POLYGON ====================
 function startPolyDraw(){
-  if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
   polyMode=true;polyDone=false;polyPts=[];
   setbackMode=false;
   document.getElementById('btn-setback-mode').textContent='辺選択モードON';
@@ -1194,24 +1169,19 @@ function updateDefs(){
 function printCanvas(){
   var canvas=document.getElementById('map-canvas');
   var svgEl=document.getElementById('tile-svg');
-  // SVGをcanvasに描画して印刷
   var tmpCanvas=document.createElement('canvas');
-  tmpCanvas.width=canvas.width;
-  tmpCanvas.height=canvas.height;
+  tmpCanvas.width=canvas.width;tmpCanvas.height=canvas.height;
   var tmpCtx=tmpCanvas.getContext('2d');
   tmpCtx.drawImage(canvas,0,0);
-  // SVGをimgに変換して重ねる
   var svgData=new XMLSerializer().serializeToString(svgEl);
   var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
   var url=URL.createObjectURL(svgBlob);
   var img=new Image();
   img.onload=function(){
-    tmpCtx.drawImage(img,0,0);
-    URL.revokeObjectURL(url);
+    tmpCtx.drawImage(img,0,0);URL.revokeObjectURL(url);
     var printWin=window.open('','_blank');
     printWin.document.write('<html><head><title>敷地タイルプランナー</title><style>@page{margin:0;}body{margin:0;padding:0;}img{max-width:100%;max-height:100vh;display:block;}</style></head><body><img src="'+tmpCanvas.toDataURL('image/png')+'"/></body></html>');
-    printWin.document.close();
-    printWin.onload=function(){printWin.print();};
+    printWin.document.close();printWin.onload=function(){printWin.print();};
   };
   img.src=url;
 }
