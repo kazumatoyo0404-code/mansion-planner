@@ -109,7 +109,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <body>
 <div id="app">
 <aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v5.5</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v5.6</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -149,7 +149,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚗 駐車場</div>
     <div class="row2"><div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"/></div></div>
-    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🪜 非常階段</div>
+    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🪜 階段</div>
     <div class="row2"><div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"/></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🛗 EV</div>
     <div class="row2"><div class="field"><label>幅</label><input type="number" id="elev-w" value="2" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="elev-d" value="2" step="0.5" oninput="updateDefs()"/></div></div>
@@ -170,7 +170,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="lbl">配置ツール</div>
     <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">11.5×6m</span></button>
     <button class="tool-btn t-park" id="tool-park" onclick="setTool('park')"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
-    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">非常階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
+    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
     <button class="tool-btn t-elev" id="tool-elev" onclick="setTool('elev')"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
     <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool('corridor')"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで長さ調整</span></button>
     <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool('balcony')"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで長さ調整</span></button>
@@ -260,14 +260,14 @@ var measureMode=false,measurePts=[],measureLines=[];
 var guideMode=false,guidePts=[],guideLines=[];
 var showGrid=false,freeConfig={name:'フリー',w:4,d:4};
 var SNAP_DIST=50;
-var boxSelecting=false,boxStart=null,boxRect=null;
+var boxSelecting=false,boxStart=null,boxRect=null,wasPanning=false;
 // ポリゴン・セットバック
 var polyMode=false,polyPts=[],polyDone=false;
 var setbackMode=false,setbacks=[],sbPendingEdge=-1,sbType='road',sbHover=-1;
 var DEFS={
   unit:    {w:11.5,d:6,  fill:[37,99,235],  stroke:'#1d4ed8',label:'住戸'},
   park:    {w:2.5, d:5,  fill:[22,163,74],  stroke:'#15803d',label:'駐車場'},
-  stair:   {w:3,   d:4,  fill:[219,39,119], stroke:'#be185d',label:'非常階段'},
+  stair:   {w:3,   d:4,  fill:[219,39,119], stroke:'#be185d',label:'階段'},
   elev:    {w:2,   d:2,  fill:[124,58,237], stroke:'#6d28d9',label:'EV'},
   corridor:{w:30,  d:3,  fill:[8,145,178],  stroke:'#0e7490',label:'外廊下'},
   balcony: {w:10,  d:2,  fill:[5,150,105],  stroke:'#047857',label:'バルコニー'},
@@ -335,10 +335,14 @@ wrap.addEventListener('mousedown',function(e){
   if(calibMode||measureMode||guideMode||polyMode||setbackMode)return;
   var rect=wrap.getBoundingClientRect();
   var cx=(e.clientX-rect.left-panX)/canvasZoom,cy=(e.clientY-rect.top-panY)/canvasZoom;
+  // ホイールクリック or 左クリック（ツールなし or タイルでない場所）でパン
+  if(e.button===1){isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();return;}
   if(currentTool==='select'&&e.button===0&&!e.shiftKey&&(e.target===wrap||e.target===mapCanvas)){
     boxSelecting=true;boxStart={x:cx,y:cy};clearEl(boxG);e.preventDefault();return;
   }
-  if(!currentTool||e.button===1){isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();}
+  if(e.button===0&&(e.target===wrap||e.target===mapCanvas)){
+    isPanning=true;panSX=e.clientX;panSY=e.clientY;panSPX=panX;panSPY=panY;wrap.style.cursor='grabbing';e.preventDefault();
+  }
 });
 document.addEventListener('mousemove',function(e){
   if(isPanning){panX=panSPX+(e.clientX-panSX);panY=panSPY+(e.clientY-panSY);applyTf();return;}
@@ -358,7 +362,7 @@ document.addEventListener('mousemove',function(e){
   }
 });
 document.addEventListener('mouseup',function(e){
-  if(isPanning){isPanning=false;wrap.style.cursor=currentTool?'crosshair':'';}
+  if(isPanning){isPanning=false;wasPanning=true;wrap.style.cursor=currentTool?'crosshair':'';setTimeout(function(){wasPanning=false;},10);}
   if(boxSelecting){
     boxSelecting=false;clearEl(boxG);
     if(boxRect&&(boxRect.w>5||boxRect.h>5)){
@@ -371,7 +375,7 @@ document.addEventListener('mouseup',function(e){
   }
 });
 wrap.addEventListener('click',function(e){
-  if(isPanning||boxSelecting)return;
+  if(isPanning||boxSelecting||wasPanning)return;
   var rect=wrap.getBoundingClientRect();
   var cx=(e.clientX-rect.left-panX)/canvasZoom,cy=(e.clientY-rect.top-panY)/canvasZoom;
   if(polyMode){polyPts.push({x:cx,y:cy});redrawPoly();return;}
@@ -730,7 +734,7 @@ function updateMetrics(){
   document.getElementById('metrics').innerHTML=
     '<div class="mc"><div class="ml">住戸数</div><div class="mv">'+u+'<span class="mu">戸</span></div></div>'+
     '<div class="mc"><div class="ml">駐車区画</div><div class="mv">'+p+'<span class="mu">台</span></div></div>'+
-    '<div class="mc"><div class="ml">非常階段</div><div class="mv">'+s+'<span class="mu">箇所</span></div></div>'+
+    '<div class="mc"><div class="ml">階段</div><div class="mv">'+s+'<span class="mu">箇所</span></div></div>'+
     '<div class="mc"><div class="ml">EV</div><div class="mv">'+ev+'<span class="mu">基</span></div></div>'+
     '<div class="mc"><div class="ml">住戸床面積</div><div class="mv">'+Math.round(uA).toLocaleString()+'<span class="mu">㎡</span></div></div>'+
     '<div class="mc"><div class="ml">建築面積計</div><div class="mv">'+Math.round(bA).toLocaleString()+'<span class="mu">㎡</span></div></div>';
