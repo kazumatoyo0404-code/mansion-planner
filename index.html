@@ -1336,33 +1336,109 @@ function openPrintPreview(){
 }
 
 function _captureToPrintPreview(){
+  // Canvas上にPDF背景を描画済みのものをそのままDataURLに変換
+  // （SVGレイヤーはforeignObject不使用のため、タイルのみCanvas再描画で合成）
   var wrapRect=wrap.getBoundingClientRect();
   var outW=Math.round(wrapRect.width);
   var outH=Math.round(wrapRect.height);
-  var tmpCanvas=document.createElement('canvas');
-  tmpCanvas.width=outW;tmpCanvas.height=outH;
-  var tmpCtx=tmpCanvas.getContext('2d');
-  tmpCtx.save();
-  tmpCtx.translate(panX,panY);
-  tmpCtx.scale(canvasZoom,canvasZoom);
-  tmpCtx.drawImage(mapCanvas,0,0);
-  tmpCtx.restore();
-  var savedSvgTransform=svg.style.transform;
-  svg.style.transform='';
-  svg.setAttribute('transform','translate('+panX+','+panY+') scale('+canvasZoom+')');
-  var svgData=new XMLSerializer().serializeToString(svg);
-  svg.style.transform=savedSvgTransform;
-  svg.removeAttribute('transform');
-  var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
-  var url=URL.createObjectURL(svgBlob);
-  var img=new Image();
-  img.onload=function(){
-    tmpCtx.drawImage(img,0,0,outW,outH);
-    URL.revokeObjectURL(url);
-    document.getElementById('pp-map-preview').src=tmpCanvas.toDataURL('image/png');
-    window._printMapDataUrl=tmpCanvas.toDataURL('image/png');
-  };
-  img.src=url;
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  var out=document.createElement('canvas');
+  out.width=outW*dpr; out.height=outH*dpr;
+  var c=out.getContext('2d');
+  c.scale(dpr,dpr);
+
+  // ① 背景（白）
+  c.fillStyle='#ffffff';c.fillRect(0,0,outW,outH);
+
+  // ② PDF レイヤー
+  c.save();c.translate(panX,panY);c.scale(canvasZoom,canvasZoom);
+  if(pdfLoaded)c.drawImage(mapCanvas,0,0);
+  c.restore();
+
+  // ③ SVGをCanvasに描画（foreignObject不使用・BlobURL不使用）
+  //    html2canvasは使わず、svg.outerHTMLをdataURIに変換してから描く
+  //    ただしChromeはtaintedになるケースがあるため、
+  //    代わりにCanvasネイティブAPIでタイル・ポリゴン・SBを直接再描画する
+  _drawSceneToCanvas(c,outW,outH);
+
+  var dataUrl=out.toDataURL('image/png');
+  document.getElementById('pp-map-preview').src=dataUrl;
+  window._printMapDataUrl=dataUrl;
+  window._printMapAspect=outW/outH;
+}
+
+// シーン全体をCanvas2Dに直接描画（SVGなし・tainted回避）
+function _drawSceneToCanvas(c,W,H){
+  c.save();
+  c.translate(panX,panY);
+  c.scale(canvasZoom,canvasZoom);
+
+  // セットバックゾーン
+  if(polyDone&&setbacks.length){
+    setbacks.forEach(function(s){
+      var i=s.edge,j=(i+1)%polyPts.length;
+      var ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y;
+      var dx=bx-ax,dy=by-ay,len=Math.sqrt(dx*dx+dy*dy)||1,dp=s.dist*ppm;
+      var nx=-dy/len,ny=dx/len;
+      if(!inward(i,nx,ny)){nx=-nx;ny=-ny;}
+      c.beginPath();
+      c.moveTo(ax,ay);c.lineTo(bx,by);
+      c.lineTo(bx+nx*dp,by+ny*dp);c.lineTo(ax+nx*dp,ay+ny*dp);
+      c.closePath();
+      c.fillStyle=s.type==='road'?'rgba(220,38,38,0.22)':'rgba(217,119,6,0.22)';
+      c.fill();
+      c.strokeStyle=s.type==='road'?'#dc2626':'#d97706';
+      c.setLineDash([5,3]);c.lineWidth=1.5;c.stroke();c.setLineDash([]);
+      // ラベル
+      var mx=(ax+bx)/2+nx*dp/2,my=(ay+by)/2+ny*dp/2;
+      c.font='bold 10px sans-serif';c.textAlign='center';c.textBaseline='middle';
+      c.strokeStyle='white';c.lineWidth=3;c.strokeText((s.type==='road'?'道路SB ':'隣地SB ')+s.dist+'m',mx,my);
+      c.fillStyle=s.type==='road'?'#dc2626':'#d97706';c.lineWidth=1;c.fillText((s.type==='road'?'道路SB ':'隣地SB ')+s.dist+'m',mx,my);
+    });
+  }
+
+  // ポリゴン
+  if(polyDone&&polyPts.length>=3){
+    c.beginPath();
+    polyPts.forEach(function(p,i){i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y);});
+    c.closePath();
+    c.fillStyle='rgba(37,99,235,0.07)';c.fill();
+    c.strokeStyle='#2563eb';c.lineWidth=2.5;c.setLineDash([]);c.stroke();
+    // 辺番号
+    for(var i=0;i<polyPts.length;i++){
+      var j=(i+1)%polyPts.length;
+      var dx=polyPts[j].x-polyPts[i].x,dy=polyPts[j].y-polyPts[i].y;
+      var len=(Math.sqrt(dx*dx+dy*dy)/ppm).toFixed(1);
+      var tx=(polyPts[i].x+polyPts[j].x)/2,ty=(polyPts[i].y+polyPts[j].y)/2;
+      c.font='bold 11px sans-serif';c.textAlign='center';c.textBaseline='middle';
+      c.strokeStyle='white';c.lineWidth=3;c.strokeText((i+1)+'辺('+len+'m)',tx,ty);
+      c.fillStyle='#1d4ed8';c.lineWidth=1;c.fillText((i+1)+'辺('+len+'m)',tx,ty);
+    }
+  }
+
+  // タイル
+  tiles.forEach(function(t){
+    var def=getTileDef(t);
+    var pw=(t.rW||def.w)*ppm,ph=def.d*ppm;
+    var r=t.rot*Math.PI/180;
+    c.save();
+    c.translate(t.cx,t.cy);c.rotate(r);c.translate(-pw/2,-ph/2);
+    var fill=def.fill;
+    c.globalAlpha=tileOpacity;
+    c.fillStyle='rgba('+fill[0]+','+fill[1]+','+fill[2]+',1)';
+    c.fillRect(0,0,pw,ph);
+    c.globalAlpha=1;
+    c.strokeStyle=def.stroke;c.lineWidth=1.5;c.strokeRect(0,0,pw,ph);
+    // ラベル
+    var fs=Math.max(8,Math.min(14,Math.min(pw,ph)/3.5));
+    c.font='bold '+fs+'px sans-serif';c.textAlign='center';c.textBaseline='middle';
+    c.fillStyle='white';c.fillText(def.label,pw/2,ph/2-fs*0.6);
+    c.font=(fs*0.78)+'px sans-serif';
+    c.fillText(def.w+'x'+def.d+'m',pw/2,ph/2+fs*0.7);
+    c.restore();
+  });
+
+  c.restore();
 }
 
 function closePrintPreview(){
@@ -1385,18 +1461,14 @@ function executePrint(){
 
   function row(label,val,unit,show){
     if(!show)return '';
-    return '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;">'+label+'</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+val+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">'+unit+'</span></td></tr>';
+    return '<tr><td class=\"lb\">'+label+'</td><td class=\"vl\">'+val+(unit?' <span style=\"font-weight:400;font-size:8px;color:#6b6760\">'+unit+'</span>':'')+'</td></tr>';
   }
   function rowEdit(id,label,unit,show){
     if(!show)return '';
-    var val=document.getElementById(id).value;
-    return row(label,val,unit,true);
+    return row(label,document.getElementById(id).value,unit,true);
   }
-
   var tableRows=
-    '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">敷地面積</td>'+
-    '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-site').value+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">㎡</span></td></tr>'+
+    row('敷地面積',document.getElementById('pp-site').value,'㎡',true)+
     row('建物階数',document.getElementById('pp-floors').value,'F',true)+
     row('住戸専有面積',document.getElementById('pp-unit-area').value,'㎡/戸',true)+
     row('総戸数',document.getElementById('pp-units').value,'戸',true)+
@@ -1405,60 +1477,68 @@ function executePrint(){
     rowEdit('pp-height','建物高さ','m',showHeight)+
     row('前面道路幅',document.getElementById('pp-road').value,'m',true)+
     row('用途地域',document.getElementById('pp-zone').value,'',true);
+  if(showBcr) tableRows+=row('建蔽率',document.getElementById('pp-bcr').value+'%（上限'+document.getElementById('pp-bcr-limit').value+'%）','',true);
+  if(showFar)  tableRows+=row('容積率',document.getElementById('pp-far').value+'%（上限'+document.getElementById('pp-far-limit').value+'%）','',true);
+  if(showSb)   tableRows+=row('セットバック',document.getElementById('pp-sb').value,'',true);
+  if(showMemo&&memo) tableRows+=row('備考','<span style=\"white-space:pre-wrap\">'+memo+'</span>','',true);
 
-  if(showBcr){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">建蔽率</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-bcr').value+
-      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-bcr-limit').value+'%)</span></td></tr>';
-  }
-  if(showFar){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">容積率</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-far').value+
-      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-far-limit').value+'%)</span></td></tr>';
-  }
-  if(showSb){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">セットバック</td>'+
-      '<td style="padding:5px 8px;font-size:10px;font-weight:600;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-sb').value+'</td></tr>';
-  }
-  if(showMemo&&memo){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">備考</td>'+
-      '<td style="padding:5px 8px;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:pre-wrap;">'+memo+'</td></tr>';
+  if(!window._printMapDataUrl){
+    alert('地図プレビューの準備ができていません。印刷プレビューを開き直してください。');
+    return;
   }
 
-  var pw=window.open('','_blank');
-  pw.document.write(
-    '<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
+  // A3横 印刷領域: 400×277mm（マージン10mm）
+  // 地図幅 = 400-72-6 = 322mm、高さ 277mm
+  var MAP_W_MM=322, MAP_H_MM=277;
+  var aspect=window._printMapAspect||1.5;
+  var imgW,imgH;
+  if(aspect>MAP_W_MM/MAP_H_MM){imgW=MAP_W_MM;imgH=MAP_W_MM/aspect;}
+  else{imgH=MAP_H_MM;imgW=MAP_H_MM*aspect;}
+
+  // data:URLをそのまま埋め込んだHTMLを生成（BlobURL不使用）
+  var htmlContent='<!DOCTYPE html><html lang="ja"><head>'+
+    '<meta charset="UTF-8"><title>'+title+'</title>'+
     '<style>'+
     '@page{size:A3 landscape;margin:10mm;}'+
     '*{box-sizing:border-box;margin:0;padding:0;}'+
-    'body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#fff;color:#1a1814;}'+
-    '.wrap{display:flex;width:297mm;height:207mm;gap:6mm;}'+
-    '.map-col{flex:1;min-width:0;display:flex;flex-direction:column;}'+
-    '.map-col img{flex:1;width:100%;object-fit:contain;border:1px solid #ddd;border-radius:3px;}'+
-    '.side{width:72mm;flex-shrink:0;display:flex;flex-direction:column;gap:4mm;}'+
-    '.header{border-bottom:3px solid #2563eb;padding-bottom:3mm;}'+
-    '.header h1{font-size:14px;font-weight:800;color:#1a1814;margin-bottom:1mm;}'+
-    '.header .date{font-size:9px;color:#6b6760;}'+
-    '.data-table{width:100%;border-collapse:collapse;border:1px solid #e0dbd4;border-radius:4px;overflow:hidden;}'+
-    '.footer{margin-top:auto;font-size:8px;color:#a8a49e;text-align:right;}'+
+    'body{font-family:\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif;'+
+         'background:#fff;color:#1a1814;'+
+         'width:400mm;height:277mm;overflow:hidden;}'+
+    '.wrap{display:flex;width:400mm;height:277mm;gap:6mm;align-items:flex-start;}'+
+    '.mc{width:'+imgW.toFixed(1)+'mm;height:'+imgH.toFixed(1)+'mm;flex-shrink:0;'+
+         'display:flex;align-items:center;justify-content:center;}'+
+    '.mc img{display:block;width:'+imgW.toFixed(1)+'mm;height:'+imgH.toFixed(1)+'mm;border:1px solid #ddd;}'+
+    '.side{width:72mm;flex-shrink:0;height:277mm;display:flex;flex-direction:column;gap:3mm;overflow:hidden;}'+
+    '.hd{border-bottom:3px solid #2563eb;padding-bottom:2mm;margin-bottom:1mm;}'+
+    '.hd h1{font-size:13px;font-weight:800;margin-bottom:1mm;}'+
+    '.hd .dt{font-size:8px;color:#6b6760;}'+
+    'table{width:100%;border-collapse:collapse;}'+
+    'td{padding:3px 5px;font-size:9px;border-bottom:1px solid #f0f0f0;vertical-align:top;}'+
+    'td.lb{color:#6b6760;white-space:nowrap;width:40%;}'+
+    'td.vl{font-weight:700;font-size:10px;}'+
+    '.ft{margin-top:auto;font-size:7px;color:#a8a49e;padding-top:2mm;border-top:1px solid #eee;}'+
     '</style></head><body>'+
-    '<div class="wrap">'+
-    '<div class="map-col">'+
-    '<img src="'+window._printMapDataUrl+'"/>'+
-    '</div>'+
-    '<div class="side">'+
-    '<div class="header">'+
-    '<h1>'+title+'</h1>'+
-    '<div class="date">作成日: '+dateStr+'</div>'+
-    '</div>'+
-    '<table class="data-table">'+tableRows+'</table>'+
-    '<div class="footer">※本資料は概算計画であり、確定値ではありません</div>'+
-    '</div>'+
-    '</div>'+
-    '</body></html>'
-  );
+    '<div class=\"wrap\">'+
+    '<div class=\"mc\"><img src=\"'+window._printMapDataUrl+'\"/></div>'+
+    '<div class=\"side\">'+
+    '<div class=\"hd\"><h1>'+title+'</h1><div class=\"dt\">作成日: '+dateStr+'</div></div>'+
+    '<table>'+tableRows+'</table>'+
+    '<div class=\"ft\">※本資料は概算計画であり、確定値ではありません</div>'+
+    '</div></div></body></html>';
+
+  // 新しいウィンドウを開き、画像ロード後に印刷
+  var pw=window.open('','_blank','width=900,height=700');
+  if(!pw){alert('ポップアップがブロックされました。\nブラウザのアドレスバー右端のポップアップブロックを許可してください。');return;}
+  pw.document.open();
+  pw.document.write(htmlContent);
   pw.document.close();
-  pw.onload=function(){pw.print();};
+  // 画像ロード完了後にprint()
+  var pimg=pw.document.querySelector('img');
+  function doPrint(){setTimeout(function(){try{pw.focus();pw.print();}catch(ex){}},300);}
+  if(pimg){
+    if(pimg.complete&&pimg.naturalWidth>0){doPrint();}
+    else{pimg.onload=doPrint;pimg.onerror=doPrint;}
+  } else {doPrint();}
   closePrintPreview();
 }
 
@@ -1592,8 +1672,43 @@ function redrawPoly(){
   }
 }
 // ── セットバック ──
-function toggleSetbackMode(){if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}setbackMode=!setbackMode;var btn=document.getElementById('btn-sb-mode');if(setbackMode){btn.textContent='辺選択モードOFF';btn.style.background='#dc2626';setBadge('calib','セットバック — 辺をクリック');wrap.style.cursor='crosshair';currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});}else{btn.textContent='辺選択モードON';btn.style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';sbHover=-1;redrawSb();}}
-function nearestEdge(cx,cy){if(!polyDone||polyPts.length<2)return -1;var best=-1,bestD=18;for(var i=0;i<polyPts.length;i++){var j=(i+1)%polyPts.length,ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y,dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy||1,t2=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/len2)),nx=ax+t2*dx,ny=ay+t2*dy,d=Math.sqrt((cx-nx)*(cx-nx)+(cy-ny)*(cy-ny));if(d<bestD){bestD=d;best=i;}}return best;}
+// セットバック辺クリック用オーバーレイグループ
+var sbHitG=null;
+function _ensureSbHitG(){
+  if(!sbHitG){sbHitG=document.createElementNS('http://www.w3.org/2000/svg','g');sbHitG.id='sb-hit-g';svg.appendChild(sbHitG);}
+}
+function _buildSbHitAreas(){
+  _ensureSbHitG();clearEl(sbHitG);
+  if(!setbackMode||!polyDone||polyPts.length<2)return;
+  var hitW=Math.max(20,36/canvasZoom);
+  for(var i=0;i<polyPts.length;i++){
+    (function(ei){
+      var jj=(ei+1)%polyPts.length;
+      var line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',polyPts[ei].x);line.setAttribute('y1',polyPts[ei].y);
+      line.setAttribute('x2',polyPts[jj].x);line.setAttribute('y2',polyPts[jj].y);
+      line.setAttribute('stroke','rgba(124,58,237,0.18)');
+      line.setAttribute('stroke-width',hitW);
+      line.style.pointerEvents='all';line.style.cursor='crosshair';
+      line.addEventListener('click',function(e){
+        if(!setbackMode)return;
+        e.stopPropagation();
+        sbPendingEdge=ei;
+        var jj2=(ei+1)%polyPts.length;
+        var dx0=polyPts[jj2].x-polyPts[ei].x,dy0=polyPts[jj2].y-polyPts[ei].y;
+        var len0=(Math.sqrt(dx0*dx0+dy0*dy0)/ppm).toFixed(1);
+        var ex=setbacks.find(function(s){return s.edge===ei;});
+        document.getElementById('sb-modal-info').textContent=(ei+1)+'辺 ('+len0+'m)';
+        document.getElementById('sb-modal-dist').value=ex?ex.dist:(sbType==='neighbor'?4:2);
+        sbType=ex?ex.type:'road';updateSbmBtns();
+        document.getElementById('sb-modal').style.display='flex';
+      });
+      sbHitG.appendChild(line);
+    })(i);
+  }
+}
+function toggleSetbackMode(){if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}setbackMode=!setbackMode;var btn=document.getElementById('btn-sb-mode');if(setbackMode){btn.textContent='辺選択モードOFF';btn.style.background='#dc2626';setBadge('calib','セットバック — 辺をクリック');wrap.style.cursor='crosshair';currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});_buildSbHitAreas();}else{btn.textContent='辺選択モードON';btn.style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';sbHover=-1;redrawSb();_ensureSbHitG();clearEl(sbHitG);}}
+function nearestEdge(cx,cy){if(!polyDone||polyPts.length<2)return -1;var best=-1;var hitPx=Math.max(20,40/canvasZoom);var bestD=hitPx;for(var i=0;i<polyPts.length;i++){var j=(i+1)%polyPts.length,ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y,dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy||1,t2=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/len2)),nx=ax+t2*dx,ny=ay+t2*dy,d=Math.sqrt((cx-nx)*(cx-nx)+(cy-ny)*(cy-ny));if(d<bestD){bestD=d;best=i;}}return best;}
 function sbmType(t){
   sbType=t;updateSbmBtns();
   // 既存設定がない辺の場合、タイプに応じてデフォルト値を切替
@@ -1685,6 +1800,8 @@ function redrawSb(){
     var lt2=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:mx,y:my-14,fill:'#0891b2','font-size':'11','font-weight':'700','paint-order':'stroke',stroke:'white','stroke-width':'3','pointer-events':'none'});
     lt2.textContent='🚗進入';sbG.appendChild(lt2);
   }
+  // ヒット領域を最前面に再構築
+  if(typeof _buildSbHitAreas==='function')_buildSbHitAreas();
 }
 function inSetbackZone(cx,cy,tw,th,rot){
   if(!polyDone||!setbacks.length)return false;
