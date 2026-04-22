@@ -216,6 +216,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   #mobile-toolbar{display:none!important;}
   #drawer-handle{display:none!important;}
 }
+
+#print-preview-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;overflow-y:auto;}
+#print-preview-modal.show{display:block;}
 </style>
 </head>
 <body>
@@ -335,6 +338,10 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="snap-row"><label>🚫 重なり防止</label><label class="toggle"><input type="checkbox" id="overlap-toggle" checked/><span class="tog-sl"></span></label></div>
     <div class="snap-row"><label>📐 グリッド表示</label><label class="toggle"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"/><span class="tog-sl"></span></label></div>
     <div class="field" id="grid-size-field" style="display:none;margin-top:2px;"><label>グリッド間隔 (m)</label><input type="number" id="grid-size" value="5" min="1" step="1" oninput="redrawGrid()"/></div>
+    <div class="snap-row"><label>📏 測定線を表示</label><label class="toggle"><input type="checkbox" id="show-measure" checked onchange="toggleLayerVis('measure')"/><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>📌 補助線を表示</label><label class="toggle"><input type="checkbox" id="show-guide" checked onchange="toggleLayerVis('guide')"/><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🚧 SBゾーンを表示</label><label class="toggle"><input type="checkbox" id="show-sb" checked onchange="toggleLayerVis('sb')"/><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🏷 タイルラベル表示</label><label class="toggle"><input type="checkbox" id="show-label" checked onchange="toggleLayerVis('label')"/><span class="tog-sl"></span></label></div>
     <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"/><span class="slider-val" id="op-val">65%</span></div>
   </div>
   <div class="sb-sec">
@@ -421,6 +428,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="foot-btn" onclick="printCanvas()">🖨️ 印刷</button>
       <button class="foot-btn" id="btn-legal-check" onclick="showLegalModal()" style="background:#2563eb;color:#fff;font-weight:700;width:100%;margin-top:4px;">⚖ 法規確認</button>
     </div>
+    <!-- セーブ・ロード -->
+    <div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
+      <div class="lbl">💾 プロジェクト保存 / 読み込み</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+        <button class="foot-btn" onclick="saveProject()" style="background:#16a34a;color:#fff;font-weight:700;border-color:#16a34a;">💾 保存</button>
+        <button class="foot-btn" onclick="document.getElementById('load-input').click()" style="background:#7c3aed;color:#fff;font-weight:700;border-color:#7c3aed;">📂 読み込み</button>
+      </div>
+      <input type="file" id="load-input" accept=".json" style="display:none;" onchange="loadProject(event)"/>
+      <div style="font-size:9px;color:#a8a49e;margin-top:3px;text-align:center;">JSONファイルで全データを保存・復元</div>
+    </div>
   </div>
 </aside>
 <div id="canvas-wrap">
@@ -441,6 +458,72 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   </div>
 </div>
 
+
+<div id="print-preview-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px 0;">
+<div id="print-preview-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;">
+  <div style="background:#fff;border-radius:14px;padding:20px 24px;width:900px;max-width:97vw;margin:16px auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h2 style="font-size:16px;font-weight:800;">🖨️ 印刷プレビュー</h2>
+      <button onclick="closePrintPreview()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b6760;">✕</button>
+    </div>
+    <div style="display:flex;gap:16px;">
+      <!-- 左: 地図プレビュー -->
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:10px;color:#6b6760;margin-bottom:4px;">📍 地図プレビュー</div>
+        <img id="pp-map-preview" style="width:100%;border:1px solid #e0dbd4;border-radius:6px;" src=""/>
+      </div>
+      <!-- 右: 編集パネル -->
+      <div style="width:300px;flex-shrink:0;overflow-y:auto;max-height:70vh;">
+        <!-- タイトル -->
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;color:#6b6760;margin-bottom:3px;font-weight:700;">📋 書類タイトル</div>
+          <input id="pp-title" type="text" value="敷地配置計画書" style="width:100%;height:32px;padding:0 8px;border:1px solid #e0dbd4;border-radius:6px;font-size:12px;font-weight:700;outline:none;"/>
+        </div>
+        <!-- 数値編集 -->
+        <div style="font-size:10px;color:#6b6760;font-weight:700;margin-bottom:6px;">✏️ 数値を修正</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">
+          <div><label style="font-size:9px;color:#a8a49e;">敷地面積(㎡)</label><input id="pp-site" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">建物階数(F)</label><input id="pp-floors" type="number" min="1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">住戸専有(㎡/戸)</label><input id="pp-unit-area" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">総戸数(戸)</label><input id="pp-units" type="number" min="1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">駐車台数(台)</label><input id="pp-park" type="number" min="0" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">駐車場率(%)</label><input id="pp-park-rate" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">建蔽率(%)</label><input id="pp-bcr" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">建蔽率上限(%)</label><input id="pp-bcr-limit" type="number" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">容積率(%)</label><input id="pp-far" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">容積率上限(%)</label><input id="pp-far-limit" type="number" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">建物高さ(m)</label><input id="pp-height" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+          <div><label style="font-size:9px;color:#a8a49e;">前面道路幅(m)</label><input id="pp-road" type="number" step="0.5" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:9px;color:#a8a49e;">用途地域</label>
+          <input id="pp-zone" type="text" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;outline:none;"/>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:9px;color:#a8a49e;">セットバック</label>
+          <input id="pp-sb" type="text" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:11px;outline:none;"/>
+        </div>
+        <!-- 表示項目 -->
+        <div style="font-size:10px;color:#6b6760;font-weight:700;margin-bottom:6px;">👁 表示する項目</div>
+        <div style="background:#f8f7f4;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-bcr" checked/> 建蔽率</label>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-far" checked/> 容積率</label>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-park" checked/> 駐車場台数・駐車場率</label>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-height" checked/> 建物高さ</label>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-sb" checked/> セットバック</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-memo"/> 備考欄</label>
+        </div>
+        <!-- 備考 -->
+        <div style="margin-bottom:14px;">
+          <label style="font-size:9px;color:#a8a49e;">備考・注記</label>
+          <textarea id="pp-memo" rows="3" placeholder="備考・注記を入力..." style="width:100%;padding:6px 8px;border:1px solid #e0dbd4;border-radius:5px;font-size:11px;outline:none;resize:vertical;font-family:inherit;"></textarea>
+        </div>
+        <!-- 印刷ボタン -->
+        <button onclick="executePrint()" style="width:100%;height:40px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:800;">🖨️ 印刷実行（A3横）</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="edge-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:14px;padding:20px 22px;width:300px;box-shadow:0 8px 40px rgba(0,0,0,.25);">
     <div style="font-size:14px;font-weight:800;margin-bottom:4px;">📐 辺長を編集</div>
@@ -483,6 +566,7 @@ var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
 var currentTool=null,currentRot=0,lastRot=0,tileOpacity=0.65;
 var tiles=[],uid=0,selectedTile=null,selectedTiles=[],copiedTiles=[];
 var groupLocked=false; // 後方互換
+var dragMoved=false; // ドラッグ判定フラグ
 var groups=[]; // [{id:Number, tileIds:[String]}]
 var gid=0; // グループIDカウンター
 var tileHistory=[];
@@ -959,16 +1043,22 @@ function createTileInternal(cx,cy,type,rot){
   g.addEventListener('click',function(e){
     if(currentTool==='erase'){e.stopPropagation();saveTileHistory();delTile(tile);return;}
     e.stopPropagation();
+    // ドラッグ後はclickを無視（dragMovedフラグで判定）
+    if(dragMoved){dragMoved=false;return;}
     // 辺選択モード中はOFFに
     if(setbackMode){setbackMode=false;sbHover=-1;document.getElementById('btn-sb-mode').textContent='辺選択モードON';document.getElementById('btn-sb-mode').style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';redrawSb();}
     if(e.shiftKey){
-      // Shift+クリック: グループに関係なく個別追加・除去
+      // Shift+クリック: 何個でも追加・除去（グループ関係なし）
       var idx=selectedTiles.indexOf(tile);
-      if(idx<0)selectedTiles.push(tile);
-      else selectedTiles.splice(idx,1);
+      if(idx<0){
+        selectedTiles.push(tile);
+      } else {
+        selectedTiles.splice(idx,1);
+      }
+      selectedTile=selectedTiles.length===1?selectedTiles[0]:null;
       groupLocked=false;
     } else {
-      // 通常クリック: グループに属していればグループ全体を選択
+      // 通常クリック: グループなら全体選択、なければ単独選択
       var g=getGroupOfTile(tile);
       if(g){
         selectGroup(g.id);
@@ -1032,22 +1122,22 @@ function setupMove(el,tile){
     if(e.target===tile.rh||e.target===tile.dh||e.target===tile.rsH)return;
     if(currentTool==='erase')return;
     e.stopPropagation();e.preventDefault();
-    if(selectedTiles.indexOf(tile)<0){
-      if(e.shiftKey){selectedTiles.push(tile);}
-      else{
-        var g2=getGroupOfTile(tile);
-        if(g2){selectGroup(g2.id);}
-        else{selectedTiles=[tile];selectedTile=tile;groupLocked=false;}
-      }
+    // mousedownではドラッグ準備のみ。選択はclickで行う
+    // ただしShiftなし・未選択タイルのドラッグ開始時は選択を確定
+    if(!e.shiftKey&&selectedTiles.indexOf(tile)<0){
+      var g2=getGroupOfTile(tile);
+      if(g2){selectGroup(g2.id);}
+      else{selectedTiles=[tile];selectedTile=tile;groupLocked=false;}
       tiles.forEach(reposTile);updateSelBar();
     }
-    act=true;sx=e.clientX;sy=e.clientY;
+    act=true;sx=e.clientX;sy=e.clientY;dragMoved=false;
     scxs=selectedTiles.map(function(t){return{t:t,cx:t.cx,cy:t.cy};});
     el.style.cursor='grabbing';
   });
   document.addEventListener('mousemove',function(e){
     if(!act)return;
     var dx=(e.clientX-sx)/canvasZoom,dy=(e.clientY-sy)/canvasZoom;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)dragMoved=true;
     if(scxs.length===1){
       var ncx=scxs[0].cx+dx,ncy=scxs[0].cy+dy;
       var sn=trySnap(ncx,ncy,tile.type,tile.rot,tile);
@@ -1178,7 +1268,14 @@ function doCopy(){if(selectedTiles.length===0){alert('先にタイルを選択�
 function doPaste(){if(copiedTiles.length===0){alert('先にタイルをコピーしてください');return;}saveTileHistory();selectedTiles=[];copiedTiles.forEach(function(c){var tmp=null;if(c.freeConfig){tmp=freeConfig;freeConfig=c.freeConfig;}var t=createTile(c.cx+20/canvasZoom,c.cy+20/canvasZoom,c.type,c.rot);if(c.rW!==undefined)t.rW=c.rW;if(tmp)freeConfig=tmp;selectedTiles.push(t);reposTile(t);});updateSelBar();}
 
 function printCanvas(){
-  // ── サマリー情報を収集 ──
+  openPrintPreview();
+}
+
+// ================================================================
+// 印刷プレビュー
+// ================================================================
+function openPrintPreview(){
+  // 現在の計算値を収集
   var totalFloors=Math.max(2,parseInt(document.getElementById('floors-input').value)||10);
   var resFloors=totalFloors-1;
   var floorH=parseFloat(document.getElementById('floor-height').value)||3;
@@ -1188,15 +1285,14 @@ function printCanvas(){
   var farLimit=parseFloat(document.getElementById('far-limit').value)||200;
   var zoneEl=document.getElementById('zone-preset');
   var zoneName=zoneEl?zoneEl.options[zoneEl.selectedIndex].text:'';
-
   var u=0,p=0,uA=0,bA=0;
-  var floorUnitsPerF=parseInt(document.getElementById('units-per-floor').value)||0;
   tiles.forEach(function(t){
     var def=getTileDef(t);
     if(t.type==='unit'){u++;uA+=(t.rW||def.w)*def.d;}
     if(t.type==='park'){p++;}
-    bA+=(t.rW||def.w)*def.d;
+    else{bA+=(t.rW||def.w)*def.d;}
   });
+  var floorUnitsPerF=parseInt(document.getElementById('units-per-floor').value)||0;
   var totalUnits=floorUnitsPerF>0?floorUnitsPerF*resFloors:u*resFloors;
   var siteAreaM2=overrideArea!=null?overrideArea:(polyDone?calcPolyArea()/ppm/ppm:0);
   var siteAreaTsubo=siteAreaM2/3.30579;
@@ -1204,153 +1300,166 @@ function printCanvas(){
   var floorArea=uA*resFloors;
   var far=siteAreaM2>0?floorArea/siteAreaM2*100:0;
   var parkRate=totalUnits>0?Math.round(p/totalUnits*100):0;
-  var bcrOk=bcr<=bcrLimit,farOk=far<=farLimit,parkOk=parkRate>=100;
   var bcrConsume=bcrLimit>0?Math.round(bcr/bcrLimit*100):0;
   var farConsume=farLimit>0?Math.round(far/farLimit*100):0;
-
-  // SB一覧
   var sbLines='なし';
-  if(typeof setbacks!=='undefined'&&setbacks.length>0&&polyPts.length>0){
+  if(setbacks.length>0&&polyPts.length>0){
     sbLines=setbacks.map(function(s){
       var ej=(s.edge+1)%polyPts.length;
-      var len=(Math.sqrt(Math.pow(polyPts[ej].x-polyPts[s.edge].x,2)+
-               Math.pow(polyPts[ej].y-polyPts[s.edge].y,2))/ppm).toFixed(1);
-      return (s.edge+1)+'辺('+len+'m): '+(s.type==='road'?'道路':'隣地')+s.dist+'m';
-    }).join('<br>');
+      var len=(Math.sqrt(Math.pow(polyPts[ej].x-polyPts[s.edge].x,2)+Math.pow(polyPts[ej].y-polyPts[s.edge].y,2))/ppm).toFixed(1);
+      return (s.edge+1)+'辺('+len+'m):'+(s.type==='road'?'道路':'隣地')+s.dist+'m';
+    }).join(' / ');
   }
 
-  // 法規警告一覧
-  var legalWarnList='';
-  if(typeof _legalStore!=='undefined'){
-    Object.values(_legalStore).forEach(function(x){
-      if(x.type==='error'||x.type==='warn'){
-        var ic=x.type==='error'?'🔴':'🟡';
-        legalWarnList+='<div style="margin-bottom:3px;">'+ic+' '+x.title+
-          (x.msg?'<br><span style="color:#6b6760;">'+x.msg+'</span>':'')+'</div>';
-      }
-    });
-  }
+  // モーダルに初期値をセット
+  document.getElementById('pp-title').value='敷地配置計画書';
+  document.getElementById('pp-site').value=siteAreaM2.toFixed(1);
+  document.getElementById('pp-floors').value=totalFloors;
+  document.getElementById('pp-units').value=totalUnits;
+  document.getElementById('pp-park').value=p;
+  document.getElementById('pp-park-rate').value=parkRate;
+  document.getElementById('pp-bcr').value=bcr.toFixed(1);
+  document.getElementById('pp-bcr-limit').value=bcrLimit;
+  document.getElementById('pp-far').value=far.toFixed(1);
+  document.getElementById('pp-far-limit').value=farLimit;
+  document.getElementById('pp-height').value=buildingH.toFixed(0);
+  document.getElementById('pp-road').value=roadW;
+  document.getElementById('pp-zone').value=zoneName;
+  document.getElementById('pp-sb').value=sbLines;
+  document.getElementById('pp-unit-area').value=Math.round(DEFS.unit.w*DEFS.unit.d);
+  document.getElementById('pp-memo').value='';
 
-  // ── 地図キャプチャ ──
+  document.getElementById('print-preview-modal').classList.add('show');
+
+  // 地図キャプチャ
+  _captureToPrintPreview();
+}
+
+function _captureToPrintPreview(){
+  var wrapRect=wrap.getBoundingClientRect();
+  var outW=Math.round(wrapRect.width);
+  var outH=Math.round(wrapRect.height);
   var tmpCanvas=document.createElement('canvas');
-  tmpCanvas.width=mapCanvas.width;tmpCanvas.height=mapCanvas.height;
+  tmpCanvas.width=outW;tmpCanvas.height=outH;
   var tmpCtx=tmpCanvas.getContext('2d');
+  tmpCtx.save();
+  tmpCtx.translate(panX,panY);
+  tmpCtx.scale(canvasZoom,canvasZoom);
   tmpCtx.drawImage(mapCanvas,0,0);
-  var savedStyle=svg.style.transform;
-  svg.style.transform='none';svg.style.transformOrigin='0 0';
+  tmpCtx.restore();
+  var savedSvgTransform=svg.style.transform;
+  svg.style.transform='';
+  svg.setAttribute('transform','translate('+panX+','+panY+') scale('+canvasZoom+')');
   var svgData=new XMLSerializer().serializeToString(svg);
-  svg.style.transform=savedStyle;
+  svg.style.transform=savedSvgTransform;
+  svg.removeAttribute('transform');
   var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
   var url=URL.createObjectURL(svgBlob);
   var img=new Image();
   img.onload=function(){
-    tmpCtx.save();
-    tmpCtx.translate(panX/canvasZoom,panY/canvasZoom);
-    tmpCtx.drawImage(img,0,0);
-    tmpCtx.restore();
+    tmpCtx.drawImage(img,0,0,outW,outH);
     URL.revokeObjectURL(url);
-
-    var mapDataUrl=tmpCanvas.toDataURL('image/png');
-    var now=new Date();
-    var dateStr=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate();
-
-    function cell(label,val,unit,ok,sub){
-      var col=ok===undefined?'#1a1814':(ok?'#15803d':'#dc2626');
-      return '<div style="background:#f8f7f4;border-radius:6px;padding:6px 8px;margin-bottom:5px;">'+
-        '<div style="font-size:9px;color:#6b6760;margin-bottom:1px;">'+label+'</div>'+
-        '<div style="font-size:15px;font-weight:800;color:'+col+';">'+val+'<span style="font-size:10px;font-weight:400;color:#6b6760;">'+(unit||'')+'</span></div>'+
-        (sub?'<div style="font-size:8px;color:#a8a49e;margin-top:1px;">'+sub+'</div>':'')+
-      '</div>';
-    }
-    function cellWide(label,val){
-      return '<div style="background:#f8f7f4;border-radius:6px;padding:5px 8px;margin-bottom:5px;">'+
-        '<div style="font-size:9px;color:#6b6760;margin-bottom:1px;">'+label+'</div>'+
-        '<div style="font-size:11px;font-weight:600;color:#1a1814;line-height:1.4;">'+val+'</div></div>';
-    }
-
-    var summaryHtml=
-      '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Hiragino Sans\',\'Yu Gothic\',sans-serif;'+
-        'width:220px;flex-shrink:0;padding:14px 12px;font-size:11px;border-left:3px solid #2563eb;">'+
-      '<div style="font-size:13px;font-weight:800;color:#1a1814;margin-bottom:2px;">敷地配置概要</div>'+
-      '<div style="font-size:9px;color:#a8a49e;margin-bottom:10px;">作成: '+dateStr+' | 1m='+ppm.toFixed(1)+'px</div>'+
-
-      // 敷地
-      cell('敷地面積',siteAreaM2.toFixed(1),'㎡',undefined,
-        '≒'+siteAreaTsubo.toFixed(1)+'坪')+
-
-      // 建物
-      cell('建物規模',totalFloors,'F',undefined,
-        'H='+buildingH.toFixed(0)+'m ／ 住戸フロア: 2F〜'+totalFloors+'F')+
-      cell('総戸数',totalUnits,'戸')+
-      cell('住戸専有面積',Math.round(DEFS.unit.w*DEFS.unit.d),'㎡/戸',undefined,
-        DEFS.unit.w+'m × '+DEFS.unit.d+'m')+
-
-      // 建蔽率
-      '<div style="background:'+(bcrOk?'#f0fdf4':'#fef2f2')+
-        ';border:1px solid '+(bcrOk?'#86efac':'#fca5a5')+
-        ';border-radius:6px;padding:6px 8px;margin-bottom:5px;">'+
-        '<div style="font-size:9px;color:'+(bcrOk?'#166534':'#dc2626')+';font-weight:700;">建蔽率</div>'+
-        '<div style="font-size:15px;font-weight:800;color:'+(bcrOk?'#15803d':'#dc2626')+';">'+
-          bcr.toFixed(1)+'<span style="font-size:9px;font-weight:400;">%</span></div>'+
-        '<div style="font-size:8px;color:#6b6760;">上限'+bcrLimit+'% ／ 消化率'+bcrConsume+'%</div>'+
-        '<div style="font-size:7px;color:#a8a49e;">建築面積÷敷地面積×100</div>'+
-      '</div>'+
-
-      // 容積率
-      '<div style="background:'+(farOk?'#f0fdf4':'#fef2f2')+
-        ';border:1px solid '+(farOk?'#86efac':'#fca5a5')+
-        ';border-radius:6px;padding:6px 8px;margin-bottom:5px;">'+
-        '<div style="font-size:9px;color:'+(farOk?'#166534':'#dc2626')+';font-weight:700;">容積率</div>'+
-        '<div style="font-size:15px;font-weight:800;color:'+(farOk?'#15803d':'#dc2626')+';">'+
-          far.toFixed(1)+'<span style="font-size:9px;font-weight:400;">%</span></div>'+
-        '<div style="font-size:8px;color:#6b6760;">上限'+farLimit+'% ／ 消化率'+farConsume+'%</div>'+
-        '<div style="font-size:7px;color:#a8a49e;">延床面積÷敷地面積×100</div>'+
-      '</div>'+
-
-      // 駐車場
-      '<div style="background:'+(parkOk?'#f0fdf4':'#fffbeb')+
-        ';border:1px solid '+(parkOk?'#86efac':'#fcd34d')+
-        ';border-radius:6px;padding:6px 8px;margin-bottom:5px;">'+
-        '<div style="font-size:9px;color:'+(parkOk?'#166534':'#92400e')+';font-weight:700;">駐車場率</div>'+
-        '<div style="font-size:15px;font-weight:800;color:'+(parkOk?'#15803d':'#d97706')+';">'+
-          parkRate+'<span style="font-size:9px;font-weight:400;">%</span></div>'+
-        '<div style="font-size:8px;color:#6b6760;">'+p+'台 ／ '+totalUnits+'戸</div>'+
-      '</div>'+
-
-      // 用途地域・道路幅
-      cellWide('用途地域',zoneName||'未設定')+
-      cell('前面道路幅',roadW,'m')+
-
-      // SB
-      cellWide('セットバック',sbLines)+
-
-      // 法規警告
-      (legalWarnList?
-        '<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:6px 8px;margin-bottom:5px;">'+
-        '<div style="font-size:9px;font-weight:700;color:#dc2626;margin-bottom:3px;">⚠ 法規確認事項</div>'+
-        '<div style="font-size:9px;line-height:1.5;">'+legalWarnList+'</div></div>':'')+'</div>';
-
-    var pw=window.open('','_blank');
-    pw.document.write(
-      '<!DOCTYPE html><html><head><title>敷地配置図</title>'+
-      '<meta charset="UTF-8">'+
-      '<style>'+
-        '@page{size:A4 landscape;margin:8mm;}'+
-        'body{margin:0;padding:0;font-family:-apple-system,sans-serif;}'+
-        '.wrap{display:flex;width:100%;height:100%;gap:8px;align-items:flex-start;}'+
-        '.map-col{flex:1;min-width:0;}'+
-        '.map-col img{width:100%;height:auto;display:block;border:1px solid #e0dbd4;border-radius:4px;}'+
-      '</style></head><body>'+
-      '<div class="wrap">'+
-        '<div class="map-col"><img src="'+mapDataUrl+'"/></div>'+
-        summaryHtml+
-      '</div>'+
-      '</body></html>'
-    );
-    pw.document.close();
-    pw.onload=function(){pw.print();};
+    document.getElementById('pp-map-preview').src=tmpCanvas.toDataURL('image/png');
+    window._printMapDataUrl=tmpCanvas.toDataURL('image/png');
   };
   img.src=url;
+}
+
+function closePrintPreview(){
+  document.getElementById('print-preview-modal').classList.remove('show');
+}
+
+function executePrint(){
+  var title=document.getElementById('pp-title').value||'敷地配置計画書';
+  var now=new Date();
+  var dateStr=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
+
+  // 表示項目を収集
+  var showBcr=document.getElementById('pp-show-bcr').checked;
+  var showFar=document.getElementById('pp-show-far').checked;
+  var showPark=document.getElementById('pp-show-park').checked;
+  var showHeight=document.getElementById('pp-show-height').checked;
+  var showSb=document.getElementById('pp-show-sb').checked;
+  var showMemo=document.getElementById('pp-show-memo').checked;
+  var memo=document.getElementById('pp-memo').value;
+
+  function row(label,val,unit,show){
+    if(!show)return '';
+    return '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;">'+label+'</td>'+
+      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+val+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">'+unit+'</span></td></tr>';
+  }
+  function rowEdit(id,label,unit,show){
+    if(!show)return '';
+    var val=document.getElementById(id).value;
+    return row(label,val,unit,true);
+  }
+
+  var tableRows=
+    '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">敷地面積</td>'+
+    '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-site').value+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">㎡</span></td></tr>'+
+    row('建物階数',document.getElementById('pp-floors').value,'F',true)+
+    row('住戸専有面積',document.getElementById('pp-unit-area').value,'㎡/戸',true)+
+    row('総戸数',document.getElementById('pp-units').value,'戸',true)+
+    rowEdit('pp-park','駐車場台数','台',showPark)+
+    rowEdit('pp-park-rate','駐車場率','%',showPark)+
+    rowEdit('pp-height','建物高さ','m',showHeight)+
+    row('前面道路幅',document.getElementById('pp-road').value,'m',true)+
+    row('用途地域',document.getElementById('pp-zone').value,'',true);
+
+  if(showBcr){
+    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">建蔽率</td>'+
+      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-bcr').value+
+      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-bcr-limit').value+'%)</span></td></tr>';
+  }
+  if(showFar){
+    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">容積率</td>'+
+      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-far').value+
+      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-far-limit').value+'%)</span></td></tr>';
+  }
+  if(showSb){
+    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">セットバック</td>'+
+      '<td style="padding:5px 8px;font-size:10px;font-weight:600;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-sb').value+'</td></tr>';
+  }
+  if(showMemo&&memo){
+    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">備考</td>'+
+      '<td style="padding:5px 8px;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:pre-wrap;">'+memo+'</td></tr>';
+  }
+
+  var pw=window.open('','_blank');
+  pw.document.write(
+    '<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
+    '<style>'+
+    '@page{size:A3 landscape;margin:10mm;}'+
+    '*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#fff;color:#1a1814;}'+
+    '.wrap{display:flex;width:297mm;height:207mm;gap:6mm;}'+
+    '.map-col{flex:1;min-width:0;display:flex;flex-direction:column;}'+
+    '.map-col img{flex:1;width:100%;object-fit:contain;border:1px solid #ddd;border-radius:3px;}'+
+    '.side{width:72mm;flex-shrink:0;display:flex;flex-direction:column;gap:4mm;}'+
+    '.header{border-bottom:3px solid #2563eb;padding-bottom:3mm;}'+
+    '.header h1{font-size:14px;font-weight:800;color:#1a1814;margin-bottom:1mm;}'+
+    '.header .date{font-size:9px;color:#6b6760;}'+
+    '.data-table{width:100%;border-collapse:collapse;border:1px solid #e0dbd4;border-radius:4px;overflow:hidden;}'+
+    '.footer{margin-top:auto;font-size:8px;color:#a8a49e;text-align:right;}'+
+    '</style></head><body>'+
+    '<div class="wrap">'+
+    '<div class="map-col">'+
+    '<img src="'+window._printMapDataUrl+'"/>'+
+    '</div>'+
+    '<div class="side">'+
+    '<div class="header">'+
+    '<h1>'+title+'</h1>'+
+    '<div class="date">作成日: '+dateStr+'</div>'+
+    '</div>'+
+    '<table class="data-table">'+tableRows+'</table>'+
+    '<div class="footer">※本資料は概算計画であり、確定値ではありません</div>'+
+    '</div>'+
+    '</div>'+
+    '</body></html>'
+  );
+  pw.document.close();
+  pw.onload=function(){pw.print();};
+  closePrintPreview();
 }
 
 document.addEventListener('keydown',function(e){
@@ -1361,7 +1470,18 @@ document.addEventListener('keydown',function(e){
     document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
     setBadge('pan','地図パンモード');wrap.style.cursor='';updateSelBar();
   }
-  if(e.key==='Delete'||e.key==='Backspace'){if(selectedTiles.length>0){saveTileHistory();selectedTiles.slice().forEach(delTile);}}
+  if(e.key==='Delete'||e.key==='Backspace'){
+    if(selectedTiles.length>0){
+      // タイルを削除
+      saveTileHistory();selectedTiles.slice().forEach(delTile);
+    } else if(measureMode||(!currentTool&&measureLines.length>0)){
+      // 測定線: 最後に追加したものを削除
+      if(measureLines.length>0){measureLines.pop();redrawMeasure();}
+    } else if(guideMode||(!currentTool&&guideLines.length>0)){
+      // 補助線: 最後に追加したものを削除
+      if(guideLines.length>0){guideLines.pop();redrawGuides();}
+    }
+  }
   if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown'){
     if(selectedTiles.length>0){e.preventDefault();var step=e.shiftKey?ppm:ppm*0.1;var dx=e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0;var dy=e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0;selectedTiles.forEach(function(t){t.cx+=dx;t.cy+=dy;reposTile(t);});}
   }
@@ -1511,13 +1631,17 @@ function confirmEdgeModal(){
   var dx=polyPts[j].x-polyPts[i].x,dy=polyPts[j].y-polyPts[i].y;
   var curLen=Math.sqrt(dx*dx+dy*dy);
   if(curLen<0.001){closeEdgeModal();return;}
-  // 辺の方向を維持して終点を移動
-  var nx=dx/curLen,ny=dy/curLen;
+  var nx=dx/curLen,ny=dy/curLen; // 辺の方向ベクトル
   var newPx=newLen*ppm;
-  polyPts[j]={x:polyPts[i].x+nx*newPx,y:polyPts[i].y+ny*newPx};
+  var diff=(newPx-curLen)/2; // 変化量の半分
+
+  // 辺の中点を固定し、始点・終点を均等に拡縮
+  // → 形状が中心から均等に変化し、隣接辺への影響を最小化
+  polyPts[i]={x:polyPts[i].x-nx*diff, y:polyPts[i].y-ny*diff};
+  polyPts[j]={x:polyPts[j].x+nx*diff, y:polyPts[j].y+ny*diff};
+
   closeEdgeModal();
   redrawPoly();redrawSb();
-  // 面積更新
   var a=calcPolyArea()/ppm/ppm;
   document.getElementById('poly-area-val').textContent=a.toFixed(1)+' ㎡';
   document.getElementById('poly-area-tsubo').textContent=(a/3.30579).toFixed(1)+' 坪';
@@ -1628,9 +1752,10 @@ function updateMetrics(){
   var northSlope=parseFloat(document.getElementById('north-slope').value)||0;
   var roadSlope=parseFloat(document.getElementById('road-slope').value)||1.5;
   tiles.forEach(function(t){
-    var def=getTileDef(t),a=def.w*def.d;bA+=a;
-    if(t.type==='unit'){u++;uA+=a;}
-    if(t.type==='park')p++;
+    var def=getTileDef(t),a=def.w*def.d;
+    if(t.type==='unit'){u++;uA+=a;bA+=a;} // 住棟: 建築面積に含む
+    else if(t.type==='park'){p++;} // 平面駐車場: 建築面積に含まない
+    else{bA+=a;} // 階段・EV・廊下等: 建築面積に含む
     if(t.type==='stair')s++;
     if(t.type==='elev')ev++;
   });
@@ -1653,13 +1778,22 @@ function updateMetrics(){
   else{legalOk.push('✓ 前面道路幅 '+roadW+'m（接道OK）');}
   // 建物高さと法規
   if(totalFloors>=2){
-    // 道路斜線 = 前面道路幅 × 道路斜線係数
-    var roadHeightLimit=roadW*roadSlope;
+    // 道路斜線 = (前面道路幅 + 道路SB×2) × 道路斜線係数
+    var roadSbDist=0;
+    setbacks.forEach(function(sb){if(sb.type==='road')roadSbDist=Math.max(roadSbDist,sb.dist);});
+    var effectiveRoadW=roadW+2*roadSbDist;
+    var roadHeightLimit=effectiveRoadW*roadSlope;
+    var roadSbNote=roadSbDist>0?'（道路幅'+roadW+'m＋SB'+roadSbDist+'m×2='+effectiveRoadW.toFixed(1)+'m）×'+roadSlope:'（道路幅'+roadW+'m×'+roadSlope+'）';
     if(buildingH>roadHeightLimit){
-      legalIssues.push('⚠ 道路斜線超過の可能性: 建物高さ'+buildingH.toFixed(1)+'m > 道路斜線制限'+roadHeightLimit.toFixed(1)+'m（道路幅'+roadW+'m×'+roadSlope+'）');
+      legalIssues.push('⚠ 道路斜線超過: 建物高さ'+buildingH.toFixed(1)+'m > 制限'+roadHeightLimit.toFixed(1)+'m '+roadSbNote);
     } else {
-      legalOk.push('✓ 道路斜線OK（建物高さ'+buildingH.toFixed(1)+'m ≤ '+roadHeightLimit.toFixed(1)+'m）');
+      legalOk.push('✓ 道路斜線OK: 制限'+roadHeightLimit.toFixed(1)+'m '+roadSbNote);
     }
+    // SB別許容高さ一覧
+    var roadSbTable=[0,1,2,3,4,5].map(function(d){
+      return 'SB'+d+'m→'+((roadW+2*d)*roadSlope).toFixed(1)+'m';
+    }).join(' / ');
+    legalOk.push('📐 道路斜線 SB別許容高さ: '+roadSbTable);
     // 北側斜線（住居系のみ）
     if(northSlope>0){
       var bbH=polyDone?(Math.sqrt(calcPolyArea())/ppm):0;
@@ -1736,15 +1870,90 @@ function updateMetrics(){
     '<div class="mc"><div class="ml">駐車場率</div><div class="mv" style="color:'+(parkOk?'#15803d':'#d97706')+';">'+parkRate+'<span class="mu">%</span></div></div>'+
     '<div class="mc"><div class="ml">住戸延床(2F〜)</div><div class="mv">'+Math.round(totalFloorArea).toLocaleString()+'<span class="mu">㎡</span></div></div>'+
     '<div class="mc"><div class="ml">建築面積</div><div class="mv">'+Math.round(bA).toLocaleString()+'<span class="mu">㎡</span></div></div>';
-  // トースト通知（超過チェック）
+  // 法規チェックを_legalStoreに蓄積（正確な値で）
+  _legalStore={};  // 毎回リセット
   if(polyDone){
-    var _bH=totalFloors*floorH;
-    var _rW=parseFloat(document.getElementById('road-width').value)||6;
-    var _rs=parseFloat(document.getElementById('road-slope').value)||1.5;
-    var _ns=parseFloat(document.getElementById('north-slope').value)||0;
-    var _nL=_ns>0?(5+Math.sqrt(siteArea)*0.8*_ns):999;
-    _patchedMetricsToast(bcr,far,bcrLimit,farLimit,_bH,_rW,_rs,_nL,totalUnits,parkRate,p);
+    var roadSbDist2=0;
+    setbacks.forEach(function(sb){if(sb.type==='road')roadSbDist2=Math.max(roadSbDist2,sb.dist);});
+    var effectiveRoadW2=roadW+2*roadSbDist2;
+    var roadLimit2=effectiveRoadW2*roadSlope;
+    var roadNote2=roadSbDist2>0?'道路幅'+roadW+'m＋SB'+roadSbDist2+'m×2='+effectiveRoadW2.toFixed(1)+'m × '+roadSlope:'道路幅'+roadW+'m × '+roadSlope;
+
+    // 道路斜線
+    if(buildingH>roadLimit2){
+      showToast('road-over','error','道路斜線制限オーバー',
+        '高さ'+buildingH.toFixed(0)+'m > 制限'+roadLimit2.toFixed(1)+'m（'+roadNote2+'）',
+        '① 階数を'+(Math.floor(roadLimit2/floorH))+'F以下にする　② 前面道路幅を広くする');
+    } else {
+      showToast('road-ok','ok','道路斜線OK',
+        '高さ'+buildingH.toFixed(0)+'m ≤ 制限'+roadLimit2.toFixed(1)+'m（'+roadNote2+'）','');
+    }
+
+    // 建蔽率
+    if(bcr>bcrLimit){
+      showToast('bcr-over','error','建蔽率オーバー！',
+        '現在'+bcr.toFixed(1)+'% > 上限'+bcrLimit+'%（超過+'+(bcr-bcrLimit).toFixed(1)+'%）',
+        '住棟スパン数を減らす / 住棟奥行を小さくする');
+    }
+
+    // 容積率
+    if(far>farLimit){
+      var suggestF=Math.ceil(farLimit/far*totalFloors)-1;
+      showToast('far-over','error','容積率オーバー！',
+        '現在'+far.toFixed(1)+'% > 上限'+farLimit+'%（超過+'+(far-farLimit).toFixed(1)+'%）',
+        '① 階数を'+Math.max(2,suggestF)+'F以下に　② スパン数削減');
+    }
+
+    // 駐車場率不足
+    if(totalUnits>0&&parkRate<100){
+      var shortage=totalUnits-p;
+      showToast('park-short','warn','駐車場率'+parkRate+'%（'+p+'台/'+totalUnits+'戸）',
+        '不足台数: 約'+shortage+'台',
+        '① 立体駐車場（機械式・自走式）を追加　② 近隣駐車場との協定　③ 戸数削減');
+    }
+
+    // 北側斜線
+    if(northSlope>0){
+      var bbH2=Math.sqrt(calcPolyArea())/ppm;
+      var northSbDist2=0;
+      setbacks.forEach(function(sb){if(sb.type==='neighbor')northSbDist2=Math.max(northSbDist2,sb.dist);});
+      var northLim2=5+(bbH2*0.6+northSbDist2)*northSlope;
+      if(buildingH>northLim2){
+        showToast('north-over','warn','北側斜線超過の可能性',
+          '建物高さ'+buildingH.toFixed(0)+'m > 北側斜線概算'+northLim2.toFixed(1)+'m（隣地SB'+northSbDist2+'m含む）',
+          '正確な測定が必要です。配置計画を確認してください');
+      }
+    }
+
+    // セットバックゾーン侵入チェック
+    var sbViolations=[];
+    setbacks.forEach(function(sb){
+      var ei=sb.edge,ej=(ei+1)%polyPts.length;
+      var dx2=polyPts[ej].x-polyPts[ei].x,dy2=polyPts[ej].y-polyPts[ei].y;
+      var edgeLenM=(Math.sqrt(dx2*dx2+dy2*dy2)/ppm).toFixed(1);
+      var typeLabel=sb.type==='road'?'道路SB':'隣地SB';
+      var unitViolated=tiles.some(function(t){
+        if(t.type!=='unit')return false;
+        return inSetbackZone(t.cx,t.cy,getTileDef(t).w*ppm,getTileDef(t).d*ppm,t.rot);
+      });
+      if(unitViolated){
+        sbViolations.push((ei+1)+'辺('+edgeLenM+'m) '+typeLabel+sb.dist+'m ー 住棟が侵入！');
+      }
+    });
+    if(sbViolations.length>0){
+      showToast('sb-violation','error','セットバックゾーン侵入',
+        sbViolations.join(' / '),
+        '赤/黄のゾーン外に住棟を移動してください（駐車場はSB内OK）');
+    } else if(setbacks.length>0){
+      var sbInfoList=setbacks.map(function(sb){
+        var ei=sb.edge,ej=(ei+1)%polyPts.length;
+        var l2=Math.sqrt(Math.pow(polyPts[ej].x-polyPts[ei].x,2)+Math.pow(polyPts[ej].y-polyPts[ei].y,2))/ppm;
+        return (sb.type==='road'?'🛣':'🏘')+(sb.edge+1)+'辺('+l2.toFixed(1)+'m):'+sb.dist+'m';
+      }).join(' | ');
+      showToast('sb-info','info','セットバック設定中',sbInfoList,'');
+    }
   }
+  _updateLegalBadge();
 }
 
 
@@ -1796,135 +2005,14 @@ function closeLegalModal(){document.getElementById('legal-modal').classList.remo
 
 // ── 入力値変更時の警告チェック ──
 var _prevViolations={};
-function checkInputViolations(){
-  if(!polyDone)return;
-  var totalFloors=Math.max(2,parseInt(document.getElementById('floors-input').value)||10);
-  var floorH=parseFloat(document.getElementById('floor-height').value)||3;
-  var roadW2=parseFloat(document.getElementById('road-width').value)||6;
-  var northSlope=parseFloat(document.getElementById('north-slope').value)||0;
-  var roadSlope=parseFloat(document.getElementById('road-slope').value)||1.5;
-  var bcrLimit=parseFloat(document.getElementById('bcr-limit').value)||60;
-  var farLimit=parseFloat(document.getElementById('far-limit').value)||200;
-  var buildingH=totalFloors*floorH;
-
-  // 道路斜線チェック
-  var roadLimit=roadW2*roadSlope;
-  if(buildingH>roadLimit){
-    showToast('road-slope','error',
-      '道路斜線オーバー',
-      '建物高さ'+buildingH.toFixed(0)+'m > 道路斜線制限'+roadLimit.toFixed(1)+'m（道路幅'+roadW2+'m×'+roadSlope+'）',
-      '階数を'+(Math.floor(roadLimit/floorH))+'F以下にするか、前面道路幅を広くしてください');
-  }
-
-  // 北側斜線チェック（参考）
-  if(northSlope>0){
-    var siteArea=overrideArea!=null?overrideArea:(polyDone?calcPolyArea()/ppm/ppm:0);
-    var estDepth=siteArea>0?Math.sqrt(siteArea)*0.8:20;
-    var northLimit=5+estDepth*northSlope;
-    if(buildingH>northLimit){
-      showToast('north-slope','warn',
-        '北側斜線超過の可能性',
-        '建物高さ'+buildingH.toFixed(0)+'m > 北側斜線概算'+northLimit.toFixed(1)+'m',
-        '正確な測定が必要です。配置計画を確認してください');
-    }
-  }
-
-  // 容積率・建蔽率はタイル配置後にチェック
-}
+function checkInputViolations(){ /* updateMetrics内で一元管理 */ }
 
 // 既存のupdateMetricsにトースト通知を追加する
 // (後でオーバーライド)
 var _origUpdateMetrics=null;
 
 // updateMetrics のパッチ: 超過時にトースト通知
-function _patchedMetricsToast(bcr,far,bcrLimit,farLimit,buildingH,roadW2,roadSlope,northLimit,totalUnits,parkRate,p){
-  // 建蔽率オーバー
-  if(bcr>bcrLimit){
-    showToast('bcr-over','error',
-      '建蔽率オーバー！',
-      '現在'+bcr.toFixed(1)+'% > 上限'+bcrLimit+'%（超過+'+(bcr-bcrLimit).toFixed(1)+'%）',
-      '住棟スパン数を減らす / 住棟奥行を小さくする / 駐車場タイルを減らす');
-  }
-  // 容積率オーバー
-  if(far>farLimit){
-    showToast('far-over','error',
-      '容積率オーバー！',
-      '現在'+far.toFixed(1)+'% > 上限'+farLimit+'%（超過+'+(far-farLimit).toFixed(1)+'%）',
-      '① 階数を下げる（例: '+(Math.ceil(farLimit/far*(Math.max(2,parseInt(document.getElementById("floors-input").value)||10)))-1)+'F以下）　② スパン数削減　③ 容積率の高い用途地域への変更を検討');
-  }
-  // 駐車場率不足
-  if(totalUnits>0&&parkRate<100){
-    var shortage=totalUnits-p;
-    if(shortage>0){
-      showToast('park-short','warn',
-        '駐車場率'+parkRate+'%（'+p+'台/'+totalUnits+'戸）',
-        '不足台数: 約'+shortage+'台',
-        '① 立体駐車場（機械式・自走式）を追加　② 近隣駐車場との協定　③ 戸数削減',
-        4000);
-    }
-  }
-  // 道路斜線チェック（タイル配置後も）
-  var roadLimit2=roadW2*roadSlope;
-  if(buildingH>roadLimit2){
-    showToast('road-over','error',
-      '道路斜線制限オーバー',
-      '高さ'+buildingH.toFixed(0)+'m > 制限'+roadLimit2.toFixed(1)+'m',
-      '前面道路幅'+roadW2+'m × 係数'+roadSlope+' = '+roadLimit2.toFixed(1)+'m制限。階高または階数を下げてください');
-  }
-  checkInputViolations();
-
-  // ── セットバック警告 ──
-  if(typeof setbacks!=='undefined'&&setbacks.length>0&&typeof polyPts!=='undefined'&&polyPts.length>0){
-    // 各セットバック辺についてチェック
-    var sbWarnings=[];
-    setbacks.forEach(function(sb){
-      var ei=sb.edge, ej=(ei+1)%polyPts.length;
-      var ax=polyPts[ei].x,ay=polyPts[ei].y,bx=polyPts[ej].x,by=polyPts[ej].y;
-      var dx=bx-ax,dy=by-ay,len2=Math.sqrt(dx*dx+dy*dy)||1;
-      var edgeLenM=(len2/ppm).toFixed(1);
-      var sbDistM=sb.dist;
-      var typeLabel=sb.type==='road'?'道路SB':'隣地SB';
-      var edgeLabel=(ei+1)+'辺('+edgeLenM+'m)';
-      
-      // その辺のセットバックゾーンに住棟タイルが入っているかチェック
-      var unitTiles=tiles.filter(function(t){return t.type==='unit';});
-      var violated=false;
-      unitTiles.forEach(function(t){
-        if(inSetbackZone(t.cx,t.cy,
-          (typeof t.rW!=='undefined'&&t.rW?t.rW:getTileDef(t).w)*ppm,
-          getTileDef(t).d*ppm, t.rot)){
-          violated=true;
-        }
-      });
-      
-      if(violated){
-        sbWarnings.push({edge:ei+1,edgeLen:edgeLenM,type:typeLabel,dist:sbDistM,violated:true});
-      }
-    });
-    
-    if(sbWarnings.length>0){
-      var warnMsgs=sbWarnings.map(function(w){
-        return w.edge+'辺('+w.edgeLen+'m) '+w.type+w.dist+'m ← 住棟が侵入！';
-      }).join(' / ');
-      showToast('sb-violation','error',
-        'セットバックゾーン侵入',
-        warnMsgs,
-        '赤/黄のゾーン外に住棟を移動してください（駐車場はSB内OK）');
-    }
-    
-    // セットバック設定の一覧を情報表示（辺番号付き）
-    var sbInfoList=setbacks.map(function(sb){
-      var ei=sb.edge,ej=(ei+1)%polyPts.length;
-      var len2=Math.sqrt(Math.pow(polyPts[ej].x-polyPts[ei].x,2)+Math.pow(polyPts[ej].y-polyPts[ei].y,2))||1;
-      var edgeLenM=(len2/ppm).toFixed(1);
-      var typeLabel=sb.type==='road'?'🛣道路':'🏘隣地';
-      return typeLabel+' '+(sb.edge+1)+'辺('+edgeLenM+'m): '+sb.dist+'m';
-    }).join(' | ');
-    if(sbInfoList){
-      showToast('sb-info','info','セットバック設定中',sbInfoList,'','',8000);
-    }
-  }
-}
+function _patchedMetricsToast(){/* 廃止済み - updateMetricsに一元化 */}
 
 // ===== モバイル対応 =====
 var isMobile=('ontouchstart' in window)||navigator.maxTouchPoints>0;
@@ -2151,6 +2239,268 @@ function clearAreaOverride(){
   overrideArea=null;
   document.getElementById('area-override-status').textContent='';
   updateMetrics();
+}
+
+
+// ============================================================
+// プロジェクト保存・読み込み
+// バージョン間でのデータ互換性を確保
+// ============================================================
+var PROJECT_VERSION='1.0';
+
+function saveProject(){
+  // 全入力値を収集
+  function getVal(id){var el=document.getElementById(id);return el?el.value:null;}
+
+  var projectData={
+    version: PROJECT_VERSION,
+    savedAt: new Date().toISOString(),
+    appVersion: document.querySelector('.sb-title')?document.querySelector('.sb-title').textContent:'',
+
+    // キャリブレーション
+    calibration:{ppm:ppm},
+
+    // 入力設定
+    settings:{
+      floors:        getVal('floors-input'),
+      floorHeight:   getVal('floor-height'),
+      roadWidth:     getVal('road-width'),
+      bcrLimit:      getVal('bcr-limit'),
+      farLimit:      getVal('far-limit'),
+      northSlope:    getVal('north-slope'),
+      roadSlope:     getVal('road-slope'),
+      zonePreset:    getVal('zone-preset'),
+      unitW:         getVal('unit-w'),
+      unitD:         getVal('unit-d'),
+      parkW:         getVal('park-w'),
+      parkD:         getVal('park-d'),
+      stairW:        getVal('stair-w'),
+      stairD:        getVal('stair-d'),
+      elevW:         getVal('elev-w'),
+      elevD:         getVal('elev-d'),
+      corridorD:     getVal('corridor-d'),
+      balconyD:      getVal('balcony-d'),
+      balconyW:      getVal('balcony-w'),
+      gridSize:      getVal('grid-size'),
+      actualArea:    getVal('actual-area-input'),
+      overrideArea:  overrideArea
+    },
+
+    // 敷地ポリゴン
+    polygon:{
+      pts: polyPts.map(function(p){return{x:p.x,y:p.y};}),
+      done: polyDone
+    },
+
+    // セットバック
+    setbacks: setbacks.map(function(s){
+      return{edge:s.edge,type:s.type,dist:s.dist};
+    }),
+
+    // タイル
+    tiles: tiles.map(function(t){
+      var def=getTileDef(t);
+      return{
+        id:t.id, type:t.type, cx:t.cx, cy:t.cy, rot:t.rot,
+        rW: t.rW||null,
+        freeConfig: t.freeConfig?{
+          name:t.freeConfig.name,
+          w:t.freeConfig.w,
+          d:t.freeConfig.d
+        }:null
+      };
+    }),
+
+    // グループ
+    groups: groups.map(function(g){
+      return{id:g.id, tileIds:g.tileIds.slice()};
+    }),
+
+    // 表示設定
+    view:{
+      panX:panX, panY:panY, canvasZoom:canvasZoom,
+      showGrid:showGrid, tileOpacity:tileOpacity,
+      currentRot:currentRot, lastRot:lastRot
+    }
+  };
+
+  var json=JSON.stringify(projectData, null, 2);
+  var blob=new Blob([json],{type:'application/json'});
+  var a=document.createElement('a');
+  var now=new Date();
+  var dateStr=now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2);
+  a.download='敷地プラン_'+dateStr+'.json';
+  a.href=URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('save-ok','ok','プロジェクトを保存しました',
+    '敷地プラン_'+dateStr+'.json','次回は「読み込み」ボタンで復元できます');
+}
+
+function loadProject(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      _applyProjectData(data);
+    }catch(err){
+      alert('読み込みエラー: '+err.message+' / 正しいプロジェクトファイルか確認してください');
+    }
+    event.target.value=''; // 同じファイルを再読み込みできるようリセット
+  };
+  reader.readAsText(file);
+}
+
+function _applyProjectData(data){
+  if(!data.version){alert('対応していないファイル形式です');return;}
+
+  // 確認ダイアログ
+  if(tiles.length>0||polyPts.length>0){
+    if(!confirm('現在の作業内容は上書きされます。読み込みますか？'))return;
+  }
+
+  // ── キャリブレーション ──
+  if(data.calibration&&data.calibration.ppm>0){
+    ppm=data.calibration.ppm;
+    document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
+    if(document.getElementById('px-m'))
+      document.getElementById('px-m').textContent=ppm.toFixed(1);
+  }
+
+  // ── 設定値を復元 ──
+  function setVal(id,val){
+    if(val===null||val===undefined)return;
+    var el=document.getElementById(id);
+    if(el)el.value=val;
+  }
+  var s=data.settings||{};
+  setVal('floors-input',   s.floors);
+  setVal('floor-height',   s.floorHeight);
+  setVal('road-width',     s.roadWidth);
+  setVal('bcr-limit',      s.bcrLimit);
+  setVal('far-limit',      s.farLimit);
+  setVal('north-slope',    s.northSlope);
+  setVal('road-slope',     s.roadSlope);
+  setVal('zone-preset',    s.zonePreset);
+  setVal('unit-w',         s.unitW);
+  setVal('unit-d',         s.unitD);
+  setVal('park-w',         s.parkW);
+  setVal('park-d',         s.parkD);
+  setVal('stair-w',        s.stairW);
+  setVal('stair-d',        s.stairD);
+  setVal('elev-w',         s.elevW);
+  setVal('elev-d',         s.elevD);
+  setVal('corridor-d',     s.corridorD);
+  setVal('balcony-d',      s.balconyD);
+  setVal('balcony-w',      s.balconyW);
+  setVal('grid-size',      s.gridSize);
+  setVal('actual-area-input', s.actualArea);
+  overrideArea=s.overrideArea||null;
+
+  // ── ポリゴン復元 ──
+  clearEl(polyG);clearEl(sbG);
+  polyPts=[];polyDone=false;setbacks=[];
+  if(data.polygon&&data.polygon.pts&&data.polygon.pts.length>=3){
+    polyPts=data.polygon.pts.map(function(p){return{x:p.x,y:p.y};});
+    polyDone=data.polygon.done||false;
+    if(polyDone){
+      var a=calcPolyArea()/ppm/ppm;
+      document.getElementById('poly-area-box').style.display='block';
+      document.getElementById('poly-area-val').textContent=a.toFixed(1)+' ㎡';
+      document.getElementById('poly-area-tsubo').textContent=(a/3.30579).toFixed(1)+' 坪';
+    }
+    redrawPoly();
+  }
+
+  // ── セットバック復元 ──
+  setbacks=(data.setbacks||[]).map(function(s){
+    return{edge:s.edge,type:s.type,dist:s.dist};
+  });
+  updateSbList();
+  redrawSb();
+
+  // ── タイル全削除→復元 ──
+  tiles.slice().forEach(delTile);
+  uid=0;
+  var idMap={}; // 旧id→新タイルのマッピング
+  (data.tiles||[]).forEach(function(td){
+    if(td.freeConfig){
+      freeConfig={name:td.freeConfig.name,w:td.freeConfig.w,d:td.freeConfig.d};
+      DEFS.free.w=td.freeConfig.w;DEFS.free.d=td.freeConfig.d;DEFS.free.label=td.freeConfig.name;
+    }
+    var t=createTile(td.cx,td.cy,td.type,td.rot);
+    if(td.rW!==null&&td.rW!==undefined){t.rW=td.rW;reposTile(t);}
+    idMap[td.id]=t.id; // 旧→新IDマッピング
+    t._oldId=td.id;
+  });
+
+  // ── グループ復元（IDをマッピング）──
+  groups=[];gid=0;
+  (data.groups||[]).forEach(function(g){
+    var newIds=g.tileIds.map(function(oldId){
+      // 旧IDから新タイルのIDを探す
+      var found=tiles.find(function(t){return t._oldId===oldId;});
+      return found?found.id:null;
+    }).filter(function(id){return id!==null;});
+    if(newIds.length>=2){
+      groups.push({id:++gid,tileIds:newIds});
+    }
+  });
+  // _oldIdを掃除
+  tiles.forEach(function(t){delete t._oldId;});
+
+  // ── 表示設定復元 ──
+  if(data.view){
+    panX=data.view.panX||0;
+    panY=data.view.panY||0;
+    canvasZoom=data.view.canvasZoom||1;
+    showGrid=data.view.showGrid||false;
+    tileOpacity=data.view.tileOpacity||0.65;
+    currentRot=data.view.currentRot||0;
+    lastRot=data.view.lastRot||0;
+    applyTf();
+    document.getElementById('hud-zoom').textContent=Math.round(canvasZoom*100);
+    if(document.getElementById('grid-toggle'))
+      document.getElementById('grid-toggle').checked=showGrid;
+    redrawGrid();
+  }
+
+  // 全体更新
+  updateDefs();
+  updateMetrics();
+  selectedTiles=[];selectedTile=null;
+  tiles.forEach(reposTile);
+  updateSelBar();
+
+  var savedAt=data.savedAt?new Date(data.savedAt).toLocaleString('ja'):'不明';
+  showToast('load-ok','ok','プロジェクトを読み込みました',
+    '保存日時: '+savedAt+' / タイル'+tiles.length+'個 / バージョン'+data.version,
+    '');
+}
+
+
+// ── レイヤー表示切替 ──
+function toggleLayerVis(layer){
+  if(layer==='measure'){
+    var show=document.getElementById('show-measure').checked;
+    if(measureG)measureG.style.display=show?'':'none';
+  } else if(layer==='guide'){
+    var show=document.getElementById('show-guide').checked;
+    if(guideG)guideG.style.display=show?'':'none';
+  } else if(layer==='sb'){
+    var show=document.getElementById('show-sb').checked;
+    if(sbG)sbG.style.display=show?'':'none';
+  } else if(layer==='label'){
+    var show=document.getElementById('show-label').checked;
+    // タイルのラベル・寸法テキストを表示/非表示
+    tiles.forEach(function(t){
+      if(t.lbl)t.lbl.style.display=show?'':'none';
+      if(t.dim)t.dim.style.display=show?'':'none';
+      if(t.entLbl)t.entLbl.style.display=show?'':'none';
+    });
+  }
 }
 
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
