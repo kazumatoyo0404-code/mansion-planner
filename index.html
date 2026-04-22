@@ -254,7 +254,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 </div>
 <div id="app">
 <aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v8.1</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v8.2</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -275,10 +275,35 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="btn-sm" style="flex:1;" onclick="undoPolyPt()">最後の点を戻す</button>
       <button class="btn-sm" style="flex:1;" onclick="clearPoly()">ポリゴン消去</button>
     </div>
-    <div id="poly-area-box" style="display:none;margin-top:6px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;">
-      <div style="font-size:10px;color:#166534;font-weight:700;">敷地面積</div>
-      <div style="font-size:20px;font-weight:800;color:#15803d;" id="poly-area-val">-</div>
-      <div style="font-size:10px;color:#166534;" id="poly-area-tsubo">-</div>
+    <div id="poly-area-box" style="display:none;margin-top:6px;">
+      <!-- ゼンリン計算面積 -->
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;margin-bottom:5px;">
+        <div style="font-size:10px;color:#166534;font-weight:700;">敷地面積（ゼンリン計算値）</div>
+        <div style="font-size:18px;font-weight:800;color:#15803d;" id="poly-area-val">-</div>
+        <div style="font-size:10px;color:#166534;" id="poly-area-tsubo">-</div>
+      </div>
+      <!-- 実測面積入力 -->
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px 10px;">
+        <div style="font-size:10px;color:#92400e;font-weight:700;margin-bottom:4px;">📐 実測面積（上書き）</div>
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
+          <input type="number" id="actual-area-input" placeholder="例: 1234.5" min="1" step="0.1"
+            style="flex:1;height:28px;padding:0 6px;font-size:12px;border:1px solid #fcd34d;border-radius:6px;outline:none;background:#fff;"
+            oninput="onActualAreaChange()"/>
+          <span style="font-size:10px;color:#92400e;white-space:nowrap;">㎡</span>
+        </div>
+        <div style="font-size:9px;color:#a8a49e;margin-bottom:5px;" id="actual-area-sub"></div>
+        <!-- 方法1: 面積だけ上書き -->
+        <button onclick="applyActualAreaOnly()" id="btn-area-only"
+          style="width:100%;height:28px;background:#d97706;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;margin-bottom:3px;display:none;">
+          📋 法規計算だけこの面積で行う
+        </button>
+        <!-- 方法2: ppmを再計算 -->
+        <button onclick="applyActualAreaScale()" id="btn-area-scale"
+          style="width:100%;height:28px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;display:none;">
+          🔧 スケール（縮尺）を自動補正する
+        </button>
+        <div style="font-size:9px;color:#6b6760;margin-top:3px;" id="area-override-status"></div>
+      </div>
     </div>
   </div>
   <div class="sb-sec">
@@ -413,6 +438,22 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <input type="text" id="free-name" placeholder="名前（例: 管理室）" maxlength="10"/>
     <div class="row2"><div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.5" min="0.5"/></div><div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.5" min="0.5"/></div></div>
     <div class="modal-btns"><button class="modal-cancel" onclick="closeFreeModal()">キャンセル</button><button class="modal-ok" onclick="confirmFreeModal()">配置開始</button></div>
+  </div>
+</div>
+
+<div id="edge-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:20px 22px;width:300px;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px;">📐 辺長を編集</div>
+    <div id="edge-modal-info" style="font-size:11px;color:#6b6760;margin-bottom:12px;"></div>
+    <label style="font-size:11px;color:#6b6760;display:block;margin-bottom:4px;">新しい長さ (m)</label>
+    <input type="number" id="edge-modal-len" min="0.5" step="0.1"
+      style="width:100%;height:36px;padding:0 10px;font-size:14px;border:1.5px solid #2563eb;border-radius:8px;margin-bottom:6px;outline:none;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')confirmEdgeModal()"/>
+    <div style="font-size:10px;color:#a8a49e;margin-bottom:14px;">辺の方向を維持したまま終点を移動します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button onclick="closeEdgeModal()" style="height:36px;border:1px solid #e0dbd4;background:#f8f7f4;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">キャンセル</button>
+      <button onclick="confirmEdgeModal()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;">確定</button>
+    </div>
   </div>
 </div>
 <div id="sb-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:9999;align-items:center;justify-content:center;">
@@ -615,7 +656,7 @@ wrap.addEventListener('click',function(e){
     var len0=(Math.sqrt(dx0*dx0+dy0*dy0)/ppm).toFixed(1);
     var ex=setbacks.find(function(s){return s.edge===ei;});
     document.getElementById('sb-modal-info').textContent=(ei+1)+'辺 ('+len0+'m)';
-    document.getElementById('sb-modal-dist').value=ex?ex.dist:2;
+    document.getElementById('sb-modal-dist').value=ex?ex.dist:(sbType==='neighbor'?4:2);
     sbType=ex?ex.type:'road';updateSbmBtns();
     var m=document.getElementById('sb-modal');m.style.display='flex';
     return;
@@ -1157,7 +1198,7 @@ function printCanvas(){
     bA+=(t.rW||def.w)*def.d;
   });
   var totalUnits=floorUnitsPerF>0?floorUnitsPerF*resFloors:u*resFloors;
-  var siteAreaM2=polyDone?calcPolyArea()/ppm/ppm:0;
+  var siteAreaM2=overrideArea!=null?overrideArea:(polyDone?calcPolyArea()/ppm/ppm:0);
   var siteAreaTsubo=siteAreaM2/3.30579;
   var bcr=siteAreaM2>0?uA/siteAreaM2*100:0;
   var floorArea=uA*resFloors;
@@ -1331,6 +1372,14 @@ document.addEventListener('keydown',function(e){
 });
 
 function setTool(t){
+  // 辺選択モードを自動OFFに
+  if(setbackMode){
+    setbackMode=false;sbHover=-1;
+    var sbBtn=document.getElementById('btn-sb-mode');
+    if(sbBtn){sbBtn.textContent='辺選択モードON';sbBtn.style.background='#7c3aed';}
+    wrap.style.cursor='';
+    redrawSb();
+  }
   currentTool=t;calibMode=false;
   measureMode=(t==='measure');if(measureMode)measurePts=[];
   guideMode=(t==='guide');if(guideMode)guidePts=[];
@@ -1372,12 +1421,50 @@ function redrawPoly(){
   if(polyDone){
     var pts=polyPts.map(function(p){return p.x+','+p.y;}).join(' ');
     polyG.appendChild(mkS('polygon',{points:pts,fill:'rgba(37,99,235,0.07)',stroke:'#2563eb','stroke-width':'2.5'}));
+    // 頂点ドラッグ編集
+    polyPts.forEach(function(p,vi){
+      var circ=mkS('circle',{cx:p.x,cy:p.y,r:'7',fill:'#2563eb',stroke:'white','stroke-width':'2',cursor:'move'});
+      circ.style.pointerEvents='all';
+      (function(idx){
+        circ.addEventListener('mousedown',function(e){
+          e.stopPropagation();e.preventDefault();
+          function mv(ev){
+            var rect=wrap.getBoundingClientRect();
+            polyPts[idx]={x:(ev.clientX-rect.left-panX)/canvasZoom,
+                          y:(ev.clientY-rect.top-panY)/canvasZoom};
+            redrawPoly();redrawSb();
+          }
+          function up(){
+            document.removeEventListener('mousemove',mv);
+            document.removeEventListener('mouseup',up);
+            var a=calcPolyArea()/ppm/ppm;
+            if(document.getElementById('poly-area-val'))
+              document.getElementById('poly-area-val').textContent=a.toFixed(1)+' ㎡';
+            if(document.getElementById('poly-area-tsubo'))
+              document.getElementById('poly-area-tsubo').textContent=(a/3.30579).toFixed(1)+' 坪';
+            updateMetrics();
+          }
+          document.addEventListener('mousemove',mv);
+          document.addEventListener('mouseup',up);
+        });
+      })(vi);
+      polyG.appendChild(circ);
+    });
     for(var i=0;i<polyPts.length;i++){
       var j=(i+1)%polyPts.length,dx=polyPts[j].x-polyPts[i].x,dy=polyPts[j].y-polyPts[i].y;
       var len=(Math.sqrt(dx*dx+dy*dy)/ppm).toFixed(1);
       var tx=(polyPts[i].x+polyPts[j].x)/2,ty=(polyPts[i].y+polyPts[j].y)/2;
       var t2=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:tx,y:ty,fill:'#1d4ed8','font-size':'11','font-weight':'700','paint-order':'stroke',stroke:'white','stroke-width':'3','pointer-events':'none'});
-      t2.textContent=(i+1)+'辺('+len+'m)';polyG.appendChild(t2);
+      t2.textContent=(i+1)+'辺('+len+'m)';
+      // クリックで辺長編集モーダルを開く
+      t2.style.cursor='pointer';t2.style.pointerEvents='all';
+      (function(ei){
+        t2.addEventListener('click',function(e){e.stopPropagation();openEdgeEdit(ei);});
+        // ホバー時に下線強調
+        t2.addEventListener('mouseenter',function(){this.style.textDecoration='underline';this.setAttribute('fill','#1e40af');});
+        t2.addEventListener('mouseleave',function(){this.style.textDecoration='';this.setAttribute('fill','#1d4ed8');});
+      })(i);
+      polyG.appendChild(t2);
     }
   } else {
     for(var i=0;i<polyPts.length-1;i++)polyG.appendChild(mkS('line',{x1:polyPts[i].x,y1:polyPts[i].y,x2:polyPts[i+1].x,y2:polyPts[i+1].y,stroke:'#2563eb','stroke-width':'2','stroke-dasharray':'6,3'}));
@@ -1387,8 +1474,56 @@ function redrawPoly(){
 // ── セットバック ──
 function toggleSetbackMode(){if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}setbackMode=!setbackMode;var btn=document.getElementById('btn-sb-mode');if(setbackMode){btn.textContent='辺選択モードOFF';btn.style.background='#dc2626';setBadge('calib','セットバック — 辺をクリック');wrap.style.cursor='crosshair';currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});}else{btn.textContent='辺選択モードON';btn.style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';sbHover=-1;redrawSb();}}
 function nearestEdge(cx,cy){if(!polyDone||polyPts.length<2)return -1;var best=-1,bestD=18;for(var i=0;i<polyPts.length;i++){var j=(i+1)%polyPts.length,ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y,dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy||1,t2=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/len2)),nx=ax+t2*dx,ny=ay+t2*dy,d=Math.sqrt((cx-nx)*(cx-nx)+(cy-ny)*(cy-ny));if(d<bestD){bestD=d;best=i;}}return best;}
-function sbmType(t){sbType=t;updateSbmBtns();}
+function sbmType(t){
+  sbType=t;updateSbmBtns();
+  // 既存設定がない辺の場合、タイプに応じてデフォルト値を切替
+  if(sbPendingEdge>=0){
+    var ex=setbacks.find(function(s){return s.edge===sbPendingEdge;});
+    if(!ex){
+      document.getElementById('sb-modal-dist').value=(t==='neighbor'?4:2);
+    }
+  }
+}
 function updateSbmBtns(){document.getElementById('sbm-road').style.opacity=sbType==='road'?'1':'0.4';document.getElementById('sbm-nb').style.opacity=sbType==='neighbor'?'1':'0.4';}
+
+// ── 辺長編集 ──
+var _editingEdge=-1;
+function openEdgeEdit(edgeIdx){
+  _editingEdge=edgeIdx;
+  var i=edgeIdx,j=(i+1)%polyPts.length;
+  var dx=polyPts[j].x-polyPts[i].x,dy=polyPts[j].y-polyPts[i].y;
+  var currentLen=(Math.sqrt(dx*dx+dy*dy)/ppm).toFixed(2);
+  document.getElementById('edge-modal-info').textContent=
+    (i+1)+'辺 / 現在の長さ: '+currentLen+'m';
+  var inp=document.getElementById('edge-modal-len');
+  inp.value=currentLen;
+  document.getElementById('edge-modal').style.display='flex';
+  setTimeout(function(){inp.select();},50);
+}
+function closeEdgeModal(){
+  document.getElementById('edge-modal').style.display='none';
+  _editingEdge=-1;
+}
+function confirmEdgeModal(){
+  var newLen=parseFloat(document.getElementById('edge-modal-len').value);
+  if(!newLen||newLen<=0){alert('正しい長さを入力してください');return;}
+  var i=_editingEdge,j=(i+1)%polyPts.length;
+  var dx=polyPts[j].x-polyPts[i].x,dy=polyPts[j].y-polyPts[i].y;
+  var curLen=Math.sqrt(dx*dx+dy*dy);
+  if(curLen<0.001){closeEdgeModal();return;}
+  // 辺の方向を維持して終点を移動
+  var nx=dx/curLen,ny=dy/curLen;
+  var newPx=newLen*ppm;
+  polyPts[j]={x:polyPts[i].x+nx*newPx,y:polyPts[i].y+ny*newPx};
+  closeEdgeModal();
+  redrawPoly();redrawSb();
+  // 面積更新
+  var a=calcPolyArea()/ppm/ppm;
+  document.getElementById('poly-area-val').textContent=a.toFixed(1)+' ㎡';
+  document.getElementById('poly-area-tsubo').textContent=(a/3.30579).toFixed(1)+' 坪';
+  updateMetrics();
+}
+
 function closeSbModal(){document.getElementById('sb-modal').style.display='none';}
 function confirmSbModal(){var dist=parseFloat(document.getElementById('sb-modal-dist').value)||0;closeSbModal();if(sbPendingEdge<0)return;setbacks=setbacks.filter(function(s){return s.edge!==sbPendingEdge;});if(dist>0)setbacks.push({edge:sbPendingEdge,type:sbType,dist:dist});sbPendingEdge=-1;redrawSb();updateSbList();}
 function clearAllSetbacks(){setbacks=[];redrawSb();updateSbList();}
@@ -1504,7 +1639,7 @@ function updateMetrics(){
   var parkRate=totalUnits>0?Math.round(p/totalUnits*100):0;
   document.getElementById('units-per-floor').value=u;
 
-  var siteArea=polyDone?calcPolyArea()/ppm/ppm:0;
+  var siteArea=overrideArea!=null?overrideArea:(polyDone?calcPolyArea()/ppm/ppm:0);
   var bcrLimit=parseFloat(document.getElementById('bcr-limit').value)||60;
   var farLimit=parseFloat(document.getElementById('far-limit').value)||200;
   var bcr=siteArea>0?(bA/siteArea*100):0;
@@ -1683,7 +1818,7 @@ function checkInputViolations(){
 
   // 北側斜線チェック（参考）
   if(northSlope>0){
-    var siteArea=polyDone?calcPolyArea()/ppm/ppm:0;
+    var siteArea=overrideArea!=null?overrideArea:(polyDone?calcPolyArea()/ppm/ppm:0);
     var estDepth=siteArea>0?Math.sqrt(siteArea)*0.8:20;
     var northLimit=5+estDepth*northSlope;
     if(buildingH>northLimit){
@@ -1943,6 +2078,79 @@ if(isMobile){
   document.getElementById('sidebar').addEventListener('touchstart',function(e){
     e.stopPropagation();
   });
+}
+
+
+// ── 実測面積管理 ──
+var overrideArea=null; // null=ゼンリン計算値を使用, Number=実測値で上書き
+
+function onActualAreaChange(){
+  var val=parseFloat(document.getElementById('actual-area-input').value);
+  var calcArea=polyDone?calcPolyArea()/ppm/ppm:0;
+  var btnOnly=document.getElementById('btn-area-only');
+  var btnScale=document.getElementById('btn-area-scale');
+  var sub=document.getElementById('actual-area-sub');
+  if(val>0&&calcArea>0){
+    btnOnly.style.display='block';
+    btnScale.style.display='block';
+    var ratio=val/calcArea;
+    var diff=val-calcArea;
+    var pct=((ratio-1)*100).toFixed(1);
+    sub.textContent='計算値'+calcArea.toFixed(1)+'㎡ との差: '+(diff>0?'+':'')+diff.toFixed(1)+'㎡ ('+
+      (diff>0?'+':'')+pct+'%) | ≒'+(val/3.30579).toFixed(1)+'坪';
+  } else {
+    btnOnly.style.display='none';
+    btnScale.style.display='none';
+    sub.textContent='';
+  }
+}
+
+// 方法1: 法規計算のみ実測面積を使う（ポリゴン・ppmはそのまま）
+function applyActualAreaOnly(){
+  var val=parseFloat(document.getElementById('actual-area-input').value);
+  if(!val||val<=0)return;
+  overrideArea=val;
+  document.getElementById('area-override-status').innerHTML=
+    '<span style="color:#d97706;font-weight:700;">✓ 法規計算に実測'+val.toFixed(1)+'㎡を使用中</span>'+
+    ' <a href="#" onclick="clearAreaOverride();return false;" style="color:#6b6760;font-size:9px;">解除</a>';
+  updateMetrics();
+}
+
+// 方法2: ppmを実測面積から逆算してスケール補正
+function applyActualAreaScale(){
+  var val=parseFloat(document.getElementById('actual-area-input').value);
+  if(!val||val<=0||!polyDone)return;
+  var calcAreaPx=calcPolyArea(); // px^2
+  // calcAreaPx = siteArea_m2 * ppm^2
+  // → ppm = sqrt(calcAreaPx / siteArea_m2)
+  var newPpm=Math.sqrt(calcAreaPx/val);
+  var oldPpm=ppm;
+  ppm=newPpm;
+  // キャリブレーション表示更新
+  document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
+  if(document.getElementById('px-m'))
+    document.getElementById('px-m').textContent=ppm.toFixed(1);
+  // タイル・グリッドを再描画
+  tiles.forEach(reposTile);
+  redrawGrid();
+  redrawPoly();
+  redrawSb();
+  // 面積表示を更新
+  var newArea=calcPolyArea()/ppm/ppm;
+  document.getElementById('poly-area-val').textContent=newArea.toFixed(1)+' ㎡';
+  document.getElementById('poly-area-tsubo').textContent=(newArea/3.30579).toFixed(1)+' 坪';
+  // overrideAreaは解除（ppm自体が正確になったので）
+  overrideArea=null;
+  document.getElementById('area-override-status').innerHTML=
+    '<span style="color:#2563eb;font-weight:700;">✓ 縮尺補正完了: 1m='+newPpm.toFixed(2)+'px (旧:'+oldPpm.toFixed(2)+'px)</span>'+
+    '<br><span style="color:#a8a49e;font-size:8px;">法規計算・タイルサイズが実測'+val.toFixed(1)+'㎡基準に更新されました</span>';
+  updateMetrics();
+}
+
+function clearAreaOverride(){
+  overrideArea=null;
+  document.getElementById('area-override-status').textContent='';
+  updateMetrics();
 }
 
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
