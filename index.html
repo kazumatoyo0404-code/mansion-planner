@@ -107,7 +107,14 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 #mode-badge.select{background:rgba(99,102,241,.95);color:#fff;border-color:#6366f1;}
 #hud{position:absolute;bottom:10px;left:10px;z-index:100;background:rgba(255,255,255,.92);color:var(--text2);font-size:10px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;}
 #shortcut-hint{position:absolute;bottom:10px;right:10px;z-index:100;background:rgba(255,255,255,.92);color:var(--text3);font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;line-height:1.7;}
-#sel-bar{display:none;position:absolute;top:10px;right:10px;z-index:100;background:rgba(99,102,241,.95);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;border:2px solid #6366f1;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+#sel-bar{display:none;position:absolute;top:10px;right:10px;z-index:100;background:rgba(20,20,30,.92);color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);box-shadow:0 4px 20px rgba(0,0,0,.35);min-width:180px;backdrop-filter:blur(8px);}
+#sel-bar .sb-title{font-size:12px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+#sel-bar .sb-group-info{background:rgba(99,102,241,0.3);border:1px solid rgba(99,102,241,0.6);border-radius:8px;padding:5px 8px;margin-bottom:6px;font-size:10px;}
+#sel-bar .sb-btns{display:flex;gap:5px;flex-wrap:wrap;}
+#sel-bar .sb-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:3px 10px;border-radius:8px;cursor:pointer;font-size:10px;font-weight:700;transition:background .15s;}
+#sel-bar .sb-btn:hover{background:rgba(255,255,255,0.28);}
+#sel-bar .sb-btn.danger{background:rgba(220,38,38,0.4);border-color:rgba(220,38,38,0.7);}
+#sel-bar .sb-btn.success{background:rgba(22,163,74,0.4);border-color:rgba(22,163,74,0.7);}
 #free-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:9999;align-items:center;justify-content:center;}
 #free-modal.show{display:flex;}
 #free-modal-inner{background:#fff;border-radius:12px;padding:24px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
@@ -132,13 +139,122 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .toast.info{background:#eff6ff;border:1.5px solid #93c5fd;color:#1e3a8a;}
 @keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
 @keyframes toastOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(30px);}}
+
+#legal-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0;}
+#legal-modal.show{display:flex;}
+#legal-modal-inner{background:#fff;border-radius:14px;padding:20px;width:480px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.25);margin:auto;}
+
+/* ===== モバイル対応 ===== */
+@media (max-width: 768px) {
+  #app{flex-direction:column;}
+
+  /* サイドバーを下部ドロワーに変更 */
+  #sidebar{
+    position:fixed;bottom:0;left:0;right:0;
+    width:100%!important;height:auto;
+    max-height:70vh;
+    border-right:none;border-top:2px solid var(--border);
+    border-radius:18px 18px 0 0;
+    transform:translateY(100%);
+    transition:transform .3s ease;
+    z-index:500;
+    box-shadow:0 -4px 24px rgba(0,0,0,0.18);
+    flex-direction:column;
+    overflow-y:auto;
+  }
+  #sidebar.open{transform:translateY(0);}
+
+  /* キャンバスをフルスクリーンに */
+  #canvas-wrap{width:100vw;height:100vh;position:fixed;top:0;left:0;}
+
+  /* モバイルツールバー（下部固定）*/
+  #mobile-toolbar{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    height:60px;z-index:400;
+    background:rgba(255,255,255,0.96);
+    border-top:1px solid var(--border);
+    backdrop-filter:blur(10px);
+    align-items:center;
+    justify-content:space-around;
+    padding:0 8px;
+    box-shadow:0 -2px 12px rgba(0,0,0,0.12);
+  }
+  #mobile-toolbar.sb-open{bottom:calc(70vh);}
+
+  .mob-btn{
+    display:flex;flex-direction:column;align-items:center;
+    background:none;border:none;cursor:pointer;
+    font-size:22px;padding:4px 8px;border-radius:10px;
+    color:var(--text);min-width:48px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-btn span{font-size:9px;color:var(--text2);margin-top:2px;}
+  .mob-btn.active{background:var(--blue);color:#fff;}
+  .mob-btn.active span{color:rgba(255,255,255,0.8);}
+
+  /* ドロワーハンドル */
+  #drawer-handle{
+    display:block!important;
+    width:40px;height:4px;background:var(--border);
+    border-radius:2px;margin:10px auto 6px;flex-shrink:0;
+  }
+
+  /* タイルツールボタンをタップしやすく */
+  .tool-btn{min-height:44px!important;font-size:12px!important;}
+  .btn-primary,.btn-sm{min-height:40px!important;}
+
+  /* HUDを上部に移動 */
+  #hud{top:8px!important;right:8px!important;font-size:10px;}
+  #sel-bar{top:50px!important;right:8px!important;}
+
+  /* 隠す要素 */
+  .sb-sub,.sb-head .sb-sub{display:none;}
+}
+
+@media (min-width: 769px) {
+  #mobile-toolbar{display:none!important;}
+  #drawer-handle{display:none!important;}
+}
 </style>
 </head>
 <body>
 <div id="toast-container"></div>
+
+<!-- モバイルツールバー -->
+<div id="mobile-toolbar" style="display:none;">
+  <button class="mob-btn" onclick="toggleDrawer()" id="mob-menu">
+    <span>☰</span><span>メニュー</span>
+  </button>
+  <button class="mob-btn" id="mob-unit" onclick="setToolMob('unit')">
+    <span>🏢</span><span>住棟</span>
+  </button>
+  <button class="mob-btn" id="mob-park" onclick="setToolMob('park')">
+    <span>🅿</span><span>駐車場</span>
+  </button>
+  <button class="mob-btn" id="mob-pan" onclick="setToolMob('pan')">
+    <span>✋</span><span>移動</span>
+  </button>
+  <button class="mob-btn" id="mob-erase" onclick="setToolMob('erase')">
+    <span>🗑</span><span>削除</span>
+  </button>
+  <button class="mob-btn" onclick="doUndoMob()">
+    <span>↩</span><span>元に戻す</span>
+  </button>
+</div>
+
+<div id="legal-modal">
+  <div id="legal-modal-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <h3 style="font-size:14px;font-weight:800;margin:0;">⚖ 法規確認レポート</h3>
+      <button onclick="closeLegalModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#6b6760;">✕</button>
+    </div>
+    <div id="legal-modal-body"></div>
+  </div>
+</div>
 <div id="app">
-<aside id="sidebar">
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v7.5</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+<aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v8.0</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
   <div class="sb-sec">
     <div class="lbl">📄 PDF地図</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -278,6 +394,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="foot-btns" style="margin-top:5px;">
       <button class="foot-btn" onclick="exportPng()">📷 PNG書き出し</button>
       <button class="foot-btn" onclick="printCanvas()">🖨️ 印刷</button>
+      <button class="foot-btn" id="btn-legal-check" onclick="showLegalModal()" style="background:#2563eb;color:#fff;font-weight:700;width:100%;margin-top:4px;">⚖ 法規確認</button>
     </div>
   </div>
 </aside>
@@ -323,7 +440,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 var ppm=10,canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
 var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
 var currentTool=null,currentRot=0,lastRot=0,tileOpacity=0.65;
-var tiles=[],uid=0,selectedTile=null,selectedTiles=[],copiedTiles=[],groupLocked=false;
+var tiles=[],uid=0,selectedTile=null,selectedTiles=[],copiedTiles=[];
+var groupLocked=false; // 後方互換
+var groups=[]; // [{id:Number, tileIds:[String]}]
+var gid=0; // グループIDカウンター
 var tileHistory=[];
 var calibMode=false,calibPts=[];
 var measureMode=false,measurePts=[],measureLines=[];
@@ -523,6 +643,21 @@ wrap.addEventListener('click',function(e){
   }
   if(!currentTool||currentTool==='erase'||currentTool==='measure'||currentTool==='guide'||currentTool==='select')return;
   if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
+  // ── 近くに同種タイルがあれば角度を自動継承 ──
+  var nearTile=null,nearDist=Infinity;
+  tiles.forEach(function(t){
+    if(t.type!==currentTool)return;
+    var dist=Math.sqrt(Math.pow(t.cx-cx,2)+Math.pow(t.cy-cy,2));
+    if(dist<nearDist){nearDist=dist;nearTile=t;}
+  });
+  // 近くに同種タイルがある かつ 角度が手動で変更されていない（lastRotのまま）場合
+  // → 近くのタイルの角度を引き継ぐ
+  var def0=DEFS[currentTool]||DEFS.unit;
+  var adoptThresh=(def0.w+def0.d)*ppm*4;
+  if(nearTile&&nearDist<adoptThresh&&nearTile.rot!==currentRot){
+    setRot(nearTile.rot);
+  }
+
   var snapped=trySnap(cx,cy,currentTool,currentRot,null);
   if(snapped){cx=snapped.cx;cy=snapped.cy;}
   if(document.getElementById('overlap-toggle').checked&&checkOverlap(cx,cy,currentTool,currentRot,null)){showFlash(cx,cy);return;}
@@ -531,7 +666,7 @@ wrap.addEventListener('click',function(e){
     var d=DEFS.unit;
     if(inSetbackZone(cx,cy,d.w*ppm,d.d*ppm,currentRot)){showSbFlash(cx,cy);return;}
   }
-  saveTileHistory();createTile(cx,cy,currentTool,currentRot);lastRot=currentRot;
+  saveTileHistory();createTile(cx,cy,currentTool,currentRot);lastRot=currentRot;setRot(currentRot);
 });
 
 // ── キャリブレーション ──
@@ -585,20 +720,126 @@ function redrawGrid(){clearEl(gridG);if(!showGrid||ppm<=0)return;var gm=parseFlo
 function trySnap(cx,cy,type,rot,self){
   if(!document.getElementById('snap-toggle').checked)return null;
   var def=self?getTileDef(self):DEFS[type];
-  var pw=def.w*ppm,ph=def.d*ppm;
-  var thresh=Math.max(SNAP_DIST,ppm*1.5),best=null,bestD=thresh;
+  var pw=(self&&self.rW?self.rW:def.w)*ppm,ph=def.d*ppm;
+  var thresh=Math.max(SNAP_DIST,ppm*2);
+  var best=null,bestD=thresh;
+
+  function tryPt(px,py){
+    // タイルの中心がこの点に来たときのスナップ候補を計算
+    // タイルの角・辺中点それぞれが px,py に吸着
+    var r2=(rot||0)*Math.PI/180,cosR=Math.cos(r2),sinR=Math.sin(r2);
+    // タイルのローカル座標系での角・辺中点
+    var anchors=[
+      {lx:0,ly:0},                         // 中心
+      {lx:-pw/2,ly:-ph/2},                  // 左上角
+      {lx:pw/2,ly:-ph/2},                   // 右上角
+      {lx:pw/2,ly:ph/2},                    // 右下角
+      {lx:-pw/2,ly:ph/2},                   // 左下角
+      {lx:0,ly:-ph/2},                      // 上辺中点
+      {lx:0,ly:ph/2},                       // 下辺中点
+      {lx:-pw/2,ly:0},                      // 左辺中点
+      {lx:pw/2,ly:0},                        // 右辺中点
+    ];
+    anchors.forEach(function(a){
+      // アンカーのワールド座標
+      var ax=a.lx*cosR-a.ly*sinR+cx;
+      var ay=a.lx*sinR+a.ly*cosR+cy;
+      // このアンカーが px,py に吸着するとき、タイル中心は?
+      var newCx=cx+(px-ax);
+      var newCy=cy+(py-ay);
+      var d=Math.sqrt(Math.pow(ax-px,2)+Math.pow(ay-py,2));
+      if(d<bestD){bestD=d;best={cx:newCx,cy:newCy};}
+    });
+  }
+
+  // 線分上の最近接点を返す
+  function closestOnSeg(ax,ay,bx,by,px,py){
+    var dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy;
+    if(len2<0.001)return{x:ax,y:ay};
+    var t2=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+    return{x:ax+t2*dx,y:ay+t2*dy};
+  }
+
+  // ── 1. 他のタイルへのスナップ ──
+  // 同種・同角度のタイルには距離ボーナス（より強く引き寄せる）
   tiles.forEach(function(t){
     if(t===self)return;
-    var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
+    var td=getTileDef(t),tpw=(t.rW?t.rW:td.w)*ppm,tph=td.d*ppm;
     var r=t.rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
     function rot2(x,y){return{x:x*cos-y*sin+t.cx,y:x*sin+y*cos+t.cy};}
-    // 上下左右にぴったりくっつく候補
-    var cands=[rot2(0,-(tph/2+ph/2)),rot2(0,(tph/2+ph/2)),rot2(-(tpw/2+pw/2),0),rot2((tpw/2+pw/2),0)];
+    // 同種・同角度なら隣接候補を優先（閾値を1.5倍に拡大）
+    var sameKind=(type&&t.type===type)&&(Math.abs((rot||0)-t.rot)<1);
+    var candThresh=sameKind?thresh*1.5:thresh;
+    var cands=[
+      rot2(0,-(tph/2+ph/2)),rot2(0,(tph/2+ph/2)),
+      rot2(-(tpw/2+pw/2),0),rot2((tpw/2+pw/2),0)
+    ];
+    // 同種なら pw/ph の代わりに tpw/tph を使って「隙間なし」を実現
+    if(sameKind){
+      var sPw=(self&&self.rW?self.rW:pw),sPh=ph;
+      cands=[
+        rot2(0,-(tph/2+sPh/2)),rot2(0,(tph/2+sPh/2)),
+        rot2(-(tpw/2+sPw/2),0),rot2((tpw/2+sPw/2),0)
+      ];
+    }
     cands.forEach(function(pos){
       var dx=pos.x-cx,dy=pos.y-cy,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<bestD){bestD=d;best={cx:pos.x,cy:pos.y};}
+      // 同種・同角度のタイルは強く引き寄せる
+      var effectiveD=sameKind?d*0.7:d;
+      if(effectiveD<bestD){bestD=effectiveD;best={cx:pos.x,cy:pos.y};}
     });
   });
+
+  // ── 2. 敷地ポリゴンの辺・頂点へのスナップ ──
+  if(polyDone&&polyPts.length>=2){
+    polyPts.forEach(function(p){
+      // 頂点スナップ
+      tryPt(p.x,p.y);
+    });
+    for(var i=0;i<polyPts.length;i++){
+      var j=(i+1)%polyPts.length;
+      var ax=polyPts[i].x,ay=polyPts[i].y;
+      var bx=polyPts[j].x,by=polyPts[j].y;
+      // 辺の中点スナップ
+      tryPt((ax+bx)/2,(ay+by)/2);
+      // 辺上の最近接点スナップ
+      var cp=closestOnSeg(ax,ay,bx,by,cx,cy);
+      tryPt(cp.x,cp.y);
+    }
+  }
+
+  // ── 3. 補助線（guide）の端点・線上へのスナップ ──
+  if(typeof guideLines!=='undefined'){
+    guideLines.forEach(function(gl){
+      if(!gl.pts||gl.pts.length<2)return;
+      var ax=gl.pts[0].x,ay=gl.pts[0].y;
+      var bx=gl.pts[1].x,by=gl.pts[1].y;
+      tryPt(ax,ay);
+      tryPt(bx,by);
+      tryPt((ax+bx)/2,(ay+by)/2);
+      var cp=closestOnSeg(ax,ay,bx,by,cx,cy);
+      tryPt(cp.x,cp.y);
+    });
+    // guidePts（描画中の補助線の点）
+    if(typeof guidePts!=='undefined'){
+      guidePts.forEach(function(p){tryPt(p.x,p.y);});
+    }
+  }
+
+  // ── 4. 計測線（measure）の端点・線上へのスナップ ──
+  if(typeof measureLines!=='undefined'){
+    measureLines.forEach(function(ml){
+      if(!ml.pts||ml.pts.length<2)return;
+      var ax=ml.pts[0].x,ay=ml.pts[0].y;
+      var bx=ml.pts[1].x,by=ml.pts[1].y;
+      tryPt(ax,ay);
+      tryPt(bx,by);
+      tryPt((ax+bx)/2,(ay+by)/2);
+      var cp=closestOnSeg(ax,ay,bx,by,cx,cy);
+      tryPt(cp.x,cp.y);
+    });
+  }
+
   return best;
 }
 function checkOverlap(cx,cy,type,rot,excl){
@@ -679,8 +920,23 @@ function createTileInternal(cx,cy,type,rot){
     e.stopPropagation();
     // 辺選択モード中はOFFに
     if(setbackMode){setbackMode=false;sbHover=-1;document.getElementById('btn-sb-mode').textContent='辺選択モードON';document.getElementById('btn-sb-mode').style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';redrawSb();}
-    if(e.shiftKey){var idx=selectedTiles.indexOf(tile);if(idx<0)selectedTiles.push(tile);else if(!groupLocked)selectedTiles.splice(idx,1);}
-    else if(!groupLocked){selectedTiles=[tile];selectedTile=tile;}
+    if(e.shiftKey){
+      // Shift+クリック: グループに関係なく個別追加・除去
+      var idx=selectedTiles.indexOf(tile);
+      if(idx<0)selectedTiles.push(tile);
+      else selectedTiles.splice(idx,1);
+      groupLocked=false;
+    } else {
+      // 通常クリック: グループに属していればグループ全体を選択
+      var g=getGroupOfTile(tile);
+      if(g){
+        selectGroup(g.id);
+        tiles.forEach(reposTile);updateSelBar();
+        return;
+      } else {
+        selectedTiles=[tile];selectedTile=tile;groupLocked=false;
+      }
+    }
     tiles.forEach(reposTile);updateSelBar();
   });
   dh.addEventListener('click',function(e){e.stopPropagation();saveTileHistory();delTile(tile);});
@@ -735,7 +991,15 @@ function setupMove(el,tile){
     if(e.target===tile.rh||e.target===tile.dh||e.target===tile.rsH)return;
     if(currentTool==='erase')return;
     e.stopPropagation();e.preventDefault();
-    if(!groupLocked&&selectedTiles.indexOf(tile)<0){if(!e.shiftKey)selectedTiles=[tile];else selectedTiles.push(tile);selectedTile=tile;tiles.forEach(reposTile);updateSelBar();}
+    if(selectedTiles.indexOf(tile)<0){
+      if(e.shiftKey){selectedTiles.push(tile);}
+      else{
+        var g2=getGroupOfTile(tile);
+        if(g2){selectGroup(g2.id);}
+        else{selectedTiles=[tile];selectedTile=tile;groupLocked=false;}
+      }
+      tiles.forEach(reposTile);updateSelBar();
+    }
     act=true;sx=e.clientX;sy=e.clientY;
     scxs=selectedTiles.map(function(t){return{t:t,cx:t.cx,cy:t.cy};});
     el.style.cursor='grabbing';
@@ -797,7 +1061,16 @@ function setupResize(h,tile){
   });
 }
 
-function delTile(t){t.g.remove();var p=document.getElementById('HP'+t.id);if(p)p.remove();tiles=tiles.filter(function(x){return x!==t;});selectedTiles=selectedTiles.filter(function(x){return x!==t;});if(selectedTile===t)selectedTile=null;updateMetrics();updateSelBar();}
+function delTile(t){
+  t.g.remove();var p=document.getElementById('HP'+t.id);if(p)p.remove();
+  tiles=tiles.filter(function(x){return x!==t;});
+  selectedTiles=selectedTiles.filter(function(x){return x!==t;});
+  if(selectedTile===t)selectedTile=null;
+  // グループからも除去
+  groups=groups.map(function(g){g.tileIds=g.tileIds.filter(function(id){return id!==t.id;});return g;});
+  groups=groups.filter(function(g){return g.tileIds.length>=2;});
+  updateMetrics();updateSelBar();
+}
 function clearAll(){if(!confirm('全タイルを削除しますか？'))return;saveTileHistory();tiles.slice().forEach(delTile);}
 
 function updateSelBar(){
@@ -810,22 +1083,85 @@ function updateSelBar(){
 }
 function toggleGroup(){groupLocked=!groupLocked;updateSelBar();}
 
+// ── グループ管理 ──
+function getGroupOfTile(tile){
+  return groups.find(function(g){return g.tileIds.indexOf(tile.id)>=0;})||null;
+}
+function getTilesInGroup(groupId){
+  var g=groups.find(function(g){return g.id===groupId;});
+  if(!g)return [];
+  return tiles.filter(function(t){return g.tileIds.indexOf(t.id)>=0;});
+}
+function createGroup(){
+  if(selectedTiles.length<2){return;}
+  saveTileHistory();
+  // 既存グループから対象タイルを除去
+  selectedTiles.forEach(function(t){
+    groups=groups.map(function(g){
+      g.tileIds=g.tileIds.filter(function(id){return id!==t.id;});
+      return g;
+    });
+  });
+  groups=groups.filter(function(g){return g.tileIds.length>=2;});
+  // 新グループ作成
+  var newG={id:++gid,tileIds:selectedTiles.map(function(t){return t.id;})};
+  groups.push(newG);
+  groupLocked=true;
+  updateSelBar();
+}
+function dissolveGroup(groupId){
+  saveTileHistory();
+  groups=groups.filter(function(g){return g.id!==groupId;});
+  groupLocked=false;
+  updateSelBar();
+}
+function dissolveAllGroups(){
+  saveTileHistory();
+  groups=[];
+  groupLocked=false;
+  selectedTiles=[];selectedTile=null;
+  tiles.forEach(reposTile);updateSelBar();
+}
+// グループ内タイルをクリックしたとき→グループ全体を選択
+function selectGroup(groupId){
+  var gTiles=getTilesInGroup(groupId);
+  if(gTiles.length===0)return;
+  selectedTiles=gTiles.slice();
+  selectedTile=gTiles[0];
+  groupLocked=true;
+  tiles.forEach(reposTile);
+  updateSelBar();
+}
+
 function doCopy(){if(selectedTiles.length===0){alert('先にタイルを選択してください');return;}copiedTiles=selectedTiles.map(function(t){return{type:t.type,rot:t.rot,cx:t.cx,cy:t.cy,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null,rW:t.rW};});document.getElementById('hud-extra').textContent=copiedTiles.length+'個コピー済み';}
 function doPaste(){if(copiedTiles.length===0){alert('先にタイルをコピーしてください');return;}saveTileHistory();selectedTiles=[];copiedTiles.forEach(function(c){var tmp=null;if(c.freeConfig){tmp=freeConfig;freeConfig=c.freeConfig;}var t=createTile(c.cx+20/canvasZoom,c.cy+20/canvasZoom,c.type,c.rot);if(c.rW!==undefined)t.rW=c.rW;if(tmp)freeConfig=tmp;selectedTiles.push(t);reposTile(t);});updateSelBar();}
 
 function printCanvas(){
+  // SVGのtransformを一時的にリセットして正確にキャプチャ
   var tmpCanvas=document.createElement('canvas');
   tmpCanvas.width=mapCanvas.width;tmpCanvas.height=mapCanvas.height;
   var tmpCtx=tmpCanvas.getContext('2d');
+  // PDFマップを描画（そのままのサイズ・位置）
   tmpCtx.drawImage(mapCanvas,0,0);
+  // SVGのtransformを退避・リセット
+  var savedStyle=svg.style.transform;
+  svg.style.transform='none';
+  svg.style.transformOrigin='0 0';
+  // SVGをマップ座標系に合わせてスケール描画
   var svgData=new XMLSerializer().serializeToString(svg);
+  svg.style.transform=savedStyle; // 元に戻す
   var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
   var url=URL.createObjectURL(svgBlob);
   var img=new Image();
   img.onload=function(){
-    tmpCtx.drawImage(img,0,0);URL.revokeObjectURL(url);
+    // タイルSVGをpanX,panYとzoomを逆算して正しい位置に描画
+    tmpCtx.save();
+    tmpCtx.translate(panX/canvasZoom, panY/canvasZoom);
+    tmpCtx.drawImage(img,0,0);
+    tmpCtx.restore();
+    URL.revokeObjectURL(url);
     var pw=window.open('','_blank');
-    pw.document.write('<html><head><title>印刷</title><style>@page{margin:0;}body{margin:0;}img{max-width:100%;max-height:100vh;display:block;}</style></head><body><img src="'+tmpCanvas.toDataURL('image/png')+'"/></body></html>');
+    pw.document.write('<html><head><title>印刷</title><style>@page{margin:10mm;}body{margin:0;display:flex;flex-direction:column;align-items:center;}img{max-width:100%;height:auto;}</style></head><body><img src="'+tmpCanvas.toDataURL('image/png')+'"/></body></html>');
     pw.document.close();pw.onload=function(){pw.print();};
   };img.src=url;
 }
@@ -1045,16 +1381,22 @@ function updateMetrics(){
     }
     // 北側斜線（住居系のみ）
     if(northSlope>0){
-      // 敷地の南北奥行きを取得（住戸タイルが北側から何m離れているか）
-      // 簡易計算: 敷地奥行きの半分以上の位置に住棟があれば問題なし（仮定）
       var bbH=polyDone?(Math.sqrt(calcPolyArea())/ppm):0;
-      var northOffset=5+bbH*0.6; // 北側境界から6割の位置と仮定
+      // 隣地SBを考慮: SBぶん北側境界から離れるため制限が緩和
+      var northSbDist=0;
+      setbacks.forEach(function(sb){if(sb.type==='neighbor')northSbDist=Math.max(northSbDist,sb.dist);});
+      var northOffset=bbH*0.6+northSbDist;
       var northLimit=5+northOffset*northSlope;
+      // セットバック距離別の許容高さ一覧
+      var northSbTable=[0,0.5,1,2,3,4,5].map(function(d){
+        return 'SB'+d+'m→'+(5+(bbH*0.6+d)*northSlope).toFixed(1)+'m';
+      }).join(' / ');
       if(buildingH>northLimit){
-        legalIssues.push('⚠ 北側斜線超過の可能性: 建物高さ'+buildingH.toFixed(1)+'m（北側斜線≒'+northLimit.toFixed(1)+'m）住棟を南側に寄せることで緩和可能');
+        legalIssues.push('⚠ 北側斜線超過の可能性: 高さ'+buildingH.toFixed(1)+'m > 制限≒'+northLimit.toFixed(1)+'m（隣地SB'+northSbDist+'m含む）');
       } else {
-        legalOk.push('✓ 北側斜線OK（目安）');
+        legalOk.push('✓ 北側斜線OK（制限≒'+northLimit.toFixed(1)+'m、隣地SB'+northSbDist+'m含む）');
       }
+      legalOk.push('📐 北側斜線 SB別許容高さ: '+northSbTable);
     }
     // 高さ制限目安
     if(totalFloors>=7){legalOk.push('✓ 高さ'+buildingH.toFixed(0)+'m以上: 非常用昇降機（EV）設置義務あり（法34条）');}
@@ -1090,12 +1432,14 @@ function updateMetrics(){
       '<div style="background:'+(bcrOk?'#f0fdf4':'#fef2f2')+';border:1px solid '+(bcrOk?'#86efac':'#fca5a5')+';border-radius:6px;padding:5px 8px;">'+
         '<div style="font-size:9px;color:'+(bcrOk?'#166534':'#dc2626')+';font-weight:700;">建蔽率</div>'+
         '<div style="font-size:16px;font-weight:800;color:'+(bcrOk?'#15803d':'#dc2626')+';">'+bcr.toFixed(1)+'<span style="font-size:10px;font-weight:400;">%</span></div>'+
-        '<div style="font-size:9px;color:#6b6760;">上限'+bcrLimit+'%</div>'+
+        '<div style="font-size:9px;color:#6b6760;">上限'+bcrLimit+'% ／ 消化率'+(bcrLimit>0?Math.round(bcr/bcrLimit*100):0)+'%</div>'+
+        '<div style="font-size:8px;color:#a8a49e;margin-top:2px;">建築面積÷敷地面積×100</div>'+
       '</div>'+
       '<div style="background:'+(farOk?'#f0fdf4':'#fef2f2')+';border:1px solid '+(farOk?'#86efac':'#fca5a5')+';border-radius:6px;padding:5px 8px;">'+
         '<div style="font-size:9px;color:'+(farOk?'#166534':'#dc2626')+';font-weight:700;">容積率</div>'+
         '<div style="font-size:16px;font-weight:800;color:'+(farOk?'#15803d':'#dc2626')+';">'+far.toFixed(1)+'<span style="font-size:10px;font-weight:400;">%</span></div>'+
-        '<div style="font-size:9px;color:#6b6760;">上限'+farLimit+'%</div>'+
+        '<div style="font-size:9px;color:#6b6760;">上限'+farLimit+'% ／ 消化率'+(farLimit>0?Math.round(far/farLimit*100):0)+'%</div>'+
+        '<div style="font-size:8px;color:#a8a49e;margin-top:2px;">延床面積÷敷地面積×100</div>'+
       '</div></div>'+
       '<div style="background:'+(parkOk?'#f0fdf4':'#fffbeb')+';border:1px solid '+(parkOk?'#86efac':'#fcd34d')+';border-radius:6px;padding:5px 8px;margin-top:4px;">'+
         '<div style="font-size:9px;color:'+(parkOk?'#166534':'#92400e')+';font-weight:700;">駐車場率（台÷総戸数）</div>'+
@@ -1127,35 +1471,47 @@ function updateMetrics(){
 // ── トースト通知 ──
 var _toastTimers={};
 var _lastToastKey={};
+// 法規チェック結果を蓄積するストア
+var _legalStore={};
 function showToast(key,type,title,msg,suggestion,duration){
-  duration=duration||5000;
-  // 同じキーのトーストが直近2秒以内に出ていたらスキップ
-  var now=Date.now();
-  if(_lastToastKey[key]&&now-_lastToastKey[key]<2000)return;
-  _lastToastKey[key]=now;
-
-  var container=document.getElementById('toast-container');
-  // 同じキーの既存トーストを削除
-  var old=document.getElementById('toast-'+key);
-  if(old)old.remove();
-
-  var icons={error:'⚠️',warn:'⚠',ok:'✅',info:'ℹ️'};
-  var el=document.createElement('div');
-  el.className='toast '+type;
-  el.id='toast-'+key;
-  el.innerHTML='<span class="toast-icon">'+icons[type]+'</span>'+
-    '<div class="toast-body">'+
-      '<div class="toast-title">'+title+'</div>'+
-      (msg?'<div class="toast-msg">'+msg+'</div>':'')+
-      (suggestion?'<div class="toast-suggestion">💡 '+suggestion+'</div>':'')+
-    '</div>'+
-    '<button class="toast-close" onclick="this.closest(\'.toast\').remove()">✕</button>';
-  container.appendChild(el);
-  if(_toastTimers[key])clearTimeout(_toastTimers[key]);
-  _toastTimers[key]=setTimeout(function(){
-    if(el.parentNode){el.style.animation='toastOut .25s ease forwards';setTimeout(function(){el.remove();},250);}
-  },duration);
+  // トーストは表示しない。代わりに法規ストアに蓄積
+  _legalStore[key]={type:type,title:title,msg:msg,suggestion:suggestion,ts:Date.now()};
+  // 法規確認ボタンに未確認バッジを表示
+  _updateLegalBadge();
 }
+function _updateLegalBadge(){
+  var btn=document.getElementById('btn-legal-check');
+  if(!btn)return;
+  var issues=Object.values(_legalStore).filter(function(x){return x.type==='error'||x.type==='warn';});
+  if(issues.length>0){
+    btn.style.background='#dc2626';
+    btn.textContent='⚖ 法規確認 ('+issues.length+'件)';
+  } else {
+    btn.style.background='#2563eb';
+    btn.textContent='⚖ 法規確認';
+  }
+}
+function showLegalModal(){
+  var modal=document.getElementById('legal-modal');
+  if(!modal)return;
+  var items=Object.values(_legalStore);
+  if(items.length===0){
+    document.getElementById('legal-modal-body').innerHTML='<div style="text-align:center;color:#6b6760;padding:20px;">法規上の問題はありません</div>';
+  } else {
+    var icons={error:'🔴',warn:'🟡',ok:'🟢',info:'🔵'};
+    document.getElementById('legal-modal-body').innerHTML=items.map(function(x){
+      var bg=x.type==='error'?'#fef2f2':x.type==='warn'?'#fffbeb':x.type==='ok'?'#f0fdf4':'#eff6ff';
+      var border=x.type==='error'?'#fca5a5':x.type==='warn'?'#fcd34d':x.type==='ok'?'#86efac':'#93c5fd';
+      return '<div style="background:'+bg+';border:1px solid '+border+';border-radius:8px;padding:10px 12px;margin-bottom:8px;">'+
+        '<div style="font-size:12px;font-weight:700;margin-bottom:3px;">'+icons[x.type]+' '+x.title+'</div>'+
+        (x.msg?'<div style="font-size:11px;margin-bottom:2px;">'+x.msg+'</div>':'')+
+        (x.suggestion?'<div style="font-size:10px;color:#374151;background:rgba(0,0,0,0.05);border-radius:4px;padding:3px 6px;margin-top:4px;">💡 '+x.suggestion+'</div>':'')+
+      '</div>';
+    }).join('');
+  }
+  modal.classList.add('show');
+}
+function closeLegalModal(){document.getElementById('legal-modal').classList.remove('show');}
 
 // ── 入力値変更時の警告チェック ──
 var _prevViolations={};
@@ -1288,6 +1644,161 @@ function _patchedMetricsToast(bcr,far,bcrLimit,farLimit,buildingH,roadW2,roadSlo
     }
   }
 }
+
+// ===== モバイル対応 =====
+var isMobile=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+
+// ドロワー開閉
+var drawerOpen=false;
+function toggleDrawer(){
+  drawerOpen=!drawerOpen;
+  var sb=document.getElementById('sidebar');
+  var tb=document.getElementById('mobile-toolbar');
+  if(drawerOpen){sb.classList.add('open');if(tb)tb.classList.add('sb-open');}
+  else{sb.classList.remove('open');if(tb)tb.classList.remove('sb-open');}
+  var btn=document.getElementById('mob-menu');
+  if(btn)btn.classList.toggle('active',drawerOpen);
+}
+function closeDrawerIfOpen(){
+  if(drawerOpen)toggleDrawer();
+}
+function setToolMob(t){
+  closeDrawerIfOpen();
+  setTool(t);
+  // モバイルボタンのアクティブ状態
+  ['unit','park','pan','erase'].forEach(function(id){
+    var el=document.getElementById('mob-'+id);
+    if(el)el.classList.toggle('active',id===t);
+  });
+}
+function doUndoMob(){closeDrawerIfOpen();doUndo();}
+
+// ── タッチ→マウスイベント変換 ──
+function touchToMouse(te,type){
+  var t=te.changedTouches[0]||te.touches[0];
+  if(!t)return;
+  var ev=new MouseEvent(type,{
+    bubbles:true,cancelable:true,
+    clientX:t.clientX,clientY:t.clientY,
+    button:0,buttons:1
+  });
+  return ev;
+}
+
+// ピンチズーム
+var pinchStartDist=0,pinchStartZoom=1,pinchStartPanX=0,pinchStartPanY=0;
+var pinchMidX=0,pinchMidY=0;
+
+function getTouchDist(te){
+  var t0=te.touches[0],t1=te.touches[1];
+  return Math.sqrt(Math.pow(t1.clientX-t0.clientX,2)+Math.pow(t1.clientY-t0.clientY,2));
+}
+function getTouchMid(te){
+  var t0=te.touches[0],t1=te.touches[1];
+  return{x:(t0.clientX+t1.clientX)/2,y:(t0.clientY+t1.clientY)/2};
+}
+
+// シングルタッチ→パン or タイル配置
+var touchPanning=false,lastTouchX=0,lastTouchY=0,touchMoved=false;
+var touchTileMode=false; // タイル配置モード中か
+
+wrap.addEventListener('touchstart',function(e){
+  if(e.touches.length===2){
+    // ピンチ開始
+    touchPanning=false;
+    pinchStartDist=getTouchDist(e);
+    pinchStartZoom=canvasZoom;
+    var mid=getTouchMid(e);
+    pinchMidX=mid.x;pinchMidY=mid.y;
+    pinchStartPanX=panX;pinchStartPanY=panY;
+    e.preventDefault();
+    return;
+  }
+  if(e.touches.length===1){
+    var t=e.touches[0];
+    lastTouchX=t.clientX;lastTouchY=t.clientY;
+    touchMoved=false;
+    // タイル配置ツールが選択されていればタイル配置モード
+    var placingTools=['unit','park','stair','elev','corridor','balcony','free'];
+    touchTileMode=placingTools.indexOf(currentTool)>=0;
+    if(!touchTileMode){
+      // パンモードまたはタイル選択
+      touchPanning=true;
+      // タイルクリックを伝播させる（touchendで処理）
+      var ev=touchToMouse(e,'mousedown');
+      if(ev)e.target.dispatchEvent(ev);
+    }
+    e.preventDefault();
+  }
+},{passive:false});
+
+wrap.addEventListener('touchmove',function(e){
+  if(e.touches.length===2){
+    // ピンチズーム
+    var dist=getTouchDist(e);
+    var scale=dist/pinchStartDist;
+    var nz=Math.max(0.05,Math.min(20,pinchStartZoom*scale));
+    var mid=getTouchMid(e);
+    panX=pinchStartPanX+(mid.x-pinchMidX)+(pinchMidX*(pinchStartZoom-nz));
+    panY=pinchStartPanY+(mid.y-pinchMidY)+(pinchMidY*(pinchStartZoom-nz));
+    canvasZoom=nz;
+    applyTf();
+    document.getElementById('hud-zoom').textContent=Math.round(canvasZoom*100);
+    e.preventDefault();
+    return;
+  }
+  if(e.touches.length===1&&touchPanning){
+    var t=e.touches[0];
+    var dx=t.clientX-lastTouchX,dy=t.clientY-lastTouchY;
+    if(Math.abs(dx)+Math.abs(dy)>3)touchMoved=true;
+    panX+=dx;panY+=dy;
+    lastTouchX=t.clientX;lastTouchY=t.clientY;
+    applyTf();
+    e.preventDefault();
+  }
+},{passive:false});
+
+wrap.addEventListener('touchend',function(e){
+  if(e.changedTouches.length===1){
+    var t=e.changedTouches[0];
+    if(!touchMoved){
+      if(touchTileMode){
+        // タイル配置: クリックをシミュレート
+        var rect=wrap.getBoundingClientRect();
+        var cx=(t.clientX-rect.left-panX)/canvasZoom;
+        var cy=(t.clientY-rect.top-panY)/canvasZoom;
+        // wrap.click を直接シミュレート
+        var ev=new MouseEvent('click',{
+          bubbles:true,cancelable:true,
+          clientX:t.clientX,clientY:t.clientY
+        });
+        wrap.dispatchEvent(ev);
+      } else {
+        // タイル選択のためmouseupを発火
+        var ev2=touchToMouse(e,'mouseup');
+        if(ev2)document.dispatchEvent(ev2);
+        var evClick=new MouseEvent('click',{
+          bubbles:true,cancelable:true,
+          clientX:t.clientX,clientY:t.clientY
+        });
+        e.target.dispatchEvent(evClick);
+      }
+    } else if(!touchTileMode){
+      var ev3=touchToMouse(e,'mouseup');
+      if(ev3)document.dispatchEvent(ev3);
+    }
+    touchPanning=false;
+  }
+  e.preventDefault();
+},{passive:false});
+
+// ドロワーのタップで閉じる（キャンバスタップ時）
+if(isMobile){
+  document.getElementById('sidebar').addEventListener('touchstart',function(e){
+    e.stopPropagation();
+  });
+}
+
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
 </script>
 </body>
