@@ -219,6 +219,28 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 
 #print-preview-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;overflow-y:auto;}
 #print-preview-modal.show{display:block;}
+
+/* ===== 印刷専用レイアウト ===== */
+#_pt{display:none;}
+@media print{
+  body>*{display:none!important;}
+  #_pt{display:flex!important;position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;
+    font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif;color:#1a1814;
+    flex-direction:row;gap:6mm;align-items:flex-start;padding:0;margin:0;}
+  .pt-mc{flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .pt-img{display:block;border:1px solid #ddd;}
+  .pt-sd{width:72mm;flex-shrink:0;display:flex;flex-direction:column;gap:3mm;}
+  .pt-hd{border-bottom:3px solid #2563eb;padding-bottom:2mm;}
+  .pt-hd h1{font-size:13px;font-weight:800;margin:0 0 1mm;}
+  .pt-hd .dt{font-size:8px;color:#6b6760;}
+  .pt-tbl{width:100%;border-collapse:collapse;}
+  .pt-tbl td{padding:3px 5px;font-size:9px;border-bottom:1px solid #f0f0f0;vertical-align:top;}
+  .pt-tbl .lb{color:#6b6760;white-space:nowrap;width:42%;}
+  .pt-tbl .vl{font-weight:700;font-size:10px;}
+  .pt-tbl small{font-size:8px;font-weight:400;color:#6b6760;}
+  .pt-ft{margin-top:auto;font-size:7px;color:#a8a49e;padding-top:2mm;border-top:1px solid #eee;text-align:right;}
+  @page{size:A3 landscape;margin:10mm;}
+}
 </style>
 </head>
 <body>
@@ -459,7 +481,6 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 </div>
 
 
-<div id="print-preview-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px 0;">
 <div id="print-preview-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;">
   <div style="background:#fff;border-radius:14px;padding:20px 24px;width:900px;max-width:97vw;margin:16px auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -1042,11 +1063,11 @@ function createTileInternal(cx,cy,type,rot){
   g.addEventListener('mouseleave',function(){g.style.cursor='grab';[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','0');});if(rsH){rsH.setAttribute('opacity','0');rsHT.setAttribute('opacity','0');}});
   g.addEventListener('click',function(e){
     if(currentTool==='erase'){e.stopPropagation();saveTileHistory();delTile(tile);return;}
+    // セットバックモード中はタイルclickを無視し辺選択を優先
+    if(setbackMode){return;}
     e.stopPropagation();
     // ドラッグ後はclickを無視（dragMovedフラグで判定）
     if(dragMoved){dragMoved=false;return;}
-    // 辺選択モード中はOFFに
-    if(setbackMode){setbackMode=false;sbHover=-1;document.getElementById('btn-sb-mode').textContent='辺選択モードON';document.getElementById('btn-sb-mode').style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';redrawSb();}
     if(e.shiftKey){
       // Shift+クリック: 何個でも追加・除去（グループ関係なし）
       var idx=selectedTiles.indexOf(tile);
@@ -1337,32 +1358,33 @@ function openPrintPreview(){
 
 function _captureToPrintPreview(){
   var wrapRect=wrap.getBoundingClientRect();
-  var outW=Math.round(wrapRect.width);
-  var outH=Math.round(wrapRect.height);
-  var tmpCanvas=document.createElement('canvas');
-  tmpCanvas.width=outW;tmpCanvas.height=outH;
-  var tmpCtx=tmpCanvas.getContext('2d');
-  tmpCtx.save();
-  tmpCtx.translate(panX,panY);
-  tmpCtx.scale(canvasZoom,canvasZoom);
-  tmpCtx.drawImage(mapCanvas,0,0);
-  tmpCtx.restore();
-  var savedSvgTransform=svg.style.transform;
+  var outW=Math.round(wrapRect.width),outH=Math.round(wrapRect.height);
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  var out=document.createElement('canvas');
+  out.width=outW*dpr;out.height=outH*dpr;
+  var c=out.getContext('2d');c.scale(dpr,dpr);
+  c.fillStyle='#fff';c.fillRect(0,0,outW,outH);
+  if(pdfLoaded&&mapCanvas.width>0){
+    c.save();c.translate(panX,panY);c.scale(canvasZoom,canvasZoom);
+    c.drawImage(mapCanvas,0,0);c.restore();
+  }
+  // SVGをdata:URIで渡す（file://でもBlobURLと違い制限なし）
+  var saved=svg.style.transform;
   svg.style.transform='';
   svg.setAttribute('transform','translate('+panX+','+panY+') scale('+canvasZoom+')');
-  var svgData=new XMLSerializer().serializeToString(svg);
-  svg.style.transform=savedSvgTransform;
-  svg.removeAttribute('transform');
-  var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
-  var url=URL.createObjectURL(svgBlob);
+  var svgStr=new XMLSerializer().serializeToString(svg);
+  svg.style.transform=saved;svg.removeAttribute('transform');
+  var svgDataUri='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
   var img=new Image();
-  img.onload=function(){
-    tmpCtx.drawImage(img,0,0,outW,outH);
-    URL.revokeObjectURL(url);
-    document.getElementById('pp-map-preview').src=tmpCanvas.toDataURL('image/png');
-    window._printMapDataUrl=tmpCanvas.toDataURL('image/png');
-  };
-  img.src=url;
+  function done(){
+    var dataUrl=out.toDataURL('image/png');
+    document.getElementById('pp-map-preview').src=dataUrl;
+    window._printMapDataUrl=dataUrl;
+    window._printMapAspect=outW/outH;
+  }
+  img.onload=function(){try{c.drawImage(img,0,0,outW,outH);}catch(ex){}done();};
+  img.onerror=function(){done();};
+  img.src=svgDataUri;
 }
 
 function closePrintPreview(){
@@ -1373,8 +1395,6 @@ function executePrint(){
   var title=document.getElementById('pp-title').value||'敷地配置計画書';
   var now=new Date();
   var dateStr=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
-
-  // 表示項目を収集
   var showBcr=document.getElementById('pp-show-bcr').checked;
   var showFar=document.getElementById('pp-show-far').checked;
   var showPark=document.getElementById('pp-show-park').checked;
@@ -1382,21 +1402,13 @@ function executePrint(){
   var showSb=document.getElementById('pp-show-sb').checked;
   var showMemo=document.getElementById('pp-show-memo').checked;
   var memo=document.getElementById('pp-memo').value;
-
-  function row(label,val,unit,show){
+  function row(l,v,u,show){
     if(!show)return '';
-    return '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;">'+label+'</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+val+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">'+unit+'</span></td></tr>';
+    return '<tr><td class="lb">'+l+'</td><td class="vl">'+v+(u?' <small>'+u+'</small>':'')+'</td></tr>';
   }
-  function rowEdit(id,label,unit,show){
-    if(!show)return '';
-    var val=document.getElementById(id).value;
-    return row(label,val,unit,true);
-  }
-
-  var tableRows=
-    '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">敷地面積</td>'+
-    '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-site').value+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">㎡</span></td></tr>'+
+  function rowEdit(id,l,u,show){if(!show)return '';return row(l,document.getElementById(id).value,u,true);}
+  var tr=
+    row('敷地面積',document.getElementById('pp-site').value,'㎡',true)+
     row('建物階数',document.getElementById('pp-floors').value,'F',true)+
     row('住戸専有面積',document.getElementById('pp-unit-area').value,'㎡/戸',true)+
     row('総戸数',document.getElementById('pp-units').value,'戸',true)+
@@ -1405,61 +1417,26 @@ function executePrint(){
     rowEdit('pp-height','建物高さ','m',showHeight)+
     row('前面道路幅',document.getElementById('pp-road').value,'m',true)+
     row('用途地域',document.getElementById('pp-zone').value,'',true);
-
-  if(showBcr){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">建蔽率</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-bcr').value+
-      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-bcr-limit').value+'%)</span></td></tr>';
-  }
-  if(showFar){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">容積率</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-far').value+
-      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-far-limit').value+'%)</span></td></tr>';
-  }
-  if(showSb){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">セットバック</td>'+
-      '<td style="padding:5px 8px;font-size:10px;font-weight:600;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-sb').value+'</td></tr>';
-  }
-  if(showMemo&&memo){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">備考</td>'+
-      '<td style="padding:5px 8px;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:pre-wrap;">'+memo+'</td></tr>';
-  }
-
-  var pw=window.open('','_blank');
-  pw.document.write(
-    '<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
-    '<style>'+
-    '@page{size:A3 landscape;margin:10mm;}'+
-    '*{box-sizing:border-box;margin:0;padding:0;}'+
-    'body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#fff;color:#1a1814;}'+
-    '.wrap{display:flex;width:297mm;height:207mm;gap:6mm;}'+
-    '.map-col{flex:1;min-width:0;display:flex;flex-direction:column;}'+
-    '.map-col img{flex:1;width:100%;object-fit:contain;border:1px solid #ddd;border-radius:3px;}'+
-    '.side{width:72mm;flex-shrink:0;display:flex;flex-direction:column;gap:4mm;}'+
-    '.header{border-bottom:3px solid #2563eb;padding-bottom:3mm;}'+
-    '.header h1{font-size:14px;font-weight:800;color:#1a1814;margin-bottom:1mm;}'+
-    '.header .date{font-size:9px;color:#6b6760;}'+
-    '.data-table{width:100%;border-collapse:collapse;border:1px solid #e0dbd4;border-radius:4px;overflow:hidden;}'+
-    '.footer{margin-top:auto;font-size:8px;color:#a8a49e;text-align:right;}'+
-    '</style></head><body>'+
-    '<div class="wrap">'+
-    '<div class="map-col">'+
-    '<img src="'+window._printMapDataUrl+'"/>'+
-    '</div>'+
-    '<div class="side">'+
-    '<div class="header">'+
-    '<h1>'+title+'</h1>'+
-    '<div class="date">作成日: '+dateStr+'</div>'+
-    '</div>'+
-    '<table class="data-table">'+tableRows+'</table>'+
-    '<div class="footer">※本資料は概算計画であり、確定値ではありません</div>'+
-    '</div>'+
-    '</div>'+
-    '</body></html>'
-  );
-  pw.document.close();
-  setTimeout(function(){try{pw.focus();pw.print();}catch(ex){}},600);
+  if(showBcr) tr+=row('建蔽率',document.getElementById('pp-bcr').value+'%（上限'+document.getElementById('pp-bcr-limit').value+'%）','',true);
+  if(showFar)  tr+=row('容積率',document.getElementById('pp-far').value+'%（上限'+document.getElementById('pp-far-limit').value+'%）','',true);
+  if(showSb)   tr+=row('セットバック',document.getElementById('pp-sb').value,'',true);
+  if(showMemo&&memo) tr+=row('備考','<span style="white-space:pre-wrap">'+memo+'</span>','',true);
+  if(!window._printMapDataUrl){alert('地図プレビューをもう一度開いてください');return;}
+  var aspect=window._printMapAspect||(wrap.clientWidth/wrap.clientHeight);
+  var MAP_W=320,MAP_H=277;
+  var imgW,imgH;
+  if(aspect>MAP_W/MAP_H){imgW=MAP_W;imgH=MAP_W/aspect;}else{imgH=MAP_H;imgW=MAP_H*aspect;}
+  // 既存の印刷エリアを削除して再生成
+  var old=document.getElementById('_pt');if(old)old.remove();
+  var pt=document.createElement('div');pt.id='_pt';
+  pt.innerHTML='<div class="pt-mc" style="width:'+imgW.toFixed(1)+'mm;height:'+MAP_H+'mm;">'+
+    '<img class="pt-img" src="'+window._printMapDataUrl+'" style="width:'+imgW.toFixed(1)+'mm;height:'+imgH.toFixed(1)+'mm;"/></div>'+
+    '<div class="pt-sd"><div class="pt-hd"><h1>'+title+'</h1><div class="dt">作成日: '+dateStr+'</div></div>'+
+    '<table class="pt-tbl">'+tr+'</table>'+
+    '<div class="pt-ft">※本資料は概算計画であり、確定値ではありません</div></div>';
+  document.body.appendChild(pt);
   closePrintPreview();
+  setTimeout(function(){window.print();setTimeout(function(){var e=document.getElementById('_pt');if(e)e.remove();},1000);},300);
 }
 
 document.addEventListener('keydown',function(e){
@@ -1593,7 +1570,7 @@ function redrawPoly(){
 }
 // ── セットバック ──
 function toggleSetbackMode(){if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}setbackMode=!setbackMode;var btn=document.getElementById('btn-sb-mode');if(setbackMode){btn.textContent='辺選択モードOFF';btn.style.background='#dc2626';setBadge('calib','セットバック — 辺をクリック');wrap.style.cursor='crosshair';currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});}else{btn.textContent='辺選択モードON';btn.style.background='#7c3aed';setBadge('pan','地図パンモード');wrap.style.cursor='';sbHover=-1;redrawSb();}}
-function nearestEdge(cx,cy){if(!polyDone||polyPts.length<2)return -1;var best=-1,bestD=Math.max(18,30/canvasZoom);for(var i=0;i<polyPts.length;i++){var j=(i+1)%polyPts.length,ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y,dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy||1,t2=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/len2)),nx=ax+t2*dx,ny=ay+t2*dy,d=Math.sqrt((cx-nx)*(cx-nx)+(cy-ny)*(cy-ny));if(d<bestD){bestD=d;best=i;}}return best;}
+function nearestEdge(cx,cy){if(!polyDone||polyPts.length<2)return -1;var best=-1,bestD=20/canvasZoom;for(var i=0;i<polyPts.length;i++){var j=(i+1)%polyPts.length,ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y,dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy||1,t2=Math.max(0,Math.min(1,((cx-ax)*dx+(cy-ay)*dy)/len2)),nx=ax+t2*dx,ny=ay+t2*dy,d=Math.sqrt((cx-nx)*(cx-nx)+(cy-ny)*(cy-ny));if(d<bestD){bestD=d;best=i;}}return best;}
 function sbmType(t){
   sbType=t;updateSbmBtns();
   // 既存設定がない辺の場合、タイプに応じてデフォルト値を切替
@@ -1724,23 +1701,33 @@ function applyZonePreset(){
   updateMetrics();
 }
 function exportPng(){
-  if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
-  var tmpCanvas=document.createElement('canvas');
-  tmpCanvas.width=mapCanvas.width;tmpCanvas.height=mapCanvas.height;
-  var tmpCtx=tmpCanvas.getContext('2d');
-  tmpCtx.drawImage(mapCanvas,0,0);
-  var svgData=new XMLSerializer().serializeToString(svg);
-  var svgBlob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
-  var url=URL.createObjectURL(svgBlob);
+  if(!pdfLoaded&&tiles.length===0&&!polyDone){alert('タイルまたはポリゴンを配置してください');return;}
+  var wrapRect=wrap.getBoundingClientRect();
+  var outW=Math.round(wrapRect.width),outH=Math.round(wrapRect.height);
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  var out=document.createElement('canvas');
+  out.width=outW*dpr;out.height=outH*dpr;
+  var c=out.getContext('2d');c.scale(dpr,dpr);
+  c.fillStyle='#fff';c.fillRect(0,0,outW,outH);
+  if(pdfLoaded&&mapCanvas.width>0){
+    c.save();c.translate(panX,panY);c.scale(canvasZoom,canvasZoom);
+    c.drawImage(mapCanvas,0,0);c.restore();
+  }
+  var saved=svg.style.transform;
+  svg.style.transform='';
+  svg.setAttribute('transform','translate('+panX+','+panY+') scale('+canvasZoom+')');
+  var svgStr=new XMLSerializer().serializeToString(svg);
+  svg.style.transform=saved;svg.removeAttribute('transform');
+  var svgDataUri='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
   var img=new Image();
-  img.onload=function(){
-    tmpCtx.drawImage(img,0,0);URL.revokeObjectURL(url);
+  function doSave(){
     var a=document.createElement('a');
-    a.download='敷地プラン_'+new Date().toLocaleDateString('ja').replace(/\//g,'-')+'.png';
-    a.href=tmpCanvas.toDataURL('image/png');
-    a.click();
-  };
-  img.src=url;
+    a.download='敷地プラン_'+new Date().toLocaleDateString('ja').replace(/[/]/g,'-')+'.png';
+    a.href=out.toDataURL('image/png');a.click();
+  }
+  img.onload=function(){try{c.drawImage(img,0,0,outW,outH);}catch(ex){}doSave();};
+  img.onerror=function(){doSave();};
+  img.src=svgDataUri;
 }
 function updateMetrics(){
   var u=0,p=0,s=0,ev=0,uA=0,bA=0;
@@ -2474,6 +2461,10 @@ function _applyProjectData(data){
   tiles.forEach(reposTile);
   updateSelBar();
 
+  if(tiles.length>0||polyPts.length>0){
+    pdfLoaded=true;
+    document.getElementById('drop-hint').style.display='none';
+  }
   var savedAt=data.savedAt?new Date(data.savedAt).toLocaleString('ja'):'不明';
   showToast('load-ok','ok','プロジェクトを読み込みました',
     '保存日時: '+savedAt+' / タイル'+tiles.length+'個 / バージョン'+data.version,
