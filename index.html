@@ -594,7 +594,7 @@ var DEFS={
   elev:     {w:2,   d:2,  fill:[124,58,237], stroke:'#6d28d9',label:'EV',       far:false,floors:'none'},
   corridor: {w:30,  d:3,  fill:[8,145,178],  stroke:'#0e7490',label:'外廊下',   far:false,floors:'none'},
   balcony:  {w:10,  d:2,  fill:[5,150,105],  stroke:'#047857',label:'バルコニー',far:false,floors:'none'},
-  free:     {w:4,   d:4,  fill:[234,88,12],  stroke:'#c2410c',label:'フリー',   far:true, floors:'all'}
+  free:     {w:4,   d:4,  fill:[234,88,12],  stroke:'#c2410c',label:'フリー',   far:false,floors:'none'}
 };
 var wrap=document.getElementById('canvas-wrap');
 var mapCanvas=document.getElementById('map-canvas');
@@ -1800,7 +1800,7 @@ function updateMetrics(){
     var def=getTileDef(t),a=(t.rW||def.w)*def.d;
     var fl=def.floors||'none';
     if(fl!=='none'&&t.type!=='textbox') bA+=a;
-    if(t.type==='park'||t.type==='mechpark') p++;
+    if(t.type==='park') p++; // mechparkは台数カウントしない（ユニット単位)
     if(t.type==='unit'){u++;uA+=a;}
     if(t.type==='unit1f'){u1f++;uA+=a;}
     if(t.type==='stair')s++;
