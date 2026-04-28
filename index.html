@@ -576,7 +576,7 @@ var calibMode=false,calibPts=[];
 var measureMode=false,measurePts=[],measureLines=[];
 var guideMode=false,guidePts=[],guideLines=[];
 var showGrid=false,freeConfig={name:'フリー',w:4,d:4};
-var SNAP_DIST=50;
+var SNAP_DIST=20;
 var boxSelecting=false,boxStart=null,boxRect=null,wasPanning=false;
 // ポリゴン・セットバック
 var polyMode=false,polyPts=[],polyDone=false;
@@ -1040,7 +1040,7 @@ function createTileInternal(cx,cy,type,rot){
   if(type==='unit'){
     entBar=mkS('rect',{rx:'0',fill:'rgba(30,64,175,0.35)',stroke:'#1d4ed8','stroke-width':'0.5','pointer-events':'none'});g.appendChild(entBar);
     entLbl=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke',stroke:'#1d4ed8','stroke-width':'2'});
-    entLbl.textContent='1F エントランス';g.appendChild(entLbl);
+    entLbl.textContent='';g.appendChild(entLbl);
   }
   var tile={id:id,g:g,rect:rect,hr:hr,lbl:lbl,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,eL1:eL1,eL2:eL2,rsH:rsH,rsHT:rsHT,entBar:entBar,entLbl:entLbl,cx:cx,cy:cy,type:type,rot:rot,freeConfig:savedFree,rW:undefined};
   g.addEventListener('mouseenter',function(){if(currentTool==='erase'){g.style.cursor='pointer';return;}[rh,rhT,dh,dhT].forEach(function(e){e.setAttribute('opacity','1');});if(rsH){rsH.setAttribute('opacity','1');rsHT.setAttribute('opacity','1');}});
@@ -1130,7 +1130,7 @@ function reposTile(t){
       var barH2=Math.max(14,Math.min(ph*0.24,22));
       t.entLbl.setAttribute('x',pw/2);t.entLbl.setAttribute('y',ph-barH2/2);
       t.entLbl.setAttribute('font-size',Math.max(7,barH2*0.52));
-      t.entLbl.textContent='1F エントランス';
+      t.entLbl.textContent='';
     }
   } else {
     var fs2=Math.max(8,Math.min(14,Math.min(pw,ph)/3.5));
@@ -1541,7 +1541,18 @@ function setTool(t){
   else{setBadge('place','配置モード — クリックで配置');wrap.style.cursor='crosshair';redrawMeasure();redrawGuides();}
 }
 function setBadge(cls,txt){var b=document.getElementById('mode-badge');b.className=cls;b.textContent=txt;}
-function setRot(v){currentRot=v;document.getElementById('rot-custom').value=v;document.querySelectorAll('.rot-btn').forEach(function(el){el.classList.remove('active');});var m={'0':'rot-0','30':'rot-30','45':'rot-45','90':'rot-90'};if(m[String(v)]){var el=document.getElementById(m[String(v)]);if(el)el.classList.add('active');}}
+function setRot(v){
+  currentRot=v;
+  document.getElementById('rot-custom').value=v;
+  document.querySelectorAll('.rot-btn').forEach(function(el){el.classList.remove('active');});
+  var m={'0':'rot-0','30':'rot-30','45':'rot-45','90':'rot-90'};
+  if(m[String(v)]){var el=document.getElementById(m[String(v)]);if(el)el.classList.add('active');}
+  if(selectedTiles.length>0){
+    saveTileHistory();
+    selectedTiles.forEach(function(t){t.rot=v;reposTile(t);});
+    _syncRotSlider(v);
+  }
+}
 function setRotLast(){setRot(lastRot);}
 function setRotCustom(){var v=parseInt(document.getElementById('rot-custom').value)||0;currentRot=((v%360)+360)%360;document.querySelectorAll('.rot-btn').forEach(function(el){el.classList.remove('active');});}
 function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
