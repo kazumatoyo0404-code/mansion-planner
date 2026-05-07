@@ -222,6 +222,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .t-unit1f.active{border-color:#3b82f6;background:#eff6ff;color:#3b82f6;}
 .t-mechpark.active{border-color:#0d9488;background:#f0fdfa;color:#0d9488;}
 .t-textbox.active{border-color:#64748b;background:#f8fafc;color:#475569;}
+.t-garden.active{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
+.t-entrance.active{border-color:#ea580c;background:#fff7ed;color:#ea580c;}
 </style>
 </head>
 <body>
@@ -323,7 +325,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   <div class="sb-sec">
     <div class="lbl">タイルサイズ (m)</div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🏠 住戸</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.5" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.1" oninput="updateDefs()"/></div></div>
+    <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;margin-top:5px;">🏠 1F住戸（初期サイズ）</div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit1f-w" value="11.5" step="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="unit1f-d" value="6" step="0.1" oninput="updateDefs()"/></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚗 駐車場</div>
     <div class="row2"><div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"/></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🪜 階段</div>
@@ -357,6 +361,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <button class="tool-btn t-elev" id="tool-elev" onclick="setTool('elev')"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
     <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool('corridor')"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで長さ調整</span></button>
     <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool('balcony')"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで長さ調整</span></button>
+        <button class="tool-btn t-garden" id="tool-garden" onclick="setTool('garden')"><span class="icon">🌿</span><span class="tname">1F庭</span><span class="tdim" id="dim-garden">6×6m</span></button>
+    <button class="tool-btn t-entrance" id="tool-entrance" onclick="setTool('entrance')"><span class="icon">🚪</span><span class="tname">エントランス</span><span class="tdim" id="dim-entrance">12×15m</span></button>
     <button class="tool-btn t-free" id="tool-free" onclick="openFreeModal()"><span class="icon">✏️</span><span class="tname">フリータイル</span><span class="tdim">名前・サイズ自由</span></button>
     <div class="tdiv"></div>
     <button class="tool-btn t-select" id="tool-select" onclick="setTool('select')"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
@@ -426,6 +432,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="foot-btn" onclick="doCopy()">📋 コピー</button>
       <button class="foot-btn" onclick="doPaste()">📌 貼付け</button>
       <button class="foot-btn danger" onclick="clearAll()">🗑 全削除</button>
+      <button class="foot-btn" onclick="open3DPreview()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;">🧊 3Dプレビュー</button>
     </div>
 
     <div class="foot-btns" style="margin-top:5px;">
@@ -456,7 +463,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   <div id="free-modal-inner">
     <h3>✏️ フリータイル設定</h3>
     <input type="text" id="free-name" placeholder="名前（例: 管理室）" maxlength="10"/>
-    <div class="row2"><div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.5" min="0.5"/></div><div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.5" min="0.5"/></div></div>
+    <div class="row2"><div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.1" min="0.1"/></div><div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.1" min="0.1"/></div></div>
     <div class="modal-btns"><button class="modal-cancel" onclick="closeFreeModal()">キャンセル</button><button class="modal-ok" onclick="confirmFreeModal()">配置開始</button></div>
   </div>
 </div>
@@ -586,15 +593,17 @@ var entryMode=false,entryEdge=-1;
 // 北辺
 var northMode=false,northEdge=-1;
 var DEFS={
-  unit:     {w:11.5,d:6,  fill:[37,99,235],  stroke:'#1d4ed8',label:'住戸',     far:true, floors:'res'},
-  unit1f:   {w:11.5,d:6,  fill:[6,182,212],  stroke:'#0891b2',label:'1F住戸',   far:true, floors:'one'},
-  park:     {w:2.5, d:5,  fill:[22,163,74],  stroke:'#15803d',label:'駐車場',   far:false,floors:'none'},
-  mechpark: {w:12,  d:6.5,fill:[20,184,166], stroke:'#0f766e',label:'機械式P',  far:false,floors:'none'},
-  stair:    {w:3,   d:4,  fill:[219,39,119], stroke:'#be185d',label:'階段',     far:false,floors:'none'},
-  elev:     {w:2,   d:2,  fill:[124,58,237], stroke:'#6d28d9',label:'EV',       far:false,floors:'none'},
-  corridor: {w:30,  d:3,  fill:[8,145,178],  stroke:'#0e7490',label:'外廊下',   far:false,floors:'none'},
-  balcony:  {w:10,  d:2,  fill:[5,150,105],  stroke:'#047857',label:'バルコニー',far:false,floors:'none'},
-  free:     {w:4,   d:4,  fill:[234,88,12],  stroke:'#c2410c',label:'フリー',   far:false,floors:'none'}
+  unit:     {w:11.5,d:6,  fill:[29,78,216],   stroke:'#1e40af',label:'住戸',        far:true, floors:'res'},
+  unit1f:   {w:11.5,d:6,  fill:[239,68,68],   stroke:'#dc2626',label:'1F住戸',      far:true, floors:'one'},
+  park:     {w:2.5, d:5,  fill:[148,163,184],  stroke:'#64748b',label:'駐車場',      far:false,floors:'none'},
+  mechpark: {w:12,  d:6.5,fill:[100,116,139],  stroke:'#475569',label:'機械式P',     far:false,floors:'none'},
+  stair:    {w:3,   d:4,  fill:[251,191,36],   stroke:'#d97706',label:'階段',        far:false,floors:'none'},
+  elev:     {w:2,   d:2,  fill:[234,179,8],    stroke:'#a16207',label:'EV',          far:false,floors:'none'},
+  corridor: {w:30,  d:3,  fill:[14,165,233],   stroke:'#0284c7',label:'外廊下',      far:false,floors:'none'},
+  balcony:  {w:10,  d:2,  fill:[51,65,85],     stroke:'#1e293b',label:'バルコニー',  far:false,floors:'none'},
+  garden:   {w:6,   d:6,  fill:[34,197,94],    stroke:'#16a34a',label:'1F庭',        far:false,floors:'none'},
+  entrance: {w:12,  d:15, fill:[249,115,22],   stroke:'#ea580c',label:'エントランス',far:false,floors:'one'},
+  free:     {w:4,   d:4,  fill:[168,85,247],   stroke:'#9333ea',label:'フリー',      far:false,floors:'none'}
 };
 var wrap=document.getElementById('canvas-wrap');
 var mapCanvas=document.getElementById('map-canvas');
@@ -1030,7 +1039,7 @@ function createTileInternal(cx,cy,type,rot){
   var lbl=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke',stroke:'white','stroke-width':'4'});lbl.textContent=def.label;g.appendChild(lbl);
   var dim=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:def.stroke,'font-family':'monospace','pointer-events':'none','paint-order':'stroke',stroke:'white','stroke-width':'3',opacity:'0.9'});g.appendChild(dim);
   var rsH=null,rsHT=null;
-  if(type==='corridor'||type==='balcony'){rsH=mkS('rect',{width:'10',height:'20',rx:'3',fill:def.stroke,stroke:'white','stroke-width':'1.5',opacity:'0',cursor:'ew-resize'});rsH.style.pointerEvents='all';g.appendChild(rsH);rsHT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'9','font-weight':'700','pointer-events':'none',opacity:'0'});rsHT.textContent='⟺';g.appendChild(rsHT);}
+  if(type==='corridor'||type==='balcony'||type==='unit1f'){rsH=mkS('rect',{width:'10',height:'20',rx:'3',fill:def.stroke,stroke:'white','stroke-width':'1.5',opacity:'0',cursor:'ew-resize'});rsH.style.pointerEvents='all';g.appendChild(rsH);rsHT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'9','font-weight':'700','pointer-events':'none',opacity:'0'});rsHT.textContent='⟺';g.appendChild(rsHT);}
   var rh=mkS('circle',{r:'9',fill:def.stroke,stroke:'white','stroke-width':'2',opacity:'0'});rh.style.pointerEvents='all';g.appendChild(rh);
   var rhT=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'white','font-size':'11','font-weight':'700','pointer-events':'none',opacity:'0'});rhT.textContent='↻';g.appendChild(rhT);
   var dh=mkS('circle',{r:'10',fill:'#dc2626',stroke:'white','stroke-width':'2',opacity:'0'});dh.style.pointerEvents='all';g.appendChild(dh);
@@ -1116,10 +1125,31 @@ function reposTile(t){
     var floorH=parseFloat(document.getElementById('floor-height').value)||3;
     var exclusiveArea=Math.round(def.w*def.d); // 住戸面積 = タイルサイズそのまま
     var fs=Math.max(9,Math.min(16,Math.min(pw,ph)/3.2));
-    t.lbl.textContent=(t.type==='unit1f')?'🏠 1F住戸':'🏢 住棟';
-    t.lbl.setAttribute('x',pw/2);t.lbl.setAttribute('y',ph*0.38);t.lbl.setAttribute('font-size',fs);
-    t.dim.textContent='専有'+exclusiveArea+'㎡/戸';
-    t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph*0.58);t.dim.setAttribute('font-size',Math.max(8,fs*0.75));
+    if(t.type==='unit1f'){
+      t.lbl.textContent='住戸';
+      t.lbl.setAttribute('x',pw/2);t.lbl.setAttribute('y',ph*0.42);t.lbl.setAttribute('font-size',fs);
+      t.dim.textContent='専有'+exclusiveArea+'㎡';
+      t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph*0.62);t.dim.setAttribute('font-size',Math.max(8,fs*0.75));
+      // 1Fバッジ（左上の赤帯）
+      if(!t._1fBadge){
+        var badge=mkS('rect',{x:0,y:0,width:pw*0.28,height:ph*0.22,fill:'#dc2626','pointer-events':'none',rx:'0'});
+        var badgeTxt=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',
+          x:pw*0.14,y:ph*0.11,fill:'#fff','font-size':Math.max(8,fs*0.72),'font-weight':'900',
+          'pointer-events':'none','font-family':'sans-serif'});
+        badgeTxt.textContent='1F';
+        t.g.insertBefore(badge,t.lbl);
+        t.g.insertBefore(badgeTxt,t.lbl);
+        t._1fBadge=badge;t._1fBadgeTxt=badgeTxt;
+      }
+      t._1fBadge.setAttribute('width',pw*0.28);t._1fBadge.setAttribute('height',ph*0.22);
+      t._1fBadgeTxt.setAttribute('x',pw*0.14);t._1fBadgeTxt.setAttribute('y',ph*0.11);
+      t._1fBadgeTxt.setAttribute('font-size',Math.max(8,fs*0.72));
+    } else {
+      t.lbl.textContent='🏢 住棟';
+      t.lbl.setAttribute('x',pw/2);t.lbl.setAttribute('y',ph*0.38);t.lbl.setAttribute('font-size',fs);
+      t.dim.textContent='専有'+exclusiveArea+'㎡/戸';
+      t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph*0.58);t.dim.setAttribute('font-size',Math.max(8,fs*0.75));
+    }
     // 1Fエントランス帯（下部22%）
     if(t.entBar){
       var barH=Math.max(14,Math.min(ph*0.24,22));
@@ -1558,6 +1588,7 @@ function setRotCustom(){var v=parseInt(document.getElementById('rot-custom').val
 function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
 function updateDefs(){
   DEFS.unit.w=parseFloat(document.getElementById('unit-w').value)||11.5;DEFS.unit.d=parseFloat(document.getElementById('unit-d').value)||6;
+  DEFS.unit1f.w=parseFloat(document.getElementById('unit1f-w').value)||11.5;DEFS.unit1f.d=parseFloat(document.getElementById('unit1f-d').value)||6;
   DEFS.park.w=parseFloat(document.getElementById('park-w').value)||2.5;DEFS.park.d=parseFloat(document.getElementById('park-d').value)||5;
   DEFS.stair.w=parseFloat(document.getElementById('stair-w').value)||3;DEFS.stair.d=parseFloat(document.getElementById('stair-d').value)||4;
   DEFS.elev.w=parseFloat(document.getElementById('elev-w').value)||2;DEFS.elev.d=parseFloat(document.getElementById('elev-d').value)||2;
@@ -2572,5 +2603,219 @@ function toggleLayerVis(layer){
 
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
 </script>
+
+<!-- ══ 3D プレビュー ══ -->
+<div id="modal-3d" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:#0f172a;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#1e293b;color:#fff;flex-shrink:0;">
+    <span style="font-weight:800;font-size:14px;">🧊 3Dボリュームプレビュー</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:11px;color:#94a3b8;">ドラッグ:回転 / スクロール:ズーム / 右ドラッグ:移動</span>
+      <button onclick="close3DPreview()" style="padding:5px 14px;border:1px solid #475569;border-radius:6px;background:#334155;color:#fff;cursor:pointer;font-size:13px;">✕ 閉じる</button>
+    </div>
+  </div>
+  <canvas id="canvas-3d" style="flex:1;display:block;width:100%;height:100%;"></canvas>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+var _3d={renderer:null,scene:null,camera:null,animId:null,theta:30,phi:55,radius:180,target:{x:0,y:0,z:0}};
+
+window.open3DPreview=function(){
+  if(!pdfLoaded&&tiles.length===0){alert('タイルを配置してください');return;}
+  document.getElementById('modal-3d').style.display='flex';
+  setTimeout(function(){_build3D();},50);
+};
+window.close3DPreview=function(){
+  document.getElementById('modal-3d').style.display='none';
+  if(_3d.animId){cancelAnimationFrame(_3d.animId);_3d.animId=null;}
+  if(_3d.renderer){_3d.renderer.dispose();_3d.renderer=null;}
+};
+
+function _build3D(){
+  if(_3d.renderer){_3d.renderer.dispose();_3d.renderer=null;}
+  if(_3d.animId){cancelAnimationFrame(_3d.animId);_3d.animId=null;}
+  var canvas=document.getElementById('canvas-3d');
+  var W=canvas.offsetWidth||800, H=canvas.offsetHeight||600;
+  var scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0f172a);
+  _3d.scene=scene;
+  var camera=new THREE.PerspectiveCamera(45,W/H,0.1,2000);
+  _3d.camera=camera;
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(W,H,false);
+  renderer.shadowMap.enabled=true;
+  _3d.renderer=renderer;
+
+  // 照明
+  scene.add(new THREE.AmbientLight(0xffffff,0.55));
+  var sun=new THREE.DirectionalLight(0xfffbe6,1.0);
+  sun.position.set(60,100,80);sun.castShadow=true;scene.add(sun);
+  scene.add(new THREE.DirectionalLight(0x8fb4ff,0.35)).position.set(-80,60,-60);
+
+  // 地面
+  var gnd=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshLambertMaterial({color:0x1e2d40}));
+  gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;scene.add(gnd);
+  scene.add(new THREE.GridHelper(400,40,0x1e3a5f,0x1e3a5f));
+
+  var floorH=parseFloat(document.getElementById('floor-height').value)||3;
+  var totalFloors=Math.max(2,parseInt(document.getElementById('floors-input').value)||10);
+
+  // 重心計算
+  var cx0=0,cy0=0,n=tiles.length;
+  if(n>0){tiles.forEach(function(t){cx0+=t.cx;cy0+=t.cy;});cx0/=n;cy0/=n;}
+
+  // ── タイル描画 ──
+  // 近くにunit1fがあるバルコニー・外廊下を検出（1F判定）
+  function _isNear1F(t){
+    var px2=(t.cx-cx0)/ppm, pz2=(t.cy-cy0)/ppm;
+    for(var ii=0;ii<tiles.length;ii++){
+      if(tiles[ii].type!=='unit1f'&&tiles[ii].type!=='garden'&&tiles[ii].type!=='entrance')continue;
+      var ax=(tiles[ii].cx-cx0)/ppm, az=(tiles[ii].cy-cy0)/ppm;
+      if(Math.abs(px2-ax)<20&&Math.abs(pz2-az)<20)return true;
+    }
+    return false;
+  }
+
+  tiles.forEach(function(t){
+    var def=getTileDef(t);
+    var tw=(t.rW||def.w), td=def.d;
+    var f=def.fill;
+    var col=new THREE.Color(f[0]/255,f[1]/255,f[2]/255); // DEFSのfill色を自動使用
+    var px=(t.cx-cx0)/ppm, pz=(t.cy-cy0)/ppm;
+    var ry=-t.rot*Math.PI/180;
+
+    // ── 駐車場: 薄いスラブ+駐車枠の線 ──
+    if(t.type==='park'||t.type==='mechpark'){
+      var slabH2=0.15;
+      var geo3=new THREE.BoxGeometry(tw,slabH2,td);
+      var mat3=new THREE.MeshLambertMaterial({color:col,transparent:true,opacity:0.6});
+      var m3=new THREE.Mesh(geo3,mat3);
+      m3.position.set(px,slabH2/2,pz);m3.rotation.y=ry;
+      scene.add(m3);
+      // 駐車枠線（平面グリッド）
+      var lineCol=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.5});
+      var slotW=2.5, slotD=5;
+      var nW=Math.max(1,Math.round(tw/slotW)), nD=Math.max(1,Math.round(td/slotD));
+      var lineGeo=new THREE.BufferGeometry();
+      var verts=[];
+      for(var si=0;si<=nW;si++){var sx=-tw/2+si*(tw/nW);verts.push(sx,0.2,-td/2,sx,0.2,td/2);}
+      for(var sj=0;sj<=nD;sj++){var sz=-td/2+sj*(td/nD);verts.push(-tw/2,0.2,sz,tw/2,0.2,sz);}
+      lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+      var lineM=new THREE.LineSegments(lineGeo,lineCol);
+      lineM.position.set(px,0,pz);lineM.rotation.y=ry;
+      scene.add(lineM);
+      return;
+    }
+
+    // ── 外廊下・バルコニー ──
+    if(t.type==='corridor'||t.type==='balcony'){
+      var near1f=_isNear1F(t);
+      var slabH=floorH*0.18;
+      var slabCol=new THREE.Color(f[0]/255,f[1]/255,f[2]/255);
+      var nFloors=near1f?1:totalFloors; // 1F住戸の隣なら1階のみ
+      for(var fi=0;fi<nFloors;fi++){
+        var sg=new THREE.BoxGeometry(tw,slabH,td);
+        var sm=new THREE.MeshLambertMaterial({color:slabCol,transparent:true,opacity:0.85});
+        var smesh=new THREE.Mesh(sg,sm);
+        smesh.receiveShadow=true;
+        smesh.position.set(px,fi*floorH+slabH/2,pz);
+        smesh.rotation.y=ry;
+        smesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(sg),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.2})));
+        scene.add(smesh);
+      }
+      return;
+    }
+
+    // ── 通常ボックスタイル ──
+    var bh;
+    if(t.type==='garden')        bh=0.3;
+    else if(t.type==='unit1f')   bh=floorH;
+    else if(t.type==='entrance') bh=floorH;
+    else if(t.type==='stair'||t.type==='elev') bh=totalFloors*floorH;
+    else if(t.type==='unit')     bh=totalFloors*floorH;
+    else bh=Math.max(floorH*0.4,2);
+
+    var geo=new THREE.BoxGeometry(tw,bh,td);
+    var mat=new THREE.MeshLambertMaterial({color:col});
+    var mesh=new THREE.Mesh(geo,mat);
+    mesh.castShadow=true;mesh.receiveShadow=true;
+    mesh.position.set(px,bh/2,pz);
+    mesh.rotation.y=ry;
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.12})));
+    // フロア区切り線（住戸のみ）
+    if(t.type==='unit'){
+      for(var fi2=1;fi2<totalFloors;fi2++){
+        var ly=fi2*floorH-bh/2;
+        var fl2=new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.PlaneGeometry(tw,td)),
+          new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.08})
+        );
+        fl2.rotation.x=-Math.PI/2;fl2.position.y=ly;mesh.add(fl2);
+      }
+    }
+    scene.add(mesh);
+  });
+
+  // 敷地ポリゴン
+  if(polyDone&&polyPts.length>=3){
+    var shape=new THREE.Shape();
+    polyPts.forEach(function(p,i){
+      var px=(p.x-cx0)/ppm, pz=(p.y-cy0)/ppm;
+      if(i===0)shape.moveTo(px,pz);else shape.lineTo(px,pz);
+    });
+    shape.closePath();
+    var pMesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshBasicMaterial({color:0x3b82f6,transparent:true,opacity:0.12,side:THREE.DoubleSide}));
+    pMesh.rotation.x=-Math.PI/2;pMesh.position.y=0.05;scene.add(pMesh);
+    var pts3=polyPts.map(function(p){return new THREE.Vector3((p.x-cx0)/ppm,0.15,(p.y-cy0)/ppm);});
+    pts3.push(pts3[0].clone());
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts3),new THREE.LineBasicMaterial({color:0x60a5fa})));
+  }
+
+  // カメラ更新
+  function updCam(){
+    var t2=_3d.theta*Math.PI/180, p2=_3d.phi*Math.PI/180;
+    _3d.camera.position.set(
+      _3d.target.x+_3d.radius*Math.sin(p2)*Math.sin(t2),
+      _3d.target.y+_3d.radius*Math.cos(p2),
+      _3d.target.z+_3d.radius*Math.sin(p2)*Math.cos(t2)
+    );
+    _3d.camera.lookAt(_3d.target.x,_3d.target.y,_3d.target.z);
+  }
+  updCam();
+
+  // マウス操作
+  var drag=false,rDrag=false,lx=0,ly2=0;
+  canvas.addEventListener('mousedown',function(e){drag=true;rDrag=e.button===2;lx=e.clientX;ly2=e.clientY;e.preventDefault();});
+  canvas.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('mousemove',function(e){
+    if(!drag||document.getElementById('modal-3d').style.display==='none')return;
+    var dx=e.clientX-lx,dy=e.clientY-ly2;lx=e.clientX;ly2=e.clientY;
+    if(rDrag){
+      var camDir=new THREE.Vector3();_3d.camera.getWorldDirection(camDir);
+      var right=new THREE.Vector3().crossVectors(camDir,new THREE.Vector3(0,1,0)).normalize();
+      _3d.target.x-=right.x*dx*0.15;_3d.target.z-=right.z*dx*0.15;_3d.target.y+=dy*0.15;
+    }else{_3d.theta-=dx*0.4;_3d.phi=Math.max(8,Math.min(88,_3d.phi-dy*0.4));}
+    updCam();
+  });
+  document.addEventListener('mouseup',function(){drag=false;});
+  canvas.addEventListener('wheel',function(e){
+    _3d.radius=Math.max(15,Math.min(700,_3d.radius+e.deltaY*0.25));updCam();e.preventDefault();
+  },{passive:false});
+
+  // アニメーション
+  (function anim(){_3d.animId=requestAnimationFrame(anim);if(_3d.renderer)_3d.renderer.render(scene,camera);})();
+
+  // リサイズ
+  window.addEventListener('resize',function(){
+    if(!_3d.renderer||document.getElementById('modal-3d').style.display==='none')return;
+    var W2=canvas.offsetWidth,H2=canvas.offsetHeight;
+    if(!W2||!H2)return;
+    _3d.camera.aspect=W2/H2;_3d.camera.updateProjectionMatrix();_3d.renderer.setSize(W2,H2,false);
+  });
+}
+})();
+</script>
+
 </body>
 </html>
