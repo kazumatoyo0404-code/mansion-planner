@@ -362,7 +362,9 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool('corridor')"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで長さ調整</span></button>
     <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool('balcony')"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで長さ調整</span></button>
         <button class="tool-btn t-garden" id="tool-garden" onclick="setTool('garden')"><span class="icon">🌿</span><span class="tname">1F庭</span><span class="tdim" id="dim-garden">6×6m</span></button>
+    <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="garden-w" value="6" step="0.1" min="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="garden-d" value="6" step="0.1" min="0.1" oninput="updateDefs()"/></div></div>
     <button class="tool-btn t-entrance" id="tool-entrance" onclick="setTool('entrance')"><span class="icon">🚪</span><span class="tname">エントランス</span><span class="tdim" id="dim-entrance">12×15m</span></button>
+    <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="entrance-w" value="12" step="0.1" min="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="entrance-d" value="15" step="0.1" min="0.1" oninput="updateDefs()"/></div></div>
     <button class="tool-btn t-free" id="tool-free" onclick="openFreeModal()"><span class="icon">✏️</span><span class="tname">フリータイル</span><span class="tdim">名前・サイズ自由</span></button>
     <div class="tdiv"></div>
     <button class="tool-btn t-select" id="tool-select" onclick="setTool('select')"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
@@ -1594,10 +1596,16 @@ function updateDefs(){
   DEFS.elev.w=parseFloat(document.getElementById('elev-w').value)||2;DEFS.elev.d=parseFloat(document.getElementById('elev-d').value)||2;
   DEFS.corridor.d=parseFloat(document.getElementById('corridor-d').value)||3;DEFS.corridor.w=parseFloat(document.getElementById('corridor-w').value)||30;
   DEFS.balcony.d=parseFloat(document.getElementById('balcony-d').value)||2;DEFS.balcony.w=parseFloat(document.getElementById('balcony-w').value)||10;
-  document.getElementById('dim-unit').textContent=DEFS.unit.w+'×'+DEFS.unit.d+'m';
-  document.getElementById('dim-park').textContent=DEFS.park.w+'×'+DEFS.park.d+'m';
-  document.getElementById('dim-stair').textContent=DEFS.stair.w+'×'+DEFS.stair.d+'m';
-  document.getElementById('dim-elev').textContent=DEFS.elev.w+'×'+DEFS.elev.d+'m';
+  var gw=document.getElementById('garden-w'),gd=document.getElementById('garden-d');
+  if(gw)DEFS.garden.w=parseFloat(gw.value)||6;if(gd)DEFS.garden.d=parseFloat(gd.value)||6;
+  var ew=document.getElementById('entrance-w'),ed=document.getElementById('entrance-d');
+  if(ew)DEFS.entrance.w=parseFloat(ew.value)||12;if(ed)DEFS.entrance.d=parseFloat(ed.value)||15;
+  var du=document.getElementById('dim-unit');if(du)du.textContent=DEFS.unit.w+'×'+DEFS.unit.d+'m';
+  var dp=document.getElementById('dim-park');if(dp)dp.textContent=DEFS.park.w+'×'+DEFS.park.d+'m';
+  var ds=document.getElementById('dim-stair');if(ds)ds.textContent=DEFS.stair.w+'×'+DEFS.stair.d+'m';
+  var dev=document.getElementById('dim-elev');if(dev)dev.textContent=DEFS.elev.w+'×'+DEFS.elev.d+'m';
+  var dg=document.getElementById('dim-garden');if(dg)dg.textContent=DEFS.garden.w+'×'+DEFS.garden.d+'m';
+  var de=document.getElementById('dim-entrance');if(de)de.textContent=DEFS.entrance.w+'×'+DEFS.entrance.d+'m';
   tiles.forEach(reposTile);
 }
 
