@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<!-- saved from url=(0054)https://kazumatoyo0404-code.github.io/mansion-planner/ -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>敷地タイルプランナー</title>
 <style>
 :root{--bg:#f8f7f4;--surface:#fff;--surface2:#f0ede8;--border:#e0dbd4;--text:#1a1814;--text2:#6b6760;--text3:#a8a49e;--blue:#2563eb;--green:#16a34a;--pink:#db2777;--red:#dc2626;--amber:#d97706;--purple:#7c3aed;--orange:#ea580c;--cyan:#0891b2;}
@@ -217,8 +217,6 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   #drawer-handle{display:none!important;}
 }
 
-#print-preview-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;overflow-y:auto;}
-#print-preview-modal.show{display:block;}
 .t-unit1f.active{border-color:#3b82f6;background:#eff6ff;color:#3b82f6;}
 .t-mechpark.active{border-color:#0d9488;background:#f0fdfa;color:#0d9488;}
 .t-textbox.active{border-color:#64748b;background:#f8fafc;color:#475569;}
@@ -234,16 +232,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   <button class="mob-btn" onclick="toggleDrawer()" id="mob-menu">
     <span>☰</span><span>メニュー</span>
   </button>
-  <button class="mob-btn" id="mob-unit" onclick="setToolMob('unit')">
+  <button class="mob-btn" id="mob-unit" onclick="setToolMob(&#39;unit&#39;)">
     <span>🏢</span><span>住棟</span>
   </button>
-  <button class="mob-btn" id="mob-park" onclick="setToolMob('park')">
+  <button class="mob-btn" id="mob-park" onclick="setToolMob(&#39;park&#39;)">
     <span>🅿</span><span>駐車場</span>
   </button>
-  <button class="mob-btn" id="mob-pan" onclick="setToolMob('pan')">
+  <button class="mob-btn" id="mob-pan" onclick="setToolMob(&#39;pan&#39;)">
     <span>✋</span><span>移動</span>
   </button>
-  <button class="mob-btn" id="mob-erase" onclick="setToolMob('erase')">
+  <button class="mob-btn" id="mob-erase" onclick="setToolMob(&#39;erase&#39;)">
     <span>🗑</span><span>削除</span>
   </button>
   <button class="mob-btn" onclick="doUndoMob()">
@@ -269,7 +267,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="lbl">📏 キャリブレーション</div>
     <button class="btn-primary" onclick="startCalib()">① 2点クリックで距離測定</button>
     <div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:4px;">
-      <div style="flex:1;"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:2px;">実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1" style="width:100%;height:28px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"/></div>
+      <div style="flex:1;"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:2px;">実際の距離 (m)</label><input type="number" id="calib-dist" value="10" min="0.1" step="0.1" style="width:100%;height:28px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"></div>
       <button class="btn-sm" onclick="applyCalib()">確定</button>
     </div>
     <div class="calib-status idle" id="calib-status">PDFをドロップ後にキャリブレーション</div>
@@ -294,20 +292,16 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px 10px;">
         <div style="font-size:10px;color:#92400e;font-weight:700;margin-bottom:4px;">📐 実測面積（上書き）</div>
         <div style="display:flex;gap:4px;align-items:center;margin-bottom:5px;">
-          <input type="number" id="actual-area-input" placeholder="例: 1234.5" min="1" step="0.1"
-            style="flex:1;height:28px;padding:0 6px;font-size:12px;border:1px solid #fcd34d;border-radius:6px;outline:none;background:#fff;"
-            oninput="onActualAreaChange()"/>
+          <input type="number" id="actual-area-input" placeholder="例: 1234.5" min="1" step="0.1" style="flex:1;height:28px;padding:0 6px;font-size:12px;border:1px solid #fcd34d;border-radius:6px;outline:none;background:#fff;" oninput="onActualAreaChange()">
           <span style="font-size:10px;color:#92400e;white-space:nowrap;">㎡</span>
         </div>
         <div style="font-size:9px;color:#a8a49e;margin-bottom:5px;" id="actual-area-sub"></div>
         <!-- 方法1: 面積だけ上書き -->
-        <button onclick="applyActualAreaOnly()" id="btn-area-only"
-          style="width:100%;height:28px;background:#d97706;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;margin-bottom:3px;display:none;">
+        <button onclick="applyActualAreaOnly()" id="btn-area-only" style="width:100%;height:28px;background:#d97706;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;margin-bottom:3px;display:none;">
           📋 法規計算だけこの面積で行う
         </button>
         <!-- 方法2: ppmを再計算 -->
-        <button onclick="applyActualAreaScale()" id="btn-area-scale"
-          style="width:100%;height:28px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;display:none;">
+        <button onclick="applyActualAreaScale()" id="btn-area-scale" style="width:100%;height:28px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;display:none;">
           🔧 スケール（縮尺）を自動補正する
         </button>
         <div style="font-size:9px;color:#6b6760;margin-top:3px;" id="area-override-status"></div>
@@ -325,53 +319,53 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
   <div class="sb-sec">
     <div class="lbl">タイルサイズ (m)</div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🏠 住戸</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.1" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.1" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;margin-top:5px;">🏠 1F住戸（初期サイズ）</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit1f-w" value="11.5" step="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="unit1f-d" value="6" step="0.1" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit1f-w" value="11.5" step="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="unit1f-d" value="6" step="0.1" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚗 駐車場</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🪜 階段</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="stair-w" value="3" step="0.5" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="stair-d" value="4" step="0.5" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🛗 EV</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="elev-w" value="2" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="elev-d" value="2" step="0.5" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="elev-w" value="2" step="0.5" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="elev-d" value="2" step="0.5" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚶 外廊下</div>
-    <div class="row2"><div class="field"><label>奥行（固定）</label><input type="number" id="corridor-d" value="3" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>初期長さ</label><input type="number" id="corridor-w" value="30" step="0.5" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>奥行（固定）</label><input type="number" id="corridor-d" value="3" step="0.5" oninput="updateDefs()"></div><div class="field"><label>初期長さ</label><input type="number" id="corridor-w" value="30" step="0.5" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🌿 バルコニー</div>
-    <div class="row2"><div class="field"><label>奥行（固定）</label><input type="number" id="balcony-d" value="2" step="0.5" oninput="updateDefs()"/></div><div class="field"><label>初期長さ</label><input type="number" id="balcony-w" value="10" step="0.5" oninput="updateDefs()"/></div></div>
+    <div class="row2"><div class="field"><label>奥行（固定）</label><input type="number" id="balcony-d" value="2" step="0.5" oninput="updateDefs()"></div><div class="field"><label>初期長さ</label><input type="number" id="balcony-w" value="10" step="0.5" oninput="updateDefs()"></div></div>
   </div>
   <div class="sb-sec">
     <div class="lbl">表示設定</div>
-    <div class="snap-row"><label>🧲 スナップ</label><label class="toggle"><input type="checkbox" id="snap-toggle" checked/><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>🚫 重なり防止</label><label class="toggle"><input type="checkbox" id="overlap-toggle" checked/><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>📐 グリッド表示</label><label class="toggle"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"/><span class="tog-sl"></span></label></div>
-    <div class="field" id="grid-size-field" style="display:none;margin-top:2px;"><label>グリッド間隔 (m)</label><input type="number" id="grid-size" value="5" min="1" step="1" oninput="redrawGrid()"/></div>
-    <div class="snap-row"><label>📏 測定線を表示</label><label class="toggle"><input type="checkbox" id="show-measure" checked onchange="toggleLayerVis('measure')"/><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>📌 補助線を表示</label><label class="toggle"><input type="checkbox" id="show-guide" checked onchange="toggleLayerVis('guide')"/><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>🚧 SBゾーンを表示</label><label class="toggle"><input type="checkbox" id="show-sb" checked onchange="toggleLayerVis('sb')"/><span class="tog-sl"></span></label></div>
-    <div class="snap-row"><label>🏷 タイルラベル表示</label><label class="toggle"><input type="checkbox" id="show-label" checked onchange="toggleLayerVis('label')"/><span class="tog-sl"></span></label></div>
-    <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"/><span class="slider-val" id="op-val">65%</span></div>
+    <div class="snap-row"><label>🧲 スナップ</label><label class="toggle"><input type="checkbox" id="snap-toggle" checked=""><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🚫 重なり防止</label><label class="toggle"><input type="checkbox" id="overlap-toggle" checked=""><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>📐 グリッド表示</label><label class="toggle"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"><span class="tog-sl"></span></label></div>
+    <div class="field" id="grid-size-field" style="display:none;margin-top:2px;"><label>グリッド間隔 (m)</label><input type="number" id="grid-size" value="5" min="1" step="1" oninput="redrawGrid()"></div>
+    <div class="snap-row"><label>📏 測定線を表示</label><label class="toggle"><input type="checkbox" id="show-measure" checked="" onchange="toggleLayerVis(&#39;measure&#39;)"><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>📌 補助線を表示</label><label class="toggle"><input type="checkbox" id="show-guide" checked="" onchange="toggleLayerVis(&#39;guide&#39;)"><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🚧 SBゾーンを表示</label><label class="toggle"><input type="checkbox" id="show-sb" checked="" onchange="toggleLayerVis(&#39;sb&#39;)"><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🏷 タイルラベル表示</label><label class="toggle"><input type="checkbox" id="show-label" checked="" onchange="toggleLayerVis(&#39;label&#39;)"><span class="tog-sl"></span></label></div>
+    <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"><span class="slider-val" id="op-val">65%</span></div>
   </div>
   <div class="sb-sec">
     <div class="lbl">配置ツール</div>
-    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">11.12×6.5m</span></button>
-    <button class="tool-btn t-park" id="tool-park" onclick="setTool('unit1f')"><span class="icon">🏠</span><span class="tname">1F住戸</span><span class="tdim" id="dim-unit1f">11.5×6m</span></button>
+    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool('unit')"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">11.5×6m</span></button>
+    <button class="tool-btn t-unit1f" id="tool-unit1f" onclick="setTool('unit1f')"><span class="icon">🏠</span><span class="tname">1F住戸</span><span class="tdim" id="dim-unit1f">11.5×6m</span></button>
     <button class="tool-btn t-mechpark" id="tool-mechpark" onclick="setTool('mechpark')"><span class="icon">🏗</span><span class="tname">機械式P</span><span class="tdim" id="dim-mechpark">12×6.5m</span></button>
     <button class="tool-btn t-park" id="tool-park" onclick="setTool('park')"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
-    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool('stair')"><span class="icon">🪜</span><span class="tname">階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
-    <button class="tool-btn t-elev" id="tool-elev" onclick="setTool('elev')"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
-    <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool('corridor')"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで長さ調整</span></button>
-    <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool('balcony')"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで長さ調整</span></button>
-        <button class="tool-btn t-garden" id="tool-garden" onclick="setTool('garden')"><span class="icon">🌿</span><span class="tname">1F庭</span><span class="tdim" id="dim-garden">6×6m</span></button>
-    <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="garden-w" value="6" step="0.1" min="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="garden-d" value="6" step="0.1" min="0.1" oninput="updateDefs()"/></div></div>
-    <button class="tool-btn t-entrance" id="tool-entrance" onclick="setTool('entrance')"><span class="icon">🚪</span><span class="tname">エントランス</span><span class="tdim" id="dim-entrance">12×15m</span></button>
-    <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="entrance-w" value="12" step="0.1" min="0.1" oninput="updateDefs()"/></div><div class="field"><label>奥行</label><input type="number" id="entrance-d" value="15" step="0.1" min="0.1" oninput="updateDefs()"/></div></div>
+    <button class="tool-btn t-stair" id="tool-stair" onclick="setTool(&#39;stair&#39;)"><span class="icon">🪜</span><span class="tname">階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
+    <button class="tool-btn t-elev" id="tool-elev" onclick="setTool(&#39;elev&#39;)"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
+    <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool(&#39;corridor&#39;)"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで長さ調整</span></button>
+    <button class="tool-btn t-balcony" id="tool-balcony" onclick="setTool(&#39;balcony&#39;)"><span class="icon">🌿</span><span class="tname">バルコニー</span><span class="tdim">端ドラッグで長さ調整</span></button>
+        <button class="tool-btn t-garden" id="tool-garden" onclick="setTool(&#39;garden&#39;)"><span class="icon">🌿</span><span class="tname">1F庭</span><span class="tdim" id="dim-garden">6×6m</span></button>
+    <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="garden-w" value="6" step="0.1" min="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="garden-d" value="6" step="0.1" min="0.1" oninput="updateDefs()"></div></div>
+    <button class="tool-btn t-entrance" id="tool-entrance" onclick="setTool(&#39;entrance&#39;)"><span class="icon">🚪</span><span class="tname">エントランス</span><span class="tdim" id="dim-entrance">12×15m</span></button>
+    <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="entrance-w" value="12" step="0.1" min="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="entrance-d" value="15" step="0.1" min="0.1" oninput="updateDefs()"></div></div>
     <button class="tool-btn t-free" id="tool-free" onclick="openFreeModal()"><span class="icon">✏️</span><span class="tname">フリータイル</span><span class="tdim">名前・サイズ自由</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-select" id="tool-select" onclick="setTool('select')"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
-    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool('measure')"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
-    <button class="tool-btn t-guide" id="tool-guide" onclick="setTool('guide')"><span class="icon">📌</span><span class="tname">補助線</span><span class="tdim">2点クリック</span></button>
+    <button class="tool-btn t-select" id="tool-select" onclick="setTool(&#39;select&#39;)"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
+    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool(&#39;measure&#39;)"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
+    <button class="tool-btn t-guide" id="tool-guide" onclick="setTool(&#39;guide&#39;)"><span class="icon">📌</span><span class="tname">補助線</span><span class="tdim">2点クリック</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
+    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool(&#39;erase&#39;)"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
     <div style="display:flex;gap:4px;margin-top:4px;">
       <button class="btn-sm" style="flex:1;" onclick="clearMeasures()">測定線を全消去</button>
       <button class="btn-sm" style="flex:1;" onclick="clearGuides()">補助線を全消去</button>
@@ -386,17 +380,17 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="rot-btn" id="rot-90" onclick="setRot(90)">90°</button>
       <button class="rot-btn" id="rot-last" onclick="setRotLast()">前回</button>
     </div>
-    <div class="rot-input-row"><input type="number" id="rot-custom" value="0" min="0" max="359" oninput="setRotCustom()"/><span>° 直接入力</span></div>
+    <div class="rot-input-row"><input type="number" id="rot-custom" value="0" min="0" max="359" oninput="setRotCustom()"><span>° 直接入力</span></div>
   </div>
   <div class="sb-sec">
     <div class="lbl">🏢 建物・法規設定</div>
     <div class="row2" style="margin-bottom:6px;">
-      <div class="field"><label>建物階数（全体）</label><input type="number" id="floors-input" value="10" min="2" max="60" step="1" oninput="updateMetrics()"/></div>
-      <div class="field"><label>住戸/F（2F〜）</label><input type="number" id="units-per-floor" value="0" min="0" step="1" style="background:#f0fdf4;" readonly/></div>
+      <div class="field"><label>建物階数（全体）</label><input type="number" id="floors-input" value="10" min="2" max="60" step="1" oninput="updateMetrics()"></div>
+      <div class="field"><label>住戸/F（2F〜）</label><input type="number" id="units-per-floor" value="0" min="0" step="1" style="background:#f0fdf4;" readonly=""></div>
     </div>
     <div class="row2" style="margin-bottom:6px;">
-      <div class="field"><label>階高 (m)</label><input type="number" id="floor-height" value="3" min="2.5" max="5" step="0.1" oninput="updateMetrics()"/></div>
-      <div class="field"><label>前面道路幅 (m)</label><input type="number" id="road-width" value="6" min="4" max="40" step="0.5" oninput="updateMetrics()"/></div>
+      <div class="field"><label>階高 (m)</label><input type="number" id="floor-height" value="3" min="2.5" max="5" step="0.1" oninput="updateMetrics()"></div>
+      <div class="field"><label>前面道路幅 (m)</label><input type="number" id="road-width" value="6" min="4" max="40" step="0.5" oninput="updateMetrics()"></div>
     </div>
     <div class="field">
       <label>用途地域</label>
@@ -413,19 +407,19 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       </select>
     </div>
     <div class="row2">
-      <div class="field"><label>建蔽率上限 (%)</label><input type="number" id="bcr-limit" value="60" min="10" max="100" step="10" oninput="updateMetrics()"/></div>
-      <div class="field"><label>容積率上限 (%)</label><input type="number" id="far-limit" value="200" min="50" max="1300" step="50" oninput="updateMetrics()"/></div>
+      <div class="field"><label>建蔽率上限 (%)</label><input type="number" id="bcr-limit" value="60" min="10" max="100" step="10" oninput="updateMetrics()"></div>
+      <div class="field"><label>容積率上限 (%)</label><input type="number" id="far-limit" value="200" min="50" max="1300" step="50" oninput="updateMetrics()"></div>
     </div>
     <div class="row2">
-      <div class="field"><label>北側斜線勾配</label><input type="number" id="north-slope" value="1.25" min="0" max="3" step="0.25" oninput="updateMetrics()"/></div>
-      <div class="field"><label>道路斜線係数</label><input type="number" id="road-slope" value="1.5" min="0.6" max="2.5" step="0.1" oninput="updateMetrics()"/></div>
+      <div class="field"><label>北側斜線勾配</label><input type="number" id="north-slope" value="1.25" min="0" max="3" step="0.25" oninput="updateMetrics()"></div>
+      <div class="field"><label>道路斜線係数</label><input type="number" id="road-slope" value="1.5" min="0.6" max="2.5" step="0.1" oninput="updateMetrics()"></div>
     </div>
-    <div id="legal-check" style="margin-top:5px;"></div>
-    <div id="ratio-display" style="margin-top:4px;"></div>
+    <div id="legal-check" style="margin-top:5px;"><div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:5px 8px;margin-bottom:4px;"><div style="font-size:9px;font-weight:700;color:#dc2626;margin-bottom:2px;">⚠ 法規確認事項</div><div style="font-size:9px;color:#7f1d1d;margin-bottom:1px;">⚠ 道路斜線超過: 建物高さ30.0m &gt; 制限9.0m （道路幅6m×1.5）</div><div style="font-size:9px;color:#7f1d1d;margin-bottom:1px;">⚠ 北側斜線超過の可能性: 高さ30.0m &gt; 制限≒5.0m（隣地SB0m含む）</div></div><div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 8px;"><div style="font-size:9px;font-weight:700;color:#166534;margin-bottom:2px;">📋 法規メモ</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">✓ 前面道路幅 6m（接道OK）</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">📐 道路斜線 SB別許容高さ: SB0m→9.0m / SB1m→12.0m / SB2m→15.0m / SB3m→18.0m / SB4m→21.0m / SB5m→24.0m</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">📐 北側斜線 SB別許容高さ: SB0m→5.0m / SB0.5m→5.6m / SB1m→6.3m / SB2m→7.5m / SB3m→8.8m / SB4m→10.0m / SB5m→11.3m</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">✓ 高さ30m以上: 非常用昇降機（EV）設置義務あり（法34条）</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">✓ 高さ20m超相当: 避雷針設置義務（法33条）</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">✓ 隣地境界から50cm以上の離隔確保（民法234条）が必要</div><div style="font-size:9px;color:#166534;margin-bottom:1px;">✓ 共同住宅: 防火区画・2方向避難路・各住戸採光1/7以上（法28条）</div></div></div>
+    <div id="ratio-display" style="margin-top:4px;"><div style="font-size:10px;color:var(--text3);margin-top:3px;">敷地ポリゴンを描くと建蔽率・容積率・駐車場率を表示</div></div>
   </div>
   <div class="sb-sec">
     <div class="lbl">📊 配置サマリー</div>
-    <div class="metrics-grid" id="metrics"></div>
+    <div class="metrics-grid" id="metrics"><div class="mc"><div class="ml">建物高さ</div><div class="mv">30<span class="mu">m</span></div></div><div class="mc"><div class="ml">総戸数(2F〜10F)</div><div class="mv">0<span class="mu">戸</span></div></div><div class="mc"><div class="ml">駐車場</div><div class="mv">0<span class="mu">台</span></div></div><div class="mc"><div class="ml">駐車場率</div><div class="mv" style="color:#d97706;">0<span class="mu">%</span></div></div><div class="mc"><div class="ml">住戸延床(2F〜)</div><div class="mv">0<span class="mu">㎡</span></div></div><div class="mc"><div class="ml">建築面積</div><div class="mv">0<span class="mu">㎡</span></div></div></div>
     <div class="hint" style="margin-top:6px;">Ctrl+Z 元に戻す | Ctrl+C/V コピペ | Del 削除 | 矢印キー移動 | ESC パンモード</div>
   </div>
   <div class="sb-foot">
@@ -434,20 +428,19 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
       <button class="foot-btn" onclick="doCopy()">📋 コピー</button>
       <button class="foot-btn" onclick="doPaste()">📌 貼付け</button>
       <button class="foot-btn danger" onclick="clearAll()">🗑 全削除</button>
-      <button class="foot-btn" onclick="open3DPreview()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;">🧊 3Dプレビュー</button>
     </div>
 
     <div class="foot-btns" style="margin-top:5px;">
-      <button class="foot-btn" id="btn-legal-check" onclick="showLegalModal()" style="background:#2563eb;color:#fff;font-weight:700;width:100%;margin-top:4px;">⚖ 法規確認</button>
+      <button class="foot-btn" id="btn-legal-check" onclick="showLegalModal()" style="background:#2563eb;color:#fff;font-weight:700;">⚖ 法規確認</button>
     </div>
     <!-- セーブ・ロード -->
     <div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
       <div class="lbl">💾 プロジェクト保存 / 読み込み</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
         <button class="foot-btn" onclick="saveProject()" style="background:#16a34a;color:#fff;font-weight:700;border-color:#16a34a;">💾 保存</button>
-        <button class="foot-btn" onclick="document.getElementById('load-input').click()" style="background:#7c3aed;color:#fff;font-weight:700;border-color:#7c3aed;">📂 読み込み</button>
+        <button class="foot-btn" onclick="document.getElementById(&#39;load-input&#39;).click()" style="background:#7c3aed;color:#fff;font-weight:700;border-color:#7c3aed;">📂 読み込み</button>
       </div>
-      <input type="file" id="load-input" accept=".json" style="display:none;" onchange="loadProject(event)"/>
+      <input type="file" id="load-input" accept=".json" style="display:none;" onchange="loadProject(event)">
       <div style="font-size:9px;color:#a8a49e;margin-top:3px;text-align:center;">JSONファイルで全データを保存・復元</div>
     </div>
   </div>
@@ -455,94 +448,28 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 <div id="canvas-wrap">
   <div id="drop-hint"><div class="icon">📄</div><div class="text">PDF地図をここにドロップ</div><div class="sub">縮尺図面を読み込んでタイルを配置できます</div></div>
   <canvas id="map-canvas"></canvas>
-  <svg id="tile-svg"></svg>
+  <svg id="tile-svg"><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
   <div id="mode-badge" class="pan">地図パンモード</div>
   <div id="sel-bar"></div>
-  <div id="hud">1m=<span id="hud-ppm">-</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
+  <div id="hud">1m=<span id="hud-ppm">10.0</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
   <div id="shortcut-hint">Ctrl+Z 元に戻す | Ctrl+C/V コピペ<br>矢印キー移動 | Del 削除 | ESC パンモード</div>
 </div>
 <div id="free-modal">
   <div id="free-modal-inner">
     <h3>✏️ フリータイル設定</h3>
-    <input type="text" id="free-name" placeholder="名前（例: 管理室）" maxlength="10"/>
-    <div class="row2"><div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.1" min="0.1"/></div><div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.1" min="0.1"/></div></div>
+    <input type="text" id="free-name" placeholder="名前（例: 管理室）" maxlength="10">
+    <div class="row2"><div class="field"><label>幅 (m)</label><input type="number" id="free-w" value="4" step="0.1" min="0.1"></div><div class="field"><label>奥行 (m)</label><input type="number" id="free-d" value="4" step="0.1" min="0.1"></div></div>
     <div class="modal-btns"><button class="modal-cancel" onclick="closeFreeModal()">キャンセル</button><button class="modal-ok" onclick="confirmFreeModal()">配置開始</button></div>
   </div>
 </div>
 
 
-<div id="print-preview-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;">
-  <div style="background:#fff;border-radius:14px;padding:20px 24px;width:900px;max-width:97vw;margin:16px auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h2 style="font-size:16px;font-weight:800;">🖨️ 印刷プレビュー</h2>
-      <button onclick="closePrintPreview()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b6760;">✕</button>
-    </div>
-    <div style="display:flex;gap:16px;">
-      <!-- 左: 地図プレビュー -->
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:10px;color:#6b6760;margin-bottom:4px;">📍 地図プレビュー</div>
-        <img id="pp-map-preview" style="width:100%;border:1px solid #e0dbd4;border-radius:6px;" src=""/>
-      </div>
-      <!-- 右: 編集パネル -->
-      <div style="width:300px;flex-shrink:0;overflow-y:auto;max-height:70vh;">
-        <!-- タイトル -->
-        <div style="margin-bottom:10px;">
-          <div style="font-size:10px;color:#6b6760;margin-bottom:3px;font-weight:700;">📋 書類タイトル</div>
-          <input id="pp-title" type="text" value="敷地配置計画書" style="width:100%;height:32px;padding:0 8px;border:1px solid #e0dbd4;border-radius:6px;font-size:12px;font-weight:700;outline:none;"/>
-        </div>
-        <!-- 数値編集 -->
-        <div style="font-size:10px;color:#6b6760;font-weight:700;margin-bottom:6px;">✏️ 数値を修正</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">
-          <div><label style="font-size:9px;color:#a8a49e;">敷地面積(㎡)</label><input id="pp-site" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">建物階数(F)</label><input id="pp-floors" type="number" min="1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">住戸専有(㎡/戸)</label><input id="pp-unit-area" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">総戸数(戸)</label><input id="pp-units" type="number" min="1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">駐車台数(台)</label><input id="pp-park" type="number" min="0" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">駐車場率(%)</label><input id="pp-park-rate" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">建蔽率(%)</label><input id="pp-bcr" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">建蔽率上限(%)</label><input id="pp-bcr-limit" type="number" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">容積率(%)</label><input id="pp-far" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">容積率上限(%)</label><input id="pp-far-limit" type="number" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">建物高さ(m)</label><input id="pp-height" type="number" step="0.1" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-          <div><label style="font-size:9px;color:#a8a49e;">前面道路幅(m)</label><input id="pp-road" type="number" step="0.5" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;font-weight:700;outline:none;"/></div>
-        </div>
-        <div style="margin-bottom:8px;">
-          <label style="font-size:9px;color:#a8a49e;">用途地域</label>
-          <input id="pp-zone" type="text" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:12px;outline:none;"/>
-        </div>
-        <div style="margin-bottom:10px;">
-          <label style="font-size:9px;color:#a8a49e;">セットバック</label>
-          <input id="pp-sb" type="text" style="width:100%;height:28px;padding:0 6px;border:1px solid #e0dbd4;border-radius:5px;font-size:11px;outline:none;"/>
-        </div>
-        <!-- 表示項目 -->
-        <div style="font-size:10px;color:#6b6760;font-weight:700;margin-bottom:6px;">👁 表示する項目</div>
-        <div style="background:#f8f7f4;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
-          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-bcr" checked/> 建蔽率</label>
-          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-far" checked/> 容積率</label>
-          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-park" checked/> 駐車場台数・駐車場率</label>
-          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-height" checked/> 建物高さ</label>
-          <label style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-sb" checked/> セットバック</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;"><input type="checkbox" id="pp-show-memo"/> 備考欄</label>
-        </div>
-        <!-- 備考 -->
-        <div style="margin-bottom:14px;">
-          <label style="font-size:9px;color:#a8a49e;">備考・注記</label>
-          <textarea id="pp-memo" rows="3" placeholder="備考・注記を入力..." style="width:100%;padding:6px 8px;border:1px solid #e0dbd4;border-radius:5px;font-size:11px;outline:none;resize:vertical;font-family:inherit;"></textarea>
-        </div>
-        <!-- 印刷ボタン -->
-        <button onclick="executePrint()" style="width:100%;height:40px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:800;">🖨️ 印刷実行（A3横）</button>
-      </div>
-    </div>
-  </div>
-</div>
 <div id="edge-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:14px;padding:20px 22px;width:300px;box-shadow:0 8px 40px rgba(0,0,0,.25);">
     <div style="font-size:14px;font-weight:800;margin-bottom:4px;">📐 辺長を編集</div>
     <div id="edge-modal-info" style="font-size:11px;color:#6b6760;margin-bottom:12px;"></div>
     <label style="font-size:11px;color:#6b6760;display:block;margin-bottom:4px;">新しい長さ (m)</label>
-    <input type="number" id="edge-modal-len" min="0.5" step="0.1"
-      style="width:100%;height:36px;padding:0 10px;font-size:14px;border:1.5px solid #2563eb;border-radius:8px;margin-bottom:6px;outline:none;box-sizing:border-box;"
-      onkeydown="if(event.key==='Enter')confirmEdgeModal()"/>
+    <input type="number" id="edge-modal-len" min="0.5" step="0.1" style="width:100%;height:36px;padding:0 10px;font-size:14px;border:1.5px solid #2563eb;border-radius:8px;margin-bottom:6px;outline:none;box-sizing:border-box;" onkeydown="if(event.key===&#39;Enter&#39;)confirmEdgeModal()">
     <div style="font-size:10px;color:#a8a49e;margin-bottom:14px;">辺の方向を維持したまま終点を移動します</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <button onclick="closeEdgeModal()" style="height:36px;border:1px solid #e0dbd4;background:#f8f7f4;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">キャンセル</button>
@@ -556,17 +483,41 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div id="sb-modal-info" style="font-size:11px;color:#6b6760;margin-bottom:10px;"></div>
     <div style="font-size:11px;margin-bottom:4px;">種別:</div>
     <div style="display:flex;gap:6px;margin-bottom:10px;">
-      <button id="sbm-road" onclick="sbmType('road')" style="flex:1;height:32px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;border:2px solid #ef4444;background:#fef2f2;color:#dc2626;">🛣 道路</button>
-      <button id="sbm-nb" onclick="sbmType('neighbor')" style="flex:1;height:32px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;border:2px solid #f59e0b;background:#fffbeb;color:#d97706;">🏘 隣地</button>
+      <button id="sbm-road" onclick="sbmType(&#39;road&#39;)" style="flex:1;height:32px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;border:2px solid #ef4444;background:#fef2f2;color:#dc2626;">🛣 道路</button>
+      <button id="sbm-nb" onclick="sbmType(&#39;neighbor&#39;)" style="flex:1;height:32px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;border:2px solid #f59e0b;background:#fffbeb;color:#d97706;">🏘 隣地</button>
     </div>
     <div style="font-size:11px;margin-bottom:4px;">距離 (m):</div>
-    <input type="number" id="sb-modal-dist" value="2" min="0" step="0.1" style="width:100%;height:32px;padding:0 10px;font-size:13px;border:1px solid #e0dbd4;border-radius:7px;margin-bottom:12px;outline:none;"/>
+    <input type="number" id="sb-modal-dist" value="2" min="0" step="0.1" style="width:100%;height:32px;padding:0 10px;font-size:13px;border:1px solid #e0dbd4;border-radius:7px;margin-bottom:12px;outline:none;">
     <div style="display:flex;gap:8px;">
       <button onclick="closeSbModal()" style="flex:1;height:34px;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;background:#f0ede8;color:#6b6760;border:1px solid #e0dbd4;">キャンセル</button>
       <button onclick="confirmSbModal()" style="flex:1;height:34px;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;background:#7c3aed;color:#fff;border:none;">確定</button>
     </div>
   </div>
 </div>
+</div>
+
+<!-- タイルサイズ変更モーダル -->
+<div id="tile-resize-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:22px;width:300px;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px;">📐 タイルサイズ変更</div>
+    <div id="tile-resize-info" style="font-size:11px;color:#6b6760;margin-bottom:12px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div>
+        <label style="font-size:11px;color:#6b6760;display:block;margin-bottom:3px;">幅 (m)</label>
+        <input type="number" id="tile-resize-w" min="0.5" step="0.1" style="width:100%;height:34px;padding:0 8px;font-size:14px;border:1.5px solid #2563eb;border-radius:8px;outline:none;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b6760;display:block;margin-bottom:3px;">奥行 (m)</label>
+        <input type="number" id="tile-resize-d" min="0.5" step="0.1" style="width:100%;height:34px;padding:0 8px;font-size:14px;border:1.5px solid #2563eb;border-radius:8px;outline:none;box-sizing:border-box;">
+      </div>
+    </div>
+    <div style="font-size:10px;color:#a8a49e;margin-bottom:14px;">※ このタイルのみ変更します。他のタイルには影響しません。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+      <button onclick="closeTileResizeModal()" style="height:36px;border:1px solid #e0dbd4;background:#f8f7f4;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;">キャンセル</button>
+      <button onclick="resetTileSize()" style="height:36px;border:1px solid #fca5a5;background:#fef2f2;color:#dc2626;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;">デフォに戻す</button>
+      <button onclick="confirmTileResizeModal()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;">確定</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -802,9 +753,9 @@ wrap.addEventListener('click',function(e){
   var snapped=trySnap(cx,cy,currentTool,currentRot,null);
   if(snapped){cx=snapped.cx;cy=snapped.cy;}
   if(document.getElementById('overlap-toggle').checked&&checkOverlap(cx,cy,currentTool,currentRot,null)){showFlash(cx,cy);return;}
-  // 住戸のみセットバックチェック
-  if(currentTool==='unit'&&polyDone&&setbacks.length>0){
-    var d=DEFS.unit;
+  // 住戸・1F住戸はセットバックゾーンに配置不可
+  if((currentTool==='unit'||currentTool==='unit1f')&&polyDone&&setbacks.length>0){
+    var d=DEFS[currentTool];
     if(inSetbackZone(cx,cy,d.w*ppm,d.d*ppm,currentRot)){showSbFlash(cx,cy);return;}
   }
   saveTileHistory();createTile(cx,cy,currentTool,currentRot);lastRot=currentRot;setRot(currentRot);
@@ -861,7 +812,7 @@ function redrawGrid(){clearEl(gridG);if(!showGrid||ppm<=0)return;var gm=parseFlo
 function trySnap(cx,cy,type,rot,self){
   if(!document.getElementById('snap-toggle').checked)return null;
   var def=self?getTileDef(self):DEFS[type];
-  var pw=(self&&self.rW?self.rW:def.w)*ppm,ph=def.d*ppm;
+  var pw=def.w*ppm,ph=def.d*ppm;
   var thresh=Math.max(SNAP_DIST,ppm*2);
   var best=null,bestD=thresh;
 
@@ -905,7 +856,7 @@ function trySnap(cx,cy,type,rot,self){
   // 同種・同角度のタイルには距離ボーナス（より強く引き寄せる）
   tiles.forEach(function(t){
     if(t===self)return;
-    var td=getTileDef(t),tpw=(t.rW?t.rW:td.w)*ppm,tph=td.d*ppm;
+    var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
     var r=t.rot*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r);
     function rot2(x,y){return{x:x*cos-y*sin+t.cx,y:x*sin+y*cos+t.cy};}
     // 同種・同角度なら隣接候補を優先（閾値を1.5倍に拡大）
@@ -917,7 +868,7 @@ function trySnap(cx,cy,type,rot,self){
     ];
     // 同種なら pw/ph の代わりに tpw/tph を使って「隙間なし」を実現
     if(sameKind){
-      var sPw=(self&&self.rW?self.rW:pw),sPh=ph;
+      var sPw=pw,sPh=ph;
       cands=[
         rot2(0,-(tph/2+sPh/2)),rot2(0,(tph/2+sPh/2)),
         rot2(-(tpw/2+sPw/2),0),rot2((tpw/2+sPw/2),0)
@@ -984,7 +935,10 @@ function trySnap(cx,cy,type,rot,self){
   return best;
 }
 function checkOverlap(cx,cy,type,rot,excl){
-  var def=DEFS[type],pw=def.w*ppm,ph=def.d*ppm;
+  var def=Object.assign({},DEFS[type]);
+  // 新規配置時はDEFS値をそのまま使う（excl=nullの場合）
+  // 既存タイルのcustomW/Dは getTileDef で解決済み
+  var pw=def.w*ppm,ph=def.d*ppm;
   for(var i=0;i<tiles.length;i++){
     var t=tiles[i];if(t===excl)continue;
     var td=getTileDef(t),tpw=td.w*ppm,tph=td.d*ppm;
@@ -997,7 +951,7 @@ function showFlash(cx,cy){clearEl(snapG);snapG.appendChild(mkS('circle',{cx:cx,c
 // ── 履歴 ──
 function saveTileHistory(){
   tileHistory.push({
-    tiles:tiles.map(function(t){return{cx:t.cx,cy:t.cy,type:t.type,rot:t.rot,rW:t.rW,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null};}),
+    tiles:tiles.map(function(t){return{cx:t.cx,cy:t.cy,type:t.type,rot:t.rot,rW:t.rW,customW:t.customW,customD:t.customD,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null};}),
     measures:measureLines.map(function(m){return{pts:[{x:m.pts[0].x,y:m.pts[0].y},{x:m.pts[1].x,y:m.pts[1].y}],dist:m.dist};})
   });
   if(tileHistory.length>50)tileHistory.shift();
@@ -1007,7 +961,7 @@ function doUndo(){
   tiles.slice().forEach(function(t){t.g.remove();var p=document.getElementById('HP'+t.id);if(p)p.remove();});
   tiles=[];selectedTile=null;selectedTiles=[];groupLocked=false;
   var state=tileHistory.pop();
-  state.tiles.forEach(function(s){var tmp=null;if(s.freeConfig){tmp=freeConfig;freeConfig=s.freeConfig;}var t=createTileInternal(s.cx,s.cy,s.type,s.rot);if(s.rW!==undefined)t.rW=s.rW;if(tmp)freeConfig=tmp;reposTile(t);});
+  state.tiles.forEach(function(s){var tmp=null;if(s.freeConfig){tmp=freeConfig;freeConfig=s.freeConfig;}var t=createTileInternal(s.cx,s.cy,s.type,s.rot);if(s.rW!==undefined)t.rW=s.rW;if(s.customW!==undefined&&s.customW!==null)t.customW=s.customW;if(s.customD!==undefined&&s.customD!==null)t.customD=s.customD;if(tmp)freeConfig=tmp;reposTile(t);});
   if(state.measures){measureLines=state.measures;redrawMeasure();}
   updateMetrics();updateSelBar();
 }
@@ -1020,6 +974,9 @@ function getTileDef(t){
   var def=Object.assign({},DEFS[t.type]);
   if(t.type==='free'&&t.freeConfig){def.w=t.freeConfig.w;def.d=t.freeConfig.d;def.label=t.freeConfig.name;}
   if((t.type==='corridor'||t.type==='balcony')&&t.rW!==undefined)def.w=t.rW;
+  // 個別サイズ上書き（サイズ変更機能）
+  if(t.customW!==undefined&&t.customW!==null)def.w=t.customW;
+  if(t.customD!==undefined&&t.customD!==null)def.d=t.customD;
   return def;
 }
 
@@ -1201,8 +1158,8 @@ function setupMove(el,tile){
       var ncx=scxs[0].cx+dx,ncy=scxs[0].cy+dy;
       var sn=trySnap(ncx,ncy,tile.type,tile.rot,tile);
       if(sn){ncx=sn.cx;ncy=sn.cy;}
-      // 住戸はセットバックゾーンに入れない（ドラッグ中も）
-      if(tile.type==='unit'&&polyDone&&setbacks.length>0){
+      // 住戸・1F住戸はセットバックゾーンに入れない（ドラッグ中も）
+      if((tile.type==='unit'||tile.type==='unit1f')&&polyDone&&setbacks.length>0){
         var def=getTileDef(tile);
         if(inSetbackZone(ncx,ncy,def.w*ppm,def.d*ppm,tile.rot)){
           // 元の位置をキープ
@@ -1268,10 +1225,61 @@ function updateSelBar(){
   if(selectedTiles.length>0){
     bar.style.display='block';
     var lockTxt=groupLocked?'🔒 グループ解除':'🔓 グループ化';
-    bar.innerHTML=selectedTiles.length+'個選択中 &nbsp;<button onclick="toggleGroup()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.6);color:#fff;padding:2px 10px;border-radius:10px;cursor:pointer;font-size:10px;font-weight:700;">'+lockTxt+'</button>';
+    var resizeBtn='';
+    if(selectedTiles.length===1){
+      var t=selectedTiles[0];
+      var def=getTileDef(t);
+      var hasCustom=(t.customW!==undefined&&t.customW!==null)||(t.customD!==undefined&&t.customD!==null);
+      var sizeLabel=def.w.toFixed(1)+'×'+def.d.toFixed(1)+'m'+(hasCustom?' ✏':'');
+      resizeBtn='<button onclick="openTileResizeModal()" style="background:rgba(37,99,235,0.35);border:1px solid rgba(37,99,235,0.7);color:#fff;padding:2px 10px;border-radius:10px;cursor:pointer;font-size:10px;font-weight:700;">📐 サイズ変更 '+sizeLabel+'</button> ';
+    }
+    bar.innerHTML=selectedTiles.length+'個選択中 &nbsp;'+resizeBtn+'<button onclick="toggleGroup()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.6);color:#fff;padding:2px 10px;border-radius:10px;cursor:pointer;font-size:10px;font-weight:700;">'+lockTxt+'</button>';
   } else {bar.style.display='none';}
 }
 function toggleGroup(){groupLocked=!groupLocked;updateSelBar();}
+
+// ── タイルサイズ変更モーダル ──
+var _resizingTile=null;
+function openTileResizeModal(){
+  if(!selectedTiles||selectedTiles.length!==1)return;
+  _resizingTile=selectedTiles[0];
+  var def=getTileDef(_resizingTile);
+  var modal=document.getElementById('tile-resize-modal');
+  document.getElementById('tile-resize-info').textContent=def.label+' の個別サイズを変更します';
+  document.getElementById('tile-resize-w').value=def.w.toFixed(1);
+  document.getElementById('tile-resize-d').value=def.d.toFixed(1);
+  modal.style.display='flex';
+  document.getElementById('tile-resize-w').focus();
+}
+function closeTileResizeModal(){
+  document.getElementById('tile-resize-modal').style.display='none';
+  _resizingTile=null;
+}
+function confirmTileResizeModal(){
+  if(!_resizingTile)return;
+  var w=parseFloat(document.getElementById('tile-resize-w').value);
+  var d=parseFloat(document.getElementById('tile-resize-d').value);
+  if(isNaN(w)||w<0.5||isNaN(d)||d<0.5){alert('0.5m以上の値を入力してください');return;}
+  saveTileHistory();
+  _resizingTile.customW=w;
+  _resizingTile.customD=d;
+  reposTile(_resizingTile);
+  updateMetrics();
+  closeTileResizeModal();
+  updateSelBar();
+  showToast('resize-ok','ok','サイズを変更しました',w+'×'+d+'m に変更','他のタイルには影響しません');
+}
+function resetTileSize(){
+  if(!_resizingTile)return;
+  saveTileHistory();
+  _resizingTile.customW=null;
+  _resizingTile.customD=null;
+  reposTile(_resizingTile);
+  updateMetrics();
+  closeTileResizeModal();
+  updateSelBar();
+  showToast('resize-reset','info','デフォルトサイズに戻しました','','');
+}
 
 // ── グループ管理 ──
 function getGroupOfTile(tile){
@@ -1323,205 +1331,10 @@ function selectGroup(groupId){
   updateSelBar();
 }
 
-function doCopy(){if(selectedTiles.length===0){alert('先にタイルを選択してください');return;}copiedTiles=selectedTiles.map(function(t){return{type:t.type,rot:t.rot,cx:t.cx,cy:t.cy,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null,rW:t.rW};});document.getElementById('hud-extra').textContent=copiedTiles.length+'個コピー済み';}
-function doPaste(){if(copiedTiles.length===0){alert('先にタイルをコピーしてください');return;}saveTileHistory();selectedTiles=[];copiedTiles.forEach(function(c){var tmp=null;if(c.freeConfig){tmp=freeConfig;freeConfig=c.freeConfig;}var t=createTile(c.cx+20/canvasZoom,c.cy+20/canvasZoom,c.type,c.rot);if(c.rW!==undefined)t.rW=c.rW;if(tmp)freeConfig=tmp;selectedTiles.push(t);reposTile(t);});updateSelBar();}
+function doCopy(){if(selectedTiles.length===0){alert('先にタイルを選択してください');return;}copiedTiles=selectedTiles.map(function(t){return{type:t.type,rot:t.rot,cx:t.cx,cy:t.cy,freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null,rW:t.rW,customW:t.customW,customD:t.customD};});document.getElementById('hud-extra').textContent=copiedTiles.length+'個コピー済み';}
+function doPaste(){if(copiedTiles.length===0){alert('先にタイルをコピーしてください');return;}saveTileHistory();selectedTiles=[];copiedTiles.forEach(function(c){var tmp=null;if(c.freeConfig){tmp=freeConfig;freeConfig=c.freeConfig;}var t=createTile(c.cx+20/canvasZoom,c.cy+20/canvasZoom,c.type,c.rot);if(c.rW!==undefined)t.rW=c.rW;if(c.customW!==undefined&&c.customW!==null)t.customW=c.customW;if(c.customD!==undefined&&c.customD!==null)t.customD=c.customD;if(tmp)freeConfig=tmp;selectedTiles.push(t);reposTile(t);});updateSelBar();}
 
-function printCanvas(){
-  openPrintPreview();
-}
 
-// ================================================================
-// 印刷プレビュー
-// ================================================================
-function openPrintPreview(){
-  // 現在の計算値を収集
-  var totalFloors=Math.max(2,parseInt(document.getElementById('floors-input').value)||10);
-  var resFloors=totalFloors-1;
-  var floorH=parseFloat(document.getElementById('floor-height').value)||3;
-  var buildingH=totalFloors*floorH;
-  var roadW=parseFloat(document.getElementById('road-width').value)||6;
-  var bcrLimit=parseFloat(document.getElementById('bcr-limit').value)||60;
-  var farLimit=parseFloat(document.getElementById('far-limit').value)||200;
-  var zoneEl=document.getElementById('zone-preset');
-  var zoneName=zoneEl?zoneEl.options[zoneEl.selectedIndex].text:'';
-  var u=0,p=0,uA=0,bA=0;
-  tiles.forEach(function(t){
-    var def=getTileDef(t);
-    if(t.type==='unit'){u++;uA+=(t.rW||def.w)*def.d;}
-    if(t.type==='park'){p++;}
-    else{bA+=(t.rW||def.w)*def.d;}
-  });
-  var floorUnitsPerF=parseInt(document.getElementById('units-per-floor').value)||0;
-  var totalUnits=floorUnitsPerF>0?floorUnitsPerF*resFloors:u*resFloors;
-  var siteAreaM2=overrideArea!=null?overrideArea:(polyDone?calcPolyArea()/ppm/ppm:0);
-  var siteAreaTsubo=siteAreaM2/3.30579;
-  var bcr=siteAreaM2>0?uA/siteAreaM2*100:0;
-  var floorArea=uA*resFloors;
-  var far=siteAreaM2>0?floorArea/siteAreaM2*100:0;
-  var parkRate=totalUnits>0?Math.round(p/totalUnits*100):0;
-  var bcrConsume=bcrLimit>0?Math.round(bcr/bcrLimit*100):0;
-  var farConsume=farLimit>0?Math.round(far/farLimit*100):0;
-  var sbLines='なし';
-  if(setbacks.length>0&&polyPts.length>0){
-    sbLines=setbacks.map(function(s){
-      var ej=(s.edge+1)%polyPts.length;
-      var len=(Math.sqrt(Math.pow(polyPts[ej].x-polyPts[s.edge].x,2)+Math.pow(polyPts[ej].y-polyPts[s.edge].y,2))/ppm).toFixed(1);
-      return (s.edge+1)+'辺('+len+'m):'+(s.type==='road'?'道路':'隣地')+s.dist+'m';
-    }).join(' / ');
-  }
-
-  // モーダルに初期値をセット
-  document.getElementById('pp-title').value='敷地配置計画書';
-  document.getElementById('pp-site').value=siteAreaM2.toFixed(1);
-  document.getElementById('pp-floors').value=totalFloors;
-  document.getElementById('pp-units').value=totalUnits;
-  document.getElementById('pp-park').value=p;
-  document.getElementById('pp-park-rate').value=parkRate;
-  document.getElementById('pp-bcr').value=bcr.toFixed(1);
-  document.getElementById('pp-bcr-limit').value=bcrLimit;
-  document.getElementById('pp-far').value=far.toFixed(1);
-  document.getElementById('pp-far-limit').value=farLimit;
-  document.getElementById('pp-height').value=buildingH.toFixed(0);
-  document.getElementById('pp-road').value=roadW;
-  document.getElementById('pp-zone').value=zoneName;
-  document.getElementById('pp-sb').value=sbLines;
-  document.getElementById('pp-unit-area').value=Math.round(DEFS.unit.w*DEFS.unit.d);
-  document.getElementById('pp-memo').value='';
-
-  document.getElementById('print-preview-modal').classList.add('show');
-
-  // 地図キャプチャ
-  _captureToPrintPreview();
-}
-
-function _captureToPrintPreview(){
-  var wrapRect=wrap.getBoundingClientRect();
-  var outW=Math.round(wrapRect.width),outH=Math.round(wrapRect.height);
-  var dpr=Math.min(window.devicePixelRatio||1,2);
-  var out=document.createElement('canvas');
-  out.width=outW*dpr;out.height=outH*dpr;
-  var c=out.getContext('2d');c.scale(dpr,dpr);
-  c.fillStyle='#ffffff';c.fillRect(0,0,outW,outH);
-  if(pdfLoaded&&mapCanvas.width>0){
-    c.save();c.translate(panX,panY);c.scale(canvasZoom,canvasZoom);
-    c.drawImage(mapCanvas,0,0);c.restore();
-  }
-  var saved=svg.style.transform;
-  svg.style.transform='';
-  svg.setAttribute('transform','translate('+panX+','+panY+') scale('+canvasZoom+')');
-  var svgData=new XMLSerializer().serializeToString(svg);
-  svg.style.transform=saved;svg.removeAttribute('transform');
-  var blob=new Blob([svgData],{type:'image/svg+xml;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var img=new Image();
-  function done(){
-    URL.revokeObjectURL(url);
-    var dataUrl=out.toDataURL('image/png');
-    document.getElementById('pp-map-preview').src=dataUrl;
-    window._printMapDataUrl=dataUrl;
-    window._printMapAspect=outW/outH;
-  }
-  img.onload=function(){try{c.drawImage(img,0,0,outW,outH);}catch(ex){}done();};
-  img.onerror=function(){done();};
-  img.src=url;
-}
-
-function closePrintPreview(){
-  document.getElementById('print-preview-modal').classList.remove('show');
-}
-
-function executePrint(){
-  var title=document.getElementById('pp-title').value||'敷地配置計画書';
-  var now=new Date();
-  var dateStr=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
-
-  // 表示項目を収集
-  var showBcr=document.getElementById('pp-show-bcr').checked;
-  var showFar=document.getElementById('pp-show-far').checked;
-  var showPark=document.getElementById('pp-show-park').checked;
-  var showHeight=document.getElementById('pp-show-height').checked;
-  var showSb=document.getElementById('pp-show-sb').checked;
-  var showMemo=document.getElementById('pp-show-memo').checked;
-  var memo=document.getElementById('pp-memo').value;
-
-  function row(label,val,unit,show){
-    if(!show)return '';
-    return '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;">'+label+'</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+val+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">'+unit+'</span></td></tr>';
-  }
-  function rowEdit(id,label,unit,show){
-    if(!show)return '';
-    var val=document.getElementById(id).value;
-    return row(label,val,unit,true);
-  }
-
-  var tableRows=
-    '<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">敷地面積</td>'+
-    '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-site').value+'<span style="font-size:10px;font-weight:400;color:#6b6760;margin-left:2px;">㎡</span></td></tr>'+
-    row('建物階数',document.getElementById('pp-floors').value,'F',true)+
-    row('住戸専有面積',document.getElementById('pp-unit-area').value,'㎡/戸',true)+
-    row('総戸数',document.getElementById('pp-units').value,'戸',true)+
-    rowEdit('pp-park','駐車場台数','台',showPark)+
-    rowEdit('pp-park-rate','駐車場率','%',showPark)+
-    rowEdit('pp-height','建物高さ','m',showHeight)+
-    row('前面道路幅',document.getElementById('pp-road').value,'m',true)+
-    row('用途地域',document.getElementById('pp-zone').value,'',true);
-
-  if(showBcr){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">建蔽率</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-bcr').value+
-      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-bcr-limit').value+'%)</span></td></tr>';
-  }
-  if(showFar){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;">容積率</td>'+
-      '<td style="padding:5px 8px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-far').value+
-      '<span style="font-size:10px;font-weight:400;color:#6b6760;"> % (上限'+document.getElementById('pp-far-limit').value+'%)</span></td></tr>';
-  }
-  if(showSb){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">セットバック</td>'+
-      '<td style="padding:5px 8px;font-size:10px;font-weight:600;border-bottom:1px solid #f0f0f0;">'+document.getElementById('pp-sb').value+'</td></tr>';
-  }
-  if(showMemo&&memo){
-    tableRows+='<tr><td style="padding:5px 8px;color:#6b6760;font-size:10px;border-bottom:1px solid #f0f0f0;vertical-align:top;">備考</td>'+
-      '<td style="padding:5px 8px;font-size:10px;border-bottom:1px solid #f0f0f0;white-space:pre-wrap;">'+memo+'</td></tr>';
-  }
-
-  var pw=window.open('','_blank');
-  pw.document.write(
-    '<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
-    '<style>'+
-    '@page{size:A3 landscape;margin:10mm;}'+
-    '*{box-sizing:border-box;margin:0;padding:0;}'+
-    'body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#fff;color:#1a1814;}'+
-    '.wrap{display:flex;width:297mm;height:207mm;gap:6mm;}'+
-    '.map-col{flex:1;min-width:0;display:flex;flex-direction:column;}'+
-    '.map-col img{flex:1;width:100%;object-fit:contain;border:1px solid #ddd;border-radius:3px;}'+
-    '.side{width:72mm;flex-shrink:0;display:flex;flex-direction:column;gap:4mm;}'+
-    '.header{border-bottom:3px solid #2563eb;padding-bottom:3mm;}'+
-    '.header h1{font-size:14px;font-weight:800;color:#1a1814;margin-bottom:1mm;}'+
-    '.header .date{font-size:9px;color:#6b6760;}'+
-    '.data-table{width:100%;border-collapse:collapse;border:1px solid #e0dbd4;border-radius:4px;overflow:hidden;}'+
-    '.footer{margin-top:auto;font-size:8px;color:#a8a49e;text-align:right;}'+
-    '</style></head><body>'+
-    '<div class="wrap">'+
-    '<div class="map-col">'+
-    '<img src="'+window._printMapDataUrl+'"/>'+
-    '</div>'+
-    '<div class="side">'+
-    '<div class="header">'+
-    '<h1>'+title+'</h1>'+
-    '<div class="date">作成日: '+dateStr+'</div>'+
-    '</div>'+
-    '<table class="data-table">'+tableRows+'</table>'+
-    '<div class="footer">※本資料は概算計画であり、確定値ではありません</div>'+
-    '</div>'+
-    '</div>'+
-    '</body></html>'
-  );
-  pw.document.close();
-  setTimeout(function(){try{pw.focus();pw.print();}catch(ex){}},600);
-  closePrintPreview();
-}
 
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT')return;
@@ -1601,12 +1414,13 @@ function updateDefs(){
   var ew=document.getElementById('entrance-w'),ed=document.getElementById('entrance-d');
   if(ew)DEFS.entrance.w=parseFloat(ew.value)||12;if(ed)DEFS.entrance.d=parseFloat(ed.value)||15;
   var du=document.getElementById('dim-unit');if(du)du.textContent=DEFS.unit.w+'×'+DEFS.unit.d+'m';
+  var du1f=document.getElementById('dim-unit1f');if(du1f)du1f.textContent=DEFS.unit1f.w+'×'+DEFS.unit1f.d+'m';
   var dp=document.getElementById('dim-park');if(dp)dp.textContent=DEFS.park.w+'×'+DEFS.park.d+'m';
   var ds=document.getElementById('dim-stair');if(ds)ds.textContent=DEFS.stair.w+'×'+DEFS.stair.d+'m';
   var dev=document.getElementById('dim-elev');if(dev)dev.textContent=DEFS.elev.w+'×'+DEFS.elev.d+'m';
   var dg=document.getElementById('dim-garden');if(dg)dg.textContent=DEFS.garden.w+'×'+DEFS.garden.d+'m';
   var de=document.getElementById('dim-entrance');if(de)de.textContent=DEFS.entrance.w+'×'+DEFS.entrance.d+'m';
-  tiles.forEach(reposTile);
+  // ※ 既存タイルには影響させない（サイドバーは新規配置時のデフォルトサイズのみ）
 }
 
 // ── ポリゴン ──
@@ -1847,7 +1661,7 @@ function updateMetrics(){
   var roadSlope=parseFloat(document.getElementById('road-slope').value)||1.5;
   var u1f=0,farArea=0;
   tiles.forEach(function(t){
-    var def=getTileDef(t),a=(t.rW||def.w)*def.d;
+    var def=getTileDef(t),a=def.w*def.d;
     var fl=def.floors||'none';
     if(fl!=='none'&&t.type!=='textbox') bA+=a;
     if(t.type==='park') p++; // mechparkは台数カウントしない（ユニット単位)
@@ -2374,6 +2188,8 @@ function saveProject(){
       zonePreset:    getVal('zone-preset'),
       unitW:         getVal('unit-w'),
       unitD:         getVal('unit-d'),
+      unit1fW:       getVal('unit1f-w'),
+      unit1fD:       getVal('unit1f-d'),
       parkW:         getVal('park-w'),
       parkD:         getVal('park-d'),
       stairW:        getVal('stair-w'),
@@ -2405,6 +2221,8 @@ function saveProject(){
       return{
         id:t.id, type:t.type, cx:t.cx, cy:t.cy, rot:t.rot,
         rW: t.rW||null,
+        customW: t.customW||null,
+        customD: t.customD||null,
         freeConfig: t.freeConfig?{
           name:t.freeConfig.name,
           w:t.freeConfig.w,
@@ -2422,8 +2240,33 @@ function saveProject(){
     view:{
       panX:panX, panY:panY, canvasZoom:canvasZoom,
       showGrid:showGrid, tileOpacity:tileOpacity,
-      currentRot:currentRot, lastRot:lastRot
-    }
+      currentRot:currentRot, lastRot:lastRot,
+      snapOn:    document.getElementById('snap-toggle')   ? document.getElementById('snap-toggle').checked   : true,
+      overlapOn: document.getElementById('overlap-toggle')? document.getElementById('overlap-toggle').checked : true,
+      showMeasure: document.getElementById('show-measure')? document.getElementById('show-measure').checked   : true,
+      showGuide:   document.getElementById('show-guide')  ? document.getElementById('show-guide').checked     : true,
+      showSb:      document.getElementById('show-sb')     ? document.getElementById('show-sb').checked        : true,
+      showLabel:   document.getElementById('show-label')  ? document.getElementById('show-label').checked     : true
+    },
+
+    // 進入辺・北辺
+    edges:{ entryEdge:entryEdge, northEdge:northEdge },
+
+    // フリータイル設定
+    freeConfig:{ name:freeConfig.name, w:freeConfig.w, d:freeConfig.d },
+
+    // 距離測定線
+    measureLines: measureLines.map(function(m){
+      return{
+        pts:[{x:m.pts[0].x,y:m.pts[0].y},{x:m.pts[1].x,y:m.pts[1].y}],
+        dist:m.dist
+      };
+    }),
+
+    // 補助線
+    guideLines: guideLines.map(function(gl){
+      return{pts:[{x:gl.pts[0].x,y:gl.pts[0].y},{x:gl.pts[1].x,y:gl.pts[1].y}]};
+    })
   };
 
   var json=JSON.stringify(projectData, null, 2);
@@ -2469,6 +2312,7 @@ function _applyProjectData(data){
     document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
     if(document.getElementById('px-m'))
       document.getElementById('px-m').textContent=ppm.toFixed(1);
+    setCalibStatus('done','✓ 復元済み 1m='+ppm.toFixed(1)+'px');
   }
 
   // ── 設定値を復元 ──
@@ -2488,6 +2332,8 @@ function _applyProjectData(data){
   setVal('zone-preset',    s.zonePreset);
   setVal('unit-w',         s.unitW);
   setVal('unit-d',         s.unitD);
+  setVal('unit1f-w',       s.unit1fW);
+  setVal('unit1f-d',       s.unit1fD);
   setVal('park-w',         s.parkW);
   setVal('park-d',         s.parkD);
   setVal('stair-w',        s.stairW);
@@ -2534,6 +2380,9 @@ function _applyProjectData(data){
     }
     var t=createTile(td.cx,td.cy,td.type,td.rot);
     if(td.rW!==null&&td.rW!==undefined){t.rW=td.rW;reposTile(t);}
+    if(td.customW!==null&&td.customW!==undefined){t.customW=td.customW;}
+    if(td.customD!==null&&td.customD!==undefined){t.customD=td.customD;}
+    reposTile(t);
     idMap[td.id]=t.id; // 旧→新IDマッピング
     t._oldId=td.id;
   });
@@ -2567,7 +2416,58 @@ function _applyProjectData(data){
     if(document.getElementById('grid-toggle'))
       document.getElementById('grid-toggle').checked=showGrid;
     redrawGrid();
+    // トグル類の復元
+    function restoreToggle(id, val, fallback){
+      var el=document.getElementById(id);
+      if(!el)return;
+      el.checked=(val!==undefined&&val!==null)?val:fallback;
+    }
+    restoreToggle('snap-toggle',    data.view.snapOn,      true);
+    restoreToggle('overlap-toggle', data.view.overlapOn,   true);
+    restoreToggle('show-measure',   data.view.showMeasure, true);
+    restoreToggle('show-guide',     data.view.showGuide,   true);
+    restoreToggle('show-sb',        data.view.showSb,      true);
+    restoreToggle('show-label',     data.view.showLabel,   true);
+    // 各レイヤー表示を反映
+    toggleLayerVis('measure');toggleLayerVis('guide');
+    toggleLayerVis('sb');toggleLayerVis('label');
+    // 透明度スライダー
+    var opR=document.getElementById('op-range'),opV=document.getElementById('op-val');
+    if(opR){opR.value=Math.round(tileOpacity*100);if(opV)opV.textContent=Math.round(tileOpacity*100)+'%';}
   }
+
+  // ── 進入辺・北辺の復元 ──
+  if(data.edges){
+    entryEdge=(data.edges.entryEdge!==undefined)?data.edges.entryEdge:-1;
+    northEdge=(data.edges.northEdge!==undefined)?data.edges.northEdge:-1;
+    redrawSb(); // 進入辺・北辺をSVGに反映
+  }
+
+  // ── フリータイル設定の復元 ──
+  if(data.freeConfig){
+    freeConfig={name:data.freeConfig.name||'フリー',w:data.freeConfig.w||4,d:data.freeConfig.d||4};
+    DEFS.free.w=freeConfig.w;DEFS.free.d=freeConfig.d;DEFS.free.label=freeConfig.name;
+    var fn=document.getElementById('free-name'),fw=document.getElementById('free-w'),fd=document.getElementById('free-d');
+    if(fn)fn.value=freeConfig.name;if(fw)fw.value=freeConfig.w;if(fd)fd.value=freeConfig.d;
+  }
+
+  // ── 距離測定線の復元 ──
+  measureLines=[];measurePts=[];
+  if(data.measureLines&&data.measureLines.length>0){
+    measureLines=data.measureLines.map(function(m){
+      return{pts:[{x:m.pts[0].x,y:m.pts[0].y},{x:m.pts[1].x,y:m.pts[1].y}],dist:m.dist};
+    });
+  }
+  redrawMeasure();
+
+  // ── 補助線の復元 ──
+  guideLines=[];guidePts=[];
+  if(data.guideLines&&data.guideLines.length>0){
+    guideLines=data.guideLines.map(function(gl){
+      return{pts:[{x:gl.pts[0].x,y:gl.pts[0].y},{x:gl.pts[1].x,y:gl.pts[1].y}]};
+    });
+  }
+  redrawGuides();
 
   // 全体更新
   updateDefs();
@@ -2610,220 +2510,29 @@ function toggleLayerVis(layer){
 }
 
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
-</script>
 
-<!-- ══ 3D プレビュー ══ -->
-<div id="modal-3d" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:#0f172a;flex-direction:column;">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#1e293b;color:#fff;flex-shrink:0;">
-    <span style="font-weight:800;font-size:14px;">🧊 3Dボリュームプレビュー</span>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <span style="font-size:11px;color:#94a3b8;">ドラッグ:回転 / スクロール:ズーム / 右ドラッグ:移動</span>
-      <button onclick="close3DPreview()" style="padding:5px 14px;border:1px solid #475569;border-radius:6px;background:#334155;color:#fff;cursor:pointer;font-size:13px;">✕ 閉じる</button>
-    </div>
-  </div>
-  <canvas id="canvas-3d" style="flex:1;display:block;width:100%;height:100%;"></canvas>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
+// ── 未保存変更の離脱警告 ──
+var _projectDirty=false;
+function markDirty(){_projectDirty=true;}
+// タイル操作・ポリゴン操作・設定変更で汚れたとみなす
 (function(){
-var _3d={renderer:null,scene:null,camera:null,animId:null,theta:30,phi:55,radius:180,target:{x:0,y:0,z:0}};
-
-window.open3DPreview=function(){
-  if(!pdfLoaded&&tiles.length===0){alert('タイルを配置してください');return;}
-  document.getElementById('modal-3d').style.display='flex';
-  setTimeout(function(){_build3D();},50);
-};
-window.close3DPreview=function(){
-  document.getElementById('modal-3d').style.display='none';
-  if(_3d.animId){cancelAnimationFrame(_3d.animId);_3d.animId=null;}
-  if(_3d.renderer){_3d.renderer.dispose();_3d.renderer=null;}
-};
-
-function _build3D(){
-  if(_3d.renderer){_3d.renderer.dispose();_3d.renderer=null;}
-  if(_3d.animId){cancelAnimationFrame(_3d.animId);_3d.animId=null;}
-  var canvas=document.getElementById('canvas-3d');
-  var W=canvas.offsetWidth||800, H=canvas.offsetHeight||600;
-  var scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x0f172a);
-  _3d.scene=scene;
-  var camera=new THREE.PerspectiveCamera(45,W/H,0.1,2000);
-  _3d.camera=camera;
-  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.setSize(W,H,false);
-  renderer.shadowMap.enabled=true;
-  _3d.renderer=renderer;
-
-  // 照明
-  scene.add(new THREE.AmbientLight(0xffffff,0.55));
-  var sun=new THREE.DirectionalLight(0xfffbe6,1.0);
-  sun.position.set(60,100,80);sun.castShadow=true;scene.add(sun);
-  scene.add(new THREE.DirectionalLight(0x8fb4ff,0.35)).position.set(-80,60,-60);
-
-  // 地面
-  var gnd=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshLambertMaterial({color:0x1e2d40}));
-  gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;scene.add(gnd);
-  scene.add(new THREE.GridHelper(400,40,0x1e3a5f,0x1e3a5f));
-
-  var floorH=parseFloat(document.getElementById('floor-height').value)||3;
-  var totalFloors=Math.max(2,parseInt(document.getElementById('floors-input').value)||10);
-
-  // 重心計算
-  var cx0=0,cy0=0,n=tiles.length;
-  if(n>0){tiles.forEach(function(t){cx0+=t.cx;cy0+=t.cy;});cx0/=n;cy0/=n;}
-
-  // ── タイル描画 ──
-  // 近くにunit1fがあるバルコニー・外廊下を検出（1F判定）
-  function _isNear1F(t){
-    var px2=(t.cx-cx0)/ppm, pz2=(t.cy-cy0)/ppm;
-    for(var ii=0;ii<tiles.length;ii++){
-      if(tiles[ii].type!=='unit1f'&&tiles[ii].type!=='garden'&&tiles[ii].type!=='entrance')continue;
-      var ax=(tiles[ii].cx-cx0)/ppm, az=(tiles[ii].cy-cy0)/ppm;
-      if(Math.abs(px2-ax)<20&&Math.abs(pz2-az)<20)return true;
-    }
-    return false;
+  var origSave=saveTileHistory;
+  saveTileHistory=function(){origSave();markDirty();};
+})();
+window.addEventListener('beforeunload',function(e){
+  if(_projectDirty){
+    e.preventDefault();
+    e.returnValue='保存していない変更があります。ページを離れますか？';
+    return e.returnValue;
   }
-
-  tiles.forEach(function(t){
-    var def=getTileDef(t);
-    var tw=(t.rW||def.w), td=def.d;
-    var f=def.fill;
-    var col=new THREE.Color(f[0]/255,f[1]/255,f[2]/255); // DEFSのfill色を自動使用
-    var px=(t.cx-cx0)/ppm, pz=(t.cy-cy0)/ppm;
-    var ry=-t.rot*Math.PI/180;
-
-    // ── 駐車場: 薄いスラブ+駐車枠の線 ──
-    if(t.type==='park'||t.type==='mechpark'){
-      var slabH2=0.15;
-      var geo3=new THREE.BoxGeometry(tw,slabH2,td);
-      var mat3=new THREE.MeshLambertMaterial({color:col,transparent:true,opacity:0.6});
-      var m3=new THREE.Mesh(geo3,mat3);
-      m3.position.set(px,slabH2/2,pz);m3.rotation.y=ry;
-      scene.add(m3);
-      // 駐車枠線（平面グリッド）
-      var lineCol=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.5});
-      var slotW=2.5, slotD=5;
-      var nW=Math.max(1,Math.round(tw/slotW)), nD=Math.max(1,Math.round(td/slotD));
-      var lineGeo=new THREE.BufferGeometry();
-      var verts=[];
-      for(var si=0;si<=nW;si++){var sx=-tw/2+si*(tw/nW);verts.push(sx,0.2,-td/2,sx,0.2,td/2);}
-      for(var sj=0;sj<=nD;sj++){var sz=-td/2+sj*(td/nD);verts.push(-tw/2,0.2,sz,tw/2,0.2,sz);}
-      lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-      var lineM=new THREE.LineSegments(lineGeo,lineCol);
-      lineM.position.set(px,0,pz);lineM.rotation.y=ry;
-      scene.add(lineM);
-      return;
-    }
-
-    // ── 外廊下・バルコニー ──
-    if(t.type==='corridor'||t.type==='balcony'){
-      var near1f=_isNear1F(t);
-      var slabH=floorH*0.18;
-      var slabCol=new THREE.Color(f[0]/255,f[1]/255,f[2]/255);
-      var nFloors=near1f?1:totalFloors; // 1F住戸の隣なら1階のみ
-      for(var fi=0;fi<nFloors;fi++){
-        var sg=new THREE.BoxGeometry(tw,slabH,td);
-        var sm=new THREE.MeshLambertMaterial({color:slabCol,transparent:true,opacity:0.85});
-        var smesh=new THREE.Mesh(sg,sm);
-        smesh.receiveShadow=true;
-        smesh.position.set(px,fi*floorH+slabH/2,pz);
-        smesh.rotation.y=ry;
-        smesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(sg),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.2})));
-        scene.add(smesh);
-      }
-      return;
-    }
-
-    // ── 通常ボックスタイル ──
-    var bh;
-    if(t.type==='garden')        bh=0.3;
-    else if(t.type==='unit1f')   bh=floorH;
-    else if(t.type==='entrance') bh=floorH;
-    else if(t.type==='stair'||t.type==='elev') bh=totalFloors*floorH;
-    else if(t.type==='unit')     bh=totalFloors*floorH;
-    else bh=Math.max(floorH*0.4,2);
-
-    var geo=new THREE.BoxGeometry(tw,bh,td);
-    var mat=new THREE.MeshLambertMaterial({color:col});
-    var mesh=new THREE.Mesh(geo,mat);
-    mesh.castShadow=true;mesh.receiveShadow=true;
-    mesh.position.set(px,bh/2,pz);
-    mesh.rotation.y=ry;
-    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.12})));
-    // フロア区切り線（住戸のみ）
-    if(t.type==='unit'){
-      for(var fi2=1;fi2<totalFloors;fi2++){
-        var ly=fi2*floorH-bh/2;
-        var fl2=new THREE.LineSegments(
-          new THREE.EdgesGeometry(new THREE.PlaneGeometry(tw,td)),
-          new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.08})
-        );
-        fl2.rotation.x=-Math.PI/2;fl2.position.y=ly;mesh.add(fl2);
-      }
-    }
-    scene.add(mesh);
-  });
-
-  // 敷地ポリゴン
-  if(polyDone&&polyPts.length>=3){
-    var shape=new THREE.Shape();
-    polyPts.forEach(function(p,i){
-      var px=(p.x-cx0)/ppm, pz=(p.y-cy0)/ppm;
-      if(i===0)shape.moveTo(px,pz);else shape.lineTo(px,pz);
-    });
-    shape.closePath();
-    var pMesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshBasicMaterial({color:0x3b82f6,transparent:true,opacity:0.12,side:THREE.DoubleSide}));
-    pMesh.rotation.x=-Math.PI/2;pMesh.position.y=0.05;scene.add(pMesh);
-    var pts3=polyPts.map(function(p){return new THREE.Vector3((p.x-cx0)/ppm,0.15,(p.y-cy0)/ppm);});
-    pts3.push(pts3[0].clone());
-    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts3),new THREE.LineBasicMaterial({color:0x60a5fa})));
-  }
-
-  // カメラ更新
-  function updCam(){
-    var t2=_3d.theta*Math.PI/180, p2=_3d.phi*Math.PI/180;
-    _3d.camera.position.set(
-      _3d.target.x+_3d.radius*Math.sin(p2)*Math.sin(t2),
-      _3d.target.y+_3d.radius*Math.cos(p2),
-      _3d.target.z+_3d.radius*Math.sin(p2)*Math.cos(t2)
-    );
-    _3d.camera.lookAt(_3d.target.x,_3d.target.y,_3d.target.z);
-  }
-  updCam();
-
-  // マウス操作
-  var drag=false,rDrag=false,lx=0,ly2=0;
-  canvas.addEventListener('mousedown',function(e){drag=true;rDrag=e.button===2;lx=e.clientX;ly2=e.clientY;e.preventDefault();});
-  canvas.addEventListener('contextmenu',function(e){e.preventDefault();});
-  document.addEventListener('mousemove',function(e){
-    if(!drag||document.getElementById('modal-3d').style.display==='none')return;
-    var dx=e.clientX-lx,dy=e.clientY-ly2;lx=e.clientX;ly2=e.clientY;
-    if(rDrag){
-      var camDir=new THREE.Vector3();_3d.camera.getWorldDirection(camDir);
-      var right=new THREE.Vector3().crossVectors(camDir,new THREE.Vector3(0,1,0)).normalize();
-      _3d.target.x-=right.x*dx*0.15;_3d.target.z-=right.z*dx*0.15;_3d.target.y+=dy*0.15;
-    }else{_3d.theta-=dx*0.4;_3d.phi=Math.max(8,Math.min(88,_3d.phi-dy*0.4));}
-    updCam();
-  });
-  document.addEventListener('mouseup',function(){drag=false;});
-  canvas.addEventListener('wheel',function(e){
-    _3d.radius=Math.max(15,Math.min(700,_3d.radius+e.deltaY*0.25));updCam();e.preventDefault();
-  },{passive:false});
-
-  // アニメーション
-  (function anim(){_3d.animId=requestAnimationFrame(anim);if(_3d.renderer)_3d.renderer.render(scene,camera);})();
-
-  // リサイズ
-  window.addEventListener('resize',function(){
-    if(!_3d.renderer||document.getElementById('modal-3d').style.display==='none')return;
-    var W2=canvas.offsetWidth,H2=canvas.offsetHeight;
-    if(!W2||!H2)return;
-    _3d.camera.aspect=W2/H2;_3d.camera.updateProjectionMatrix();_3d.renderer.setSize(W2,H2,false);
-  });
-}
+});
+// 保存時にdirtyフラグをリセット
+(function(){
+  var origSave=saveProject;
+  saveProject=function(){origSave();_projectDirty=false;};
 })();
 </script>
 
-</body>
-</html>
+
+
+</body></html>
