@@ -361,15 +361,20 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
     <div class="row2" style="margin:-2px 0 4px;"><div class="field"><label>幅</label><input type="number" id="entrance-w" value="12" step="0.1" min="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="entrance-d" value="15" step="0.1" min="0.1" oninput="updateDefs()"></div></div>
     <button class="tool-btn t-free" id="tool-free" onclick="openFreeModal()"><span class="icon">✏️</span><span class="tname">フリータイル</span><span class="tdim">名前・サイズ自由</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-select" id="tool-select" onclick="setTool(&#39;select&#39;)"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
-    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool(&#39;measure&#39;)"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
-    <button class="tool-btn t-guide" id="tool-guide" onclick="setTool(&#39;guide&#39;)"><span class="icon">📌</span><span class="tname">補助線</span><span class="tdim">2点クリック</span></button>
+    <button class="tool-btn t-select" id="tool-select" onclick="setTool('select')"><span class="icon">⬚</span><span class="tname">複数選択</span><span class="tdim">ドラッグ or Shift+クリック</span></button>
+    <button class="tool-btn t-measure" id="tool-measure" onclick="setTool('measure')"><span class="icon">📏</span><span class="tname">距離測定</span><span class="tdim">2点クリック</span></button>
+    <button class="tool-btn t-guide" id="tool-guide" onclick="setTool('guide')"><span class="icon">📌</span><span class="tname">補助線</span><span class="tdim">2点クリック</span></button>
     <div class="tdiv"></div>
-    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool(&#39;erase&#39;)"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
+    <button class="tool-btn t-erase" id="tool-erase" onclick="setTool('erase')"><span class="icon">🗑</span><span class="tname">消去</span><span class="tdim">クリック / Del</span></button>
     <div style="display:flex;gap:4px;margin-top:4px;">
       <button class="btn-sm" style="flex:1;" onclick="clearMeasures()">測定線を全消去</button>
       <button class="btn-sm" style="flex:1;" onclick="clearGuides()">補助線を全消去</button>
     </div>
+    <div class="tdiv"></div>
+    <!-- ★ お気に入り -->
+    <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:5px;">⭐ お気に入りパターン</div>
+    <button onclick="saveFavorite()" style="width:100%;height:30px;border:1.5px dashed #f59e0b;background:#fffbeb;color:#b45309;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;margin-bottom:6px;">＋ 選択中タイルを保存</button>
+    <div id="favorites-list"></div>
   </div>
   <div class="sb-sec">
     <div class="lbl">回転角度</div>
@@ -663,6 +668,12 @@ document.addEventListener('mousemove',function(e){
     boxG.appendChild(mkS('rect',{x:x,y:y,width:w,height:h,fill:'rgba(99,102,241,0.08)',stroke:'#6366f1','stroke-width':'1.5','stroke-dasharray':'5,3'}));
     boxRect={x:x,y:y,w:w,h:h};
   }
+  // お気に入りゴースト
+  if(currentTool==='favorite'&&currentFavorite){
+    var rFav=wrap.getBoundingClientRect();
+    var fcx=(e.clientX-rFav.left-panX)/canvasZoom,fcy=(e.clientY-rFav.top-panY)/canvasZoom;
+    drawFavGhost(fcx,fcy);
+  }
 });
 document.addEventListener('mouseup',function(e){
   if(isPanning){
@@ -734,6 +745,12 @@ wrap.addEventListener('click',function(e){
     return;
   }
   if(!currentTool||currentTool==='erase'||currentTool==='measure'||currentTool==='guide'||currentTool==='select')return;
+  // お気に入り配置（PDF未読み込みでも可）
+  if(currentTool==='favorite'&&currentFavorite){
+    clearFavGhost();
+    placeFavorite(cx,cy);
+    return;
+  }
   if(!pdfLoaded){alert('先にPDFをドロップしてください');return;}
   // ── 近くに同種タイルがあれば角度を自動継承 ──
   var nearTile=null,nearDist=Infinity;
@@ -1238,6 +1255,137 @@ function updateSelBar(){
 }
 function toggleGroup(){groupLocked=!groupLocked;updateSelBar();}
 
+// ══════════════════════════════════════════
+// ⭐ お気に入りパターン機能
+// ══════════════════════════════════════════
+var FAV_KEY='tileFavorites';
+var currentFavorite=null; // 配置中のお気に入り
+var favGhostEls=[];       // ゴーストSVG要素
+
+function loadFavorites(){
+  try{return JSON.parse(localStorage.getItem(FAV_KEY)||'[]');}catch(e){return[];}
+}
+function saveFavoritesToStorage(favs){
+  localStorage.setItem(FAV_KEY,JSON.stringify(favs));
+}
+
+function saveFavorite(){
+  if(selectedTiles.length===0){alert('先にタイルを選択してください');return;}
+  var name=prompt('パターン名を入力してください','パターン'+(loadFavorites().length+1));
+  if(!name)return;
+  // 重心を計算して相対座標で保存
+  var cx0=selectedTiles.reduce(function(s,t){return s+t.cx;},0)/selectedTiles.length;
+  var cy0=selectedTiles.reduce(function(s,t){return s+t.cy;},0)/selectedTiles.length;
+  var fav={
+    name:name,
+    tiles:selectedTiles.map(function(t){
+      return{
+        type:t.type, rot:t.rot,
+        dx:t.cx-cx0, dy:t.cy-cy0,
+        rW:t.rW||null,
+        customW:t.customW||null, customD:t.customD||null,
+        freeConfig:t.freeConfig?{name:t.freeConfig.name,w:t.freeConfig.w,d:t.freeConfig.d}:null
+      };
+    })
+  };
+  var favs=loadFavorites();
+  favs.push(fav);
+  saveFavoritesToStorage(favs);
+  renderFavoritesList();
+  showToast('fav-saved','ok','保存しました',name,'');
+}
+
+function deleteFavorite(idx){
+  var favs=loadFavorites();
+  if(!confirm('"'+favs[idx].name+'" を削除しますか？'))return;
+  favs.splice(idx,1);
+  saveFavoritesToStorage(favs);
+  renderFavoritesList();
+}
+
+function startPlaceFavorite(idx){
+  var favs=loadFavorites();
+  currentFavorite=favs[idx];
+  currentTool='favorite';
+  document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
+  wrap.style.cursor='crosshair';
+  setBadge('favorite','⭐ '+currentFavorite.name+' — クリックで配置 / ESCキャンセル');
+}
+
+function clearFavGhost(){
+  favGhostEls.forEach(function(el){el.remove();});
+  favGhostEls=[];
+}
+
+function drawFavGhost(cx,cy){
+  clearFavGhost();
+  if(!currentFavorite)return;
+  currentFavorite.tiles.forEach(function(td){
+    var def=Object.assign({},DEFS[td.type]||DEFS.unit);
+    if(td.freeConfig){def.w=td.freeConfig.w;def.d=td.freeConfig.d;}
+    if(td.rW)def.w=td.rW;
+    if(td.customW)def.w=td.customW;
+    if(td.customD)def.d=td.customD;
+    var tcx=cx+td.dx, tcy=cy+td.dy;
+    var pw=def.w*ppm, ph=def.d*ppm;
+    var g=mkS('g',{transform:'translate('+tcx+','+tcy+') rotate('+td.rot+')'});
+    var r=mkS('rect',{x:-pw/2,y:-ph/2,width:pw,height:ph,
+      fill:'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+',0.4)',
+      stroke:'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+',0.8)',
+      'stroke-width':'1.5','stroke-dasharray':'4,3',rx:'3'});
+    g.appendChild(r);
+    var label=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',x:0,y:0,
+      fill:'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+',0.9)',
+      'font-size':Math.max(8,Math.min(11,ph*0.18)),'font-weight':'700','pointer-events':'none'});
+    label.textContent=def.label||td.type;
+    g.appendChild(label);
+    svg.appendChild(g);
+    favGhostEls.push(g);
+  });
+}
+
+function placeFavorite(cx,cy){
+  if(!currentFavorite)return;
+  saveTileHistory();
+  currentFavorite.tiles.forEach(function(td){
+    var tmp=null;
+    if(td.freeConfig){tmp=freeConfig;freeConfig=td.freeConfig;}
+    var t=createTileInternal(cx+td.dx,cy+td.dy,td.type,td.rot);
+    if(td.rW)t.rW=td.rW;
+    if(td.customW)t.customW=td.customW;
+    if(td.customD)t.customD=td.customD;
+    reposTile(t);
+    if(tmp)freeConfig=tmp;
+  });
+  updateMetrics();
+}
+
+function renderFavoritesList(){
+  var list=document.getElementById('favorites-list');
+  if(!list)return;
+  var favs=loadFavorites();
+  if(favs.length===0){
+    list.innerHTML='<div style="font-size:10px;color:#a8a49e;text-align:center;padding:6px 0;">まだ保存されていません</div>';
+    return;
+  }
+  list.innerHTML='';
+  favs.forEach(function(fav,idx){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:4px;margin-bottom:4px;';
+    var btn=document.createElement('button');
+    btn.style.cssText='flex:1;height:30px;border:1px solid #f59e0b;background:#fff;color:#92400e;border-radius:7px;cursor:pointer;font-size:10px;font-weight:700;text-align:left;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;';
+    btn.textContent='⭐ '+fav.name+' ('+fav.tiles.length+'タイル)';
+    btn.title=fav.name;
+    btn.onclick=(function(i){return function(){startPlaceFavorite(i);};})(idx);
+    var del=document.createElement('button');
+    del.style.cssText='width:24px;height:30px;border:1px solid #fca5a5;background:#fef2f2;color:#dc2626;border-radius:7px;cursor:pointer;font-size:11px;flex-shrink:0;';
+    del.textContent='×';
+    del.onclick=(function(i){return function(){deleteFavorite(i);};})(idx);
+    row.appendChild(btn);row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
 // ── タイルサイズ変更モーダル ──
 var _resizingTile=null;
 function openTileResizeModal(){
@@ -1340,6 +1488,7 @@ document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT')return;
   if(e.key==='Escape'){
     currentTool=null;calibMode=false;measureMode=false;guideMode=false;
+    if(currentFavorite){clearFavGhost();currentFavorite=null;}
     if(!groupLocked){selectedTiles=[];selectedTile=null;tiles.forEach(reposTile);}
     document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
     setBadge('pan','地図パンモード');wrap.style.cursor='';updateSelBar();
@@ -2510,6 +2659,7 @@ function toggleLayerVis(layer){
 }
 
 updateDefs();updateMetrics();document.getElementById('hud-ppm').textContent=ppm.toFixed(1);
+renderFavoritesList();
 
 // ── 未保存変更の離脱警告 ──
 var _projectDirty=false;
