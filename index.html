@@ -48,6 +48,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:
 .tool-btn .tdim{font-size:10px;color:var(--text3);font-weight:400;}
 .tool-btn.t-unit.active{border-color:var(--blue);background:#eff6ff;color:var(--blue);}
 .tool-btn.t-park.active{border-color:var(--green);background:#f0fdf4;color:var(--green);}
+.tool-btn.t-driveway.active{border-color:#0d9488;background:#f0fdfa;color:#0f766e;}
 .tool-btn.t-stair.active{border-color:var(--pink);background:#fdf2f8;color:var(--pink);}
 .tool-btn.t-elev.active{border-color:var(--purple);background:#f5f3ff;color:var(--purple);}
 .tool-btn.t-corridor.active{border-color:#0891b2;background:#ecfeff;color:#0891b2;}
@@ -285,7 +286,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
 </div>
 <div id="app">
 <aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v8.2</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.1</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
   <details class="sb-sec" data-acc="map" open><summary class="lbl">📄 地図・キャリブレーション</summary><div class="sec-body">
     
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -343,12 +344,24 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
     <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:4px 6px;background:var(--surface2);border-radius:5px;border-left:3px solid #dc2626;">🔴道路 / 🟡隣地 ゾーン内は住戸配置不可・駐車OK</div>
   
   </div></details>
+  <details class="sb-sec" data-acc="autolayout" open><summary class="lbl">🤖 自動配置（住棟＋駐車場）</summary><div class="sec-body">
+    <button class="btn-primary" id="btn-entry-mode" style="background:#0891b2;" onclick="toggleEntryMode()">🚗 進入辺を指定する</button>
+    <div id="entry-edge-display" style="margin-top:4px;font-size:11px;color:var(--text3);">進入辺: 未設定</div>
+    <div class="row2" style="margin-top:6px;">
+      <div class="field"><label>車路幅 (m)</label><input type="number" id="auto-aisle-w" value="6" min="4" max="8" step="0.5"></div>
+      <div class="field"><label>最大スパン</label><input type="number" id="auto-max-span" value="10" min="3" max="10" step="1"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:5px;cursor:pointer;"><input type="checkbox" id="auto-park-only"> 🚗 駐車場のみ敷き詰める（住棟なし）</label>
+    <button class="btn-primary" style="margin-top:6px;background:#16a34a;" onclick="runAutoLayout()">⚡ 自動配置を実行</button>
+    <div id="auto-result" style="margin-top:6px;"></div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:4px 6px;background:var(--surface2);border-radius:5px;border-left:3px solid #16a34a;">進入辺を軸に A案:対面駐車（車路平行） / B案:中央車路（車路垂直）を生成し、目標駐車率に近い案を適用。住戸はSB外、駐車・車路はSB内OK。目標駐車率は「建物・法規設定」の駐車場目標%を使用。</div>
+  </div></details>
   <details class="sb-sec" data-acc="size"><summary class="lbl">📐 タイルサイズ (m)</summary><div class="sec-body">
     
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🏠 住戸</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="11.5" step="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="6" step="0.1" oninput="updateDefs()"></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit-w" value="6.3" step="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="unit-d" value="11.1" step="0.1" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;margin-top:5px;">🏠 1F住戸（初期サイズ）</div>
-    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit1f-w" value="11.5" step="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="unit1f-d" value="6" step="0.1" oninput="updateDefs()"></div></div>
+    <div class="row2"><div class="field"><label>幅</label><input type="number" id="unit1f-w" value="6.3" step="0.1" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="unit1f-d" value="11.1" step="0.1" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🚗 駐車場</div>
     <div class="row2"><div class="field"><label>幅</label><input type="number" id="park-w" value="2.5" step="0.5" oninput="updateDefs()"></div><div class="field"><label>奥行</label><input type="number" id="park-d" value="5" step="0.5" oninput="updateDefs()"></div></div>
     <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px;">🪜 階段</div>
@@ -376,10 +389,11 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
   </div></details>
   <details class="sb-sec" data-acc="tools" open><summary class="lbl">🧱 配置ツール</summary><div class="sec-body">
     
-    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool(&#39;unit&#39;)"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">11.5×6m</span></button>
-    <button class="tool-btn t-unit1f" id="tool-unit1f" onclick="setTool(&#39;unit1f&#39;)"><span class="icon">🏠</span><span class="tname">1F住戸</span><span class="tdim" id="dim-unit1f">11.5×6m</span></button>
+    <button class="tool-btn t-unit" id="tool-unit" onclick="setTool(&#39;unit&#39;)"><span class="icon">🏠</span><span class="tname">住戸</span><span class="tdim" id="dim-unit">6.3×11.1m</span></button>
+    <button class="tool-btn t-unit1f" id="tool-unit1f" onclick="setTool(&#39;unit1f&#39;)"><span class="icon">🏠</span><span class="tname">1F住戸</span><span class="tdim" id="dim-unit1f">6.3×11.1m</span></button>
     <button class="tool-btn t-mechpark" id="tool-mechpark" onclick="setTool(&#39;mechpark&#39;)"><span class="icon">🏗</span><span class="tname">機械式P</span><span class="tdim" id="dim-mechpark">12×6.5m</span></button>
     <button class="tool-btn t-park" id="tool-park" onclick="setTool(&#39;park&#39;)"><span class="icon">🚗</span><span class="tname">駐車場</span><span class="tdim" id="dim-park">2.5×5m</span></button>
+    <button class="tool-btn t-driveway" id="tool-driveway" onclick="setTool(&#39;driveway&#39;)"><span class="icon">🛣</span><span class="tname">車路</span><span class="tdim" id="dim-driveway">6×6m（サイズ変更可）</span></button>
     <button class="tool-btn t-stair" id="tool-stair" onclick="setTool(&#39;stair&#39;)"><span class="icon">🪜</span><span class="tname">階段</span><span class="tdim" id="dim-stair">3×4m</span></button>
     <button class="tool-btn t-elev" id="tool-elev" onclick="setTool(&#39;elev&#39;)"><span class="icon">🛗</span><span class="tname">エレベーター</span><span class="tdim" id="dim-elev">2×2m</span></button>
     <button class="tool-btn t-corridor" id="tool-corridor" onclick="setTool(&#39;corridor&#39;)"><span class="icon">🚶</span><span class="tname">外廊下</span><span class="tdim">端ドラッグで長さ調整</span></button>
@@ -611,9 +625,10 @@ var entryMode=false,entryEdge=-1;
 // 北辺
 var northMode=false,northEdge=-1;
 var DEFS={
-  unit:     {w:11.5,d:6,  fill:[29,78,216],   stroke:'#1e40af',label:'住戸',        far:true, floors:'res'},
-  unit1f:   {w:11.5,d:6,  fill:[239,68,68],   stroke:'#dc2626',label:'1F住戸',      far:true, floors:'one'},
+  unit:     {w:6.3, d:11.1,  fill:[29,78,216],   stroke:'#1e40af',label:'住戸',        far:true, floors:'res'},
+  unit1f:   {w:6.3, d:11.1,  fill:[239,68,68],   stroke:'#dc2626',label:'1F住戸',      far:true, floors:'one'},
   park:     {w:2.5, d:5,  fill:[148,163,184],  stroke:'#64748b',label:'駐車場',      far:false,floors:'none'},
+  driveway: {w:6,   d:6,  fill:[20,184,166],   stroke:'#0d9488',label:'車路',        far:false,floors:'none'},
   mechpark: {w:12,  d:6.5,fill:[100,116,139],  stroke:'#475569',label:'機械式P',     far:false,floors:'none'},
   stair:    {w:3,   d:4,  fill:[251,191,36],   stroke:'#d97706',label:'階段',        far:false,floors:'none'},
   elev:     {w:2,   d:2,  fill:[234,179,8],    stroke:'#a16207',label:'EV',          far:false,floors:'none'},
@@ -2802,6 +2817,7 @@ function _applyProjectData(data){
     entryEdge=(data.edges.entryEdge!==undefined)?data.edges.entryEdge:-1;
     northEdge=(data.edges.northEdge!==undefined)?data.edges.northEdge:-1;
     redrawSb(); // 進入辺・北辺をSVGに反映
+    if(typeof updateEntryDisplay==='function')updateEntryDisplay();
   }
 
   // ── フリータイル設定の復元 ──
@@ -2893,6 +2909,345 @@ window.addEventListener('beforeunload',function(e){
   var origSave=saveProject;
   saveProject=function(){origSave();_projectDirty=false;};
 })();
+
+// ── 自動配置（住棟＋駐車場レイアウト生成）──
+var autoPlans=null,autoAppliedKey=null;
+
+function toggleEntryMode(){
+  if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}
+  entryMode=!entryMode;
+  var btn=document.getElementById('btn-entry-mode');
+  if(entryMode){
+    northMode=false;setbackMode=false;
+    btn.textContent='進入辺をクリックしてください';btn.style.background='#dc2626';
+    setBadge('calib','進入辺 — 辺をクリック');wrap.style.cursor='crosshair';
+    currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
+  }else{
+    btn.textContent='🚗 進入辺を指定する';btn.style.background='#0891b2';
+    setBadge('pan','地図パンモード');wrap.style.cursor='';
+  }
+}
+function updateEntryDisplay(){
+  var el=document.getElementById('entry-edge-display');if(!el)return;
+  if(entryEdge<0||!polyDone){el.textContent='進入辺: 未設定';return;}
+  var ej=(entryEdge+1)%polyPts.length;
+  var len=(Math.sqrt(Math.pow(polyPts[ej].x-polyPts[entryEdge].x,2)+Math.pow(polyPts[ej].y-polyPts[entryEdge].y,2))/ppm).toFixed(1);
+  el.innerHTML='進入辺: <b style="color:#0891b2;">'+(entryEdge+1)+'辺（'+len+'m）</b>';
+}
+
+function pointInPoly(x,y){
+  var inside=false;
+  for(var i=0,j=polyPts.length-1;i<polyPts.length;j=i++){
+    var xi=polyPts[i].x,yi=polyPts[i].y,xj=polyPts[j].x,yj=polyPts[j].y;
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+
+// 進入辺を基準としたローカル座標系（u:辺方向 / v:敷地内側方向、単位m）
+function _afFrame(){
+  var i=entryEdge,j=(i+1)%polyPts.length;
+  var ax=polyPts[i].x,ay=polyPts[i].y,bx=polyPts[j].x,by=polyPts[j].y;
+  var dx=bx-ax,dy=by-ay,len=Math.sqrt(dx*dx+dy*dy)||1;
+  var ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
+  if(!inward(i,nx,ny)){nx=-nx;ny=-ny;}
+  var theta=Math.atan2(uy,ux)*180/Math.PI;
+  var uMin=1e9,uMax=-1e9,vMax=0;
+  polyPts.forEach(function(p){
+    var rx=p.x-ax,ry=p.y-ay;
+    var fu=(rx*ux+ry*uy)/ppm,fv=(rx*nx+ry*ny)/ppm;
+    if(fu<uMin)uMin=fu;if(fu>uMax)uMax=fu;if(fv>vMax)vMax=fv;
+  });
+  return{ox:ax,oy:ay,ux:ux,uy:uy,nx:nx,ny:ny,theta:theta,uMin:uMin,uMax:uMax,vMax:vMax,edgeLen:len/ppm};
+}
+function _afToWorld(F,u,v){return{x:F.ox+(u*F.ux+v*F.nx)*ppm,y:F.oy+(u*F.uy+v*F.ny)*ppm};}
+// セル[u0,u0+du]×[v0,v0+dv]が有効か（4隅が敷地内、forbidSB時はSBゾーン外）
+function _afCellOK(F,u0,v0,du,dv,forbidSB){
+  var c=_afToWorld(F,u0+du/2,v0+dv/2);
+  var hw=du/2-0.03,hd=dv/2-0.03;
+  var pts=[[-hw,-hd],[hw,-hd],[hw,hd],[-hw,hd]];
+  for(var k=0;k<4;k++){
+    var wx=c.x+(pts[k][0]*F.ux+pts[k][1]*F.nx)*ppm;
+    var wy=c.y+(pts[k][0]*F.uy+pts[k][1]*F.ny)*ppm;
+    if(!pointInPoly(wx,wy))return false;
+  }
+  if(forbidSB&&setbacks.length>0&&inSetbackZone(c.x,c.y,du*ppm,dv*ppm,F.theta))return false;
+  return true;
+}
+function _afSpec(F,u0,v0,du,dv,type){
+  var c=_afToWorld(F,u0+du/2,v0+dv/2);
+  var def=DEFS[type];
+  var s={cx:c.x,cy:c.y,rot:F.theta,type:type};
+  if(Math.abs(def.w-du)>0.01)s.customW=Math.round(du*100)/100;
+  if(Math.abs(def.d-dv)>0.01)s.customD=Math.round(dv*100)/100;
+  return s;
+}
+function _afCovered(runs,u0,u1){
+  return runs.some(function(r){return r[0]<=u0+0.01&&r[1]>=u1-0.01;});
+}
+// 帯[v0,v0+dv]上で車路セルをスキャンし、有効区間（ラン）を返す
+function _afScanRuns(F,v0,dv,step){
+  var runs=[],cur=null;
+  for(var u=F.uMin;u+step<=F.uMax+0.001;u+=step){
+    if(_afCellOK(F,u,v0,step,dv,false)){
+      if(cur)cur[1]=u+step;else cur=[u,u+step];
+    }else{
+      if(cur){runs.push(cur);cur=null;}
+    }
+  }
+  if(cur)runs.push(cur);
+  return runs.filter(function(r){return r[1]-r[0]>=5;});
+}
+// 住棟一列を探す: vStartからvShiftまで1m刻みで下げつつ最長連続スパンを探索
+function _afFindUnitRow(F,vStart,maxShift,uw,ud,maxSpan){
+  var best=null;
+  for(var off=0;off<=maxShift;off+=1){
+    var v0=vStart+off;
+    if(v0+ud>F.vMax+2)break;
+    for(var s=F.uMin;s<=F.uMax-uw;s+=0.5){
+      var n=0;
+      while(n<maxSpan&&_afCellOK(F,s+n*uw,v0,uw,ud,true))n++;
+      if(n>=3&&(!best||n>best.spans||(n===best.spans&&off<best.off))){
+        best={v0:v0,uStart:s,spans:n,off:off};
+        if(n>=maxSpan)return best;
+      }
+      if(n>0)s+=Math.max(0,(n-1))*uw; // 既に数えた分はスキップ
+    }
+    if(best&&best.off===off&&best.spans>=maxSpan)break;
+  }
+  return best;
+}
+// A案: 進入辺に平行な車路＋対面駐車。帯を奥まで貪欲に積層し、切り詰め位置ごとに候補評価
+function _afPlanA(F,opt){
+  var r=opt.aisleW,sd=opt.parkD,sw=opt.parkW,uw=opt.unitW,ud=opt.unitD;
+  var us=Math.min(Math.max(F.edgeLen/2,F.uMin+r/2+0.1),F.uMax-r/2-0.1);
+  var S0=us-r/2,S1=us+r/2;
+  // 帯シーケンスを貪欲生成: start='row'(区画先) / 'aisle'(境界沿い車路=SB帯兼用)
+  function buildBands(start){
+    var bands=[],v=0;
+    if(start==='aisle'&&v+r+sd<=F.vMax){
+      bands.push({kind:'aisle',v0:0,dv:r});
+      bands.push({kind:'row',v0:r,dv:sd,aisleV:0});
+      v=r+sd;
+    }
+    while(v+2*sd+r<=F.vMax){
+      bands.push({kind:'row',v0:v,dv:sd,aisleV:v+sd});
+      bands.push({kind:'aisle',v0:v+sd,dv:r});
+      bands.push({kind:'row',v0:v+sd+r,dv:sd,aisleV:v+sd});
+      v+=2*sd+r;
+    }
+    if(v+r+sd<=F.vMax){ // 末端ハーフ: 車路＋区画1列
+      bands.push({kind:'aisle',v0:v,dv:r});
+      bands.push({kind:'row',v0:v+r,dv:sd,aisleV:v});
+      v+=r+sd;
+    }
+    return bands;
+  }
+  // 帯リストから区画・車路スペックを生成
+  function realize(bands){
+    var specs=[],stalls=0,aisleRunsByV={},aisleVs=[];
+    bands.forEach(function(b){
+      if(b.kind!=='aisle')return;
+      var runs=_afScanRuns(F,b.v0,b.dv,2.5);
+      aisleRunsByV[b.v0]=runs;
+      if(runs.length)aisleVs.push(b.v0);
+      runs.forEach(function(rn){specs.push(_afSpec(F,rn[0],b.v0,rn[1]-rn[0],b.dv,'driveway'));});
+    });
+    if(!aisleVs.length)return null;
+    bands.forEach(function(b){
+      if(b.kind!=='row')return;
+      var runs=aisleRunsByV[b.aisleV]||[];
+      for(var u=F.uMin;u+sw<=F.uMax+0.001;u+=sw){
+        if(u+sw>S0&&u<S1)continue;
+        if(!_afCovered(runs,u,u+sw))continue;
+        if(!_afCellOK(F,u,b.v0,sw,sd,false))continue;
+        specs.push(_afSpec(F,u,b.v0,sw,sd,'park'));stalls++;
+      }
+    });
+    // 縦連絡車路: 境界(v=0)から最奥車路の手前まで、車路帯以外の区間を埋める
+    var lastAisleV=Math.max.apply(null,aisleVs);
+    var v=0;
+    bands.forEach(function(b){
+      if(b.v0>lastAisleV)return;
+      if(b.kind==='aisle'){v=Math.max(v,b.v0+b.dv);return;}
+      if(b.v0>=v&&b.v0<lastAisleV){
+        var segEnd=Math.min(b.v0+b.dv,lastAisleV);
+        if(segEnd>b.v0&&_afCellOK(F,S0,b.v0,r,segEnd-b.v0,false))specs.push(_afSpec(F,S0,b.v0,r,segEnd-b.v0,'driveway'));
+        v=segEnd;
+      }
+    });
+    var depth=bands.length?bands[bands.length-1].v0+bands[bands.length-1].dv:0;
+    return{specs:specs,stalls:stalls,depth:depth};
+  }
+  var best=null;
+  ['row','aisle'].forEach(function(start){
+    var full=buildBands(start);
+    if(!full.length)return;
+    if(opt.parkOnly){
+      var rz=realize(full);
+      if(!rz||rz.stalls===0)return;
+      var plan={tiles:rz.specs,stalls:rz.stalls,spans:0,units:0,rate:0,
+        label:'A案: 対面駐車 全面敷き詰め（'+(start==='aisle'?'境界沿い車路':'区画先行')+'）'};
+      if(_afBetter(plan,best,opt))best=plan;
+      return;
+    }
+    // 住棟あり: 各車路の対面区画が完結した位置（車路より奥側のrowの直後）で切り詰めた接頭辞を候補にする
+    var cuts=[];
+    for(var i=0;i<full.length;i++){
+      if(full[i].kind==='row'&&full[i].v0>full[i].aisleV)cuts.push(i+1);
+    }
+    cuts.forEach(function(c){
+      var bands=full.slice(0,c);
+      var rz=realize(bands);
+      if(!rz||rz.stalls===0)return;
+      var row=_afFindUnitRow(F,rz.depth+2,10,uw,ud,opt.maxSpan);
+      if(!row)return;
+      var specs=rz.specs.slice();
+      for(var n=0;n<row.spans;n++)specs.push(_afSpec(F,row.uStart+n*uw,row.v0,uw,ud,'unit'));
+      var units=row.spans*opt.resFloors;
+      var rate=units>0?Math.round(rz.stalls/units*100):0;
+      var plan={tiles:specs,stalls:rz.stalls,spans:row.spans,units:units,rate:rate,
+        label:'A案: 対面駐車（'+(start==='aisle'?'境界沿い車路・':'')+'奥行'+rz.depth.toFixed(0)+'m）'};
+      if(_afBetter(plan,best,opt))best=plan;
+    });
+  });
+  return best;
+}
+// B案: 進入辺から垂直に中央車路を伸ばし、両側に直角駐車（間口狭小時は住棟を縦向き配置）
+function _afPlanB(F,opt){
+  var r=opt.aisleW,sd=opt.parkD,sw=opt.parkW,uw=opt.unitW,ud=opt.unitD;
+  var best=null;
+  var modes=opt.parkOnly?['PP']:['PP','UP','PU'];
+  modes.forEach(function(mode){
+    var us;
+    if(mode==='PP')us=F.edgeLen/2;
+    else if(mode==='UP')us=F.uMin+ud+0.5+r/2;
+    else us=F.uMax-ud-0.5-r/2;
+    us=Math.min(Math.max(us,F.uMin+r/2+0.1),F.uMax-r/2-0.1);
+    var S0=us-r/2;
+    // 車路を奥へ伸ばす
+    var vEnd=0;
+    while(vEnd+2.5<=F.vMax&&_afCellOK(F,S0,vEnd,r,2.5,false))vEnd+=2.5;
+    if(vEnd<5)return;
+    var specs=[],stalls=0,units=0,spans=0,vLimit=vEnd;
+    if(mode==='PP'&&opt.parkOnly){
+      for(var vp=0;vp+sw<=vLimit+0.001;vp+=sw){
+        if(_afCellOK(F,S0-sd,vp,sd,sw,false)){specs.push(_afSpec(F,S0-sd,vp,sd,sw,'park'));stalls++;}
+        if(_afCellOK(F,S0+r,vp,sd,sw,false)){specs.push(_afSpec(F,S0+r,vp,sd,sw,'park'));stalls++;}
+      }
+    }else if(mode==='PP'){
+      // 住棟: 最奥から手前へ横一列を探索
+      var row=null;
+      for(var v0=F.vMax-ud;v0>=sd;v0-=1){
+        var bestN=0,bestS=0;
+        for(var st=F.uMin;st<=F.uMax-uw;st+=0.5){
+          var n=0;while(n<opt.maxSpan&&_afCellOK(F,st+n*uw,v0,uw,ud,true))n++;
+          if(n>bestN){bestN=n;bestS=st;}
+          if(n>0)st+=Math.max(0,(n-1))*uw;
+        }
+        if(bestN>=3){row={v0:v0,uStart:bestS,spans:bestN};break;}
+      }
+      if(!row)return;
+      vLimit=Math.min(vEnd,row.v0-2);
+      if(vLimit<5)return;
+      for(var v=0;v+sw<=vLimit+0.001;v+=sw){
+        if(_afCellOK(F,S0-sd,v,sd,sw,false)){specs.push(_afSpec(F,S0-sd,v,sd,sw,'park'));stalls++;}
+        if(_afCellOK(F,S0+r,v,sd,sw,false)){specs.push(_afSpec(F,S0+r,v,sd,sw,'park'));stalls++;}
+      }
+      for(var n2=0;n2<row.spans;n2++)specs.push(_afSpec(F,row.uStart+n2*uw,row.v0,uw,ud,'unit'));
+      spans=row.spans;units=spans*opt.resFloors;
+    }else{
+      // 住棟縦向き: 車路の片側に住戸列（奥行方向にスパン）、反対側に駐車
+      var uU=(mode==='UP')?S0-ud-0.3:S0+r+0.3; // 住棟側
+      var uP=(mode==='UP')?S0+r:S0-sd;          // 駐車側
+      // 住棟列: v方向に最長連続スパン
+      var col=null;
+      for(var cs=0;cs<=F.vMax-uw;cs+=0.5){
+        var cn=0;while(cn<opt.maxSpan&&_afCellOK(F,uU,cs+cn*uw,ud,uw,true))cn++;
+        if(cn>=3&&(!col||cn>col.spans))col={vStart:cs,spans:cn};
+        if(cn>0)cs+=Math.max(0,(cn-1))*uw;
+      }
+      if(!col)return;
+      for(var v2=0;v2+sw<=vLimit+0.001;v2+=sw){
+        if(_afCellOK(F,uP,v2,sd,sw,false)){specs.push(_afSpec(F,uP,v2,sd,sw,'park'));stalls++;}
+      }
+      for(var n3=0;n3<col.spans;n3++)specs.push(_afSpec(F,uU,col.vStart+n3*uw,ud,uw,'unit'));
+      spans=col.spans;units=spans*opt.resFloors;
+    }
+    if(stalls===0||(!opt.parkOnly&&units===0))return;
+    specs.push(_afSpec(F,S0,0,r,vLimit,'driveway'));
+    var rate=units>0?Math.round(stalls/units*100):0;
+    var plan={tiles:specs,stalls:stalls,spans:spans,units:units,rate:rate,
+      label:'B案: 中央車路'+(opt.parkOnly?' 全面敷き詰め':(mode==='PP'?'＋両側直角':'＋片側直角・住棟縦配置')),deadEnd:true};
+    if(_afBetter(plan,best,opt))best=plan;
+  });
+  return best;
+}
+function _afBetter(a,b,opt){
+  if(!b)return true;
+  if(opt.parkOnly)return a.stalls!==b.stalls?a.stalls>b.stalls:a.tiles.length<b.tiles.length;
+  var target=opt.target;
+  var aOK=a.rate>=target,bOK=b.rate>=target;
+  if(aOK!==bOK)return aOK;
+  if(aOK&&bOK)return a.units!==b.units?a.units>b.units:a.stalls>b.stalls;
+  return a.rate!==b.rate?a.rate>b.rate:a.stalls>b.stalls;
+}
+function runAutoLayout(){
+  if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}
+  if(entryEdge<0){alert('先に「進入辺を指定する」で車の進入辺をクリックしてください');return;}
+  var F=_afFrame();
+  var opt={
+    aisleW:parseFloat(document.getElementById('auto-aisle-w').value)||6,
+    maxSpan:Math.min(10,Math.max(3,parseInt(document.getElementById('auto-max-span').value)||10)),
+    parkW:DEFS.park.w,parkD:DEFS.park.d,
+    unitW:DEFS.unit.w,unitD:DEFS.unit.d,
+    resFloors:Math.max(1,(parseInt(document.getElementById('floors-input').value)||10)-1),
+    target:parseFloat((document.getElementById('park-target')||{value:100}).value)||100,
+    parkOnly:!!(document.getElementById('auto-park-only')&&document.getElementById('auto-park-only').checked)
+  };
+  var pA=_afPlanA(F,opt),pB=_afPlanB(F,opt);
+  if(!pA&&!pB){
+    document.getElementById('auto-result').innerHTML='<div style="font-size:11px;color:#dc2626;">配置案を生成できませんでした。敷地の奥行・間口、車路幅、キャリブレーションを確認してください。</div>';
+    return;
+  }
+  autoPlans={A:pA,B:pB};
+  autoPlans._parkOnly=opt.parkOnly;
+  var bestKey=(pA&&pB)?(_afBetter(pA,pB,opt)?'A':'B'):(pA?'A':'B');
+  applyAutoPlan(bestKey);
+}
+function applyAutoPlan(key){
+  var plan=autoPlans&&autoPlans[key];if(!plan)return;
+  saveTileHistory();
+  tiles.slice().forEach(function(t){if(t.autoGen)delTile(t);});
+  plan.tiles.forEach(function(s){
+    var t=createTileInternal(s.cx,s.cy,s.type,s.rot);
+    if(s.customW!=null)t.customW=s.customW;
+    if(s.customD!=null)t.customD=s.customD;
+    t.autoGen=true;reposTile(t);
+  });
+  autoAppliedKey=key;
+  updateMetrics();renderAutoResult();
+  var statTxt=plan.units>0?(plan.label+' ／ 駐車'+plan.stalls+'台・'+plan.spans+'スパン・想定'+plan.units+'戸（駐車率'+plan.rate+'%）'):(plan.label+' ／ 駐車'+plan.stalls+'台');
+  showToast('auto-ok','ok','自動配置を適用',statTxt,'タイルは個別に移動・削除できます。Ctrl+Zで取消');
+}
+function renderAutoResult(){
+  var el=document.getElementById('auto-result');if(!el||!autoPlans)return;
+  var html='';
+  ['A','B'].forEach(function(k){
+    var p=autoPlans[k];
+    if(!p){html+='<div style="font-size:10px;color:#a8a49e;padding:3px 0;">'+k+'案: 生成不可</div>';return;}
+    var on=autoAppliedKey===k;
+    var stat=p.units>0
+      ?('駐車'+p.stalls+'台 ／ '+p.spans+'スパン×'+(p.units/p.spans)+'F＝'+p.units+'戸 ／ 駐車率<b style="color:'+(p.rate>=100?'#16a34a':p.rate>=70?'#d97706':'#dc2626')+';">'+p.rate+'%</b>')
+      :('駐車<b style="color:#16a34a;">'+p.stalls+'台</b>（住棟なし）');
+    html+='<div style="border:1.5px solid '+(on?'#16a34a':'var(--border)')+';border-radius:7px;padding:5px 7px;margin-bottom:4px;background:'+(on?'#f0fdf4':'var(--surface2)')+';">'
+      +'<div style="font-size:10px;font-weight:800;color:var(--text2);">'+p.label+(on?' <span style="color:#16a34a;">✓適用中</span>':'')+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin:2px 0;">'+stat+(p.deadEnd?'<br>⚠ 行き止まり車路: 転回所の検討要':'')+'</div>'
+      +(on?'':'<button class="btn-sm" style="width:100%;" onclick="applyAutoPlan(\''+k+'\')">この案を適用</button>')
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
 
 // ── 自動保存（localStorage / 5秒間隔）──
 var AUTOSAVE_KEY='stp_autosave_v1';
