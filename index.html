@@ -286,7 +286,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
 </div>
 <div id="app">
 <aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.2</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.4</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
   <details class="sb-sec" data-acc="map" open=""><summary class="lbl">📄 地図・キャリブレーション</summary><div class="sec-body">
     
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -351,10 +351,11 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
       <div class="field"><label>車路幅 (m)</label><input type="number" id="auto-aisle-w" value="6" min="4" max="8" step="0.5"></div>
       <div class="field"><label>最大スパン</label><input type="number" id="auto-max-span" value="10" min="3" max="10" step="1"></div>
     </div>
+    <div class="field" style="margin-top:5px;"><label>建物まわりの余白 (m)</label><input type="number" id="auto-clear" value="0" min="0" max="3" step="0.1"></div>
     <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:5px;cursor:pointer;"><input type="checkbox" id="auto-park-only"> 🚗 駐車場のみ敷き詰める（住棟なし）</label>
     <button class="btn-primary" style="margin-top:6px;background:#16a34a;" onclick="runAutoLayout()">⚡ 自動配置を実行</button>
     <div id="auto-result" style="margin-top:6px;"></div>
-    <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:4px 6px;background:var(--surface2);border-radius:5px;border-left:3px solid #16a34a;">進入辺を軸に A案:対面駐車（車路平行） / B案:中央車路（車路垂直）を生成し、目標駐車率に近い案を適用。住戸はSB外、駐車・車路はSB内OK。目標駐車率は「建物・法規設定」の駐車場目標%を使用。</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:4px 6px;background:var(--surface2);border-radius:5px;border-left:3px solid #16a34a;">進入辺を軸に A案:対面駐車（車路平行） / B案:中央車路（車路垂直）を生成。<b>すでに配置済みの住戸・バルコニー・エントランス・EV・階段・廊下・駐車場は自動でよけ</b>、先に置いた駐車場の<b>前面には車路幅ぶんのアイルを確保</b>したうえで、空きスペースに駐車場を最大数で敷き詰めます（「建物まわりの余白」で隙間調整／車路幅は上の入力値を使用）。住戸はSB外、駐車・車路はSB内OK。</div>
   </div></details>
   <details class="sb-sec" data-acc="edgepark" open=""><summary class="lbl">🅿️ 辺沿い駐車（境界線に沿って配置）</summary><div class="sec-body">
     <button class="btn-primary" id="btn-edgepark-mode" style="background:#0891b2;" onclick="toggleEdgePark()">🅿️ 辺を選んで配置</button>
@@ -610,10 +611,9 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
   </div>
 </div>
 
-<script src="./敷地タイルプランナー_files/pdf.min.js.ダウンロード">
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 var ppm=10,canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
 var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
 var currentTool=null,currentRot=0,lastRot=0,tileOpacity=0.65;
@@ -703,6 +703,7 @@ function loadImageBg(dataUrl){
 }
 
 function loadPdf(data){
+  if(typeof pdfjsLib==='undefined'){alert('PDF.jsライブラリが読み込めませんでした。インターネット接続を確認してください（画像PNG/JPGのドロップは利用できます）。');return;}
   pdfjsLib.getDocument({data:data}).promise.then(function(pdf){return pdf.getPage(1);}).then(function(page){
     var vp=page.getViewport({scale:2});
     mapCanvas.width=vp.width;mapCanvas.height=vp.height;
@@ -3135,6 +3136,53 @@ function _afFrame(){
   return{ox:ax,oy:ay,ux:ux,uy:uy,nx:nx,ny:ny,theta:theta,uMin:uMin,uMax:uMax,vMax:vMax,edgeLen:len/ppm};
 }
 function _afToWorld(F,u,v){return{x:F.ox+(u*F.ux+v*F.nx)*ppm,y:F.oy+(u*F.uy+v*F.ny)*ppm};}
+// ── 既存建物タイルを障害物として自動配置で回避 ──
+var _afObstacles=[]; // [{cx,cy,ax,ay,bx,by,ha,hb}] world px（回転矩形）
+function _afBuildObstacles(){
+  var avoidBldg={unit:1,unit1f:1,balcony:1,entrance:1,elev:1,stair:1,corridor:1};
+  var avoidPark={park:1,mechpark:1}; // 先に配置した駐車場も回避
+  var padM=parseFloat((document.getElementById('auto-clear')||{value:0}).value);if(isNaN(padM))padM=0;
+  var pad=padM*ppm;
+  var aisleM=parseFloat((document.getElementById('auto-aisle-w')||{value:6}).value)||6; // 確保する車路幅
+  var aisle=aisleM*ppm;
+  var C=_polyCentroid();
+  _afObstacles=[];
+  tiles.forEach(function(t){
+    if(t.autoGen)return;            // 自動生成タイルは再生成で消えるので対象外
+    var isBldg=avoidBldg[t.type],isPark=avoidPark[t.type];
+    if(!isBldg&&!isPark)return;
+    var def=getTileDef(t);
+    var r=(t.rot||0)*Math.PI/180,c=Math.cos(r),s=Math.sin(r);
+    var ax=c,ay=s,bx=-s,by=c;       // ax,ay=幅軸 / bx,by=奥行軸
+    var hw=def.w*ppm/2+pad,hb=def.d*ppm/2+pad;
+    var ocx=t.cx,ocy=t.cy;
+    if(isPark&&aisle>0){
+      // 出入口側（奥行軸のうち敷地重心へ向く向き）に車路幅ぶんだけ前面拡張
+      var dot=bx*(C.x-t.cx)+by*(C.y-t.cy);
+      var fx=bx,fy=by;if(dot<0){fx=-bx;fy=-by;}
+      ocx+=fx*(aisle/2);ocy+=fy*(aisle/2);
+      hb+=aisle/2;                   // 前面のみ aisle 分拡張（背面は不変）
+    }
+    _afObstacles.push({cx:ocx,cy:ocy,ax:ax,ay:ay,bx:bx,by:by,ha:hw,hb:hb});
+  });
+}
+// 2つの回転矩形(OBB)が重なるか（分離軸定理）
+function _obbOverlap(A,B){
+  var axes=[[A.ax,A.ay],[A.bx,A.by],[B.ax,B.ay],[B.bx,B.by]];
+  for(var i=0;i<4;i++){
+    var nx=axes[i][0],ny=axes[i][1];
+    var ca=A.cx*nx+A.cy*ny, ra=A.ha*Math.abs(A.ax*nx+A.ay*ny)+A.hb*Math.abs(A.bx*nx+A.by*ny);
+    var cb=B.cx*nx+B.cy*ny, rb=B.ha*Math.abs(B.ax*nx+B.ay*ny)+B.hb*Math.abs(B.bx*nx+B.by*ny);
+    if(ca+ra<cb-rb-0.01||cb+rb<ca-ra-0.01)return false; // 分離軸あり→非重複
+  }
+  return true;
+}
+function _afHitsObstacle(F,c,du,dv){
+  if(!_afObstacles.length)return false;
+  var cell={cx:c.x,cy:c.y,ax:F.ux,ay:F.uy,bx:F.nx,by:F.ny,ha:du/2*ppm,hb:dv/2*ppm};
+  for(var i=0;i<_afObstacles.length;i++){if(_obbOverlap(cell,_afObstacles[i]))return true;}
+  return false;
+}
 // セル[u0,u0+du]×[v0,v0+dv]が有効か（4隅が敷地内、forbidSB時はSBゾーン外）
 function _afCellOK(F,u0,v0,du,dv,forbidSB){
   var c=_afToWorld(F,u0+du/2,v0+dv/2);
@@ -3146,6 +3194,7 @@ function _afCellOK(F,u0,v0,du,dv,forbidSB){
     if(!pointInPoly(wx,wy))return false;
   }
   if(forbidSB&&setbacks.length>0&&inSetbackZone(c.x,c.y,du*ppm,dv*ppm,F.theta))return false;
+  if(_afHitsObstacle(F,c,du,dv))return false;
   return true;
 }
 function _afSpec(F,u0,v0,du,dv,type){
@@ -3369,6 +3418,7 @@ function _afBetter(a,b,opt){
 function runAutoLayout(){
   if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}
   if(entryEdge<0){alert('先に「進入辺を指定する」で車の進入辺をクリックしてください');return;}
+  _afBuildObstacles();
   var F=_afFrame();
   var opt={
     aisleW:parseFloat(document.getElementById('auto-aisle-w').value)||6,
