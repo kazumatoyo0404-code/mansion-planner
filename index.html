@@ -286,7 +286,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
 </div>
 <div id="app">
 <aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.9</div><div class="sb-sub">AUTO PLANNING EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.9.1</div><div class="sb-sub">AUTO PLANNING EDITION</div></div>
   <details class="sb-sec" data-acc="map" open=""><summary class="lbl">① 地図・キャリブレーション</summary><div class="sec-body">
     
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -622,7 +622,18 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
   </div>
 </div>
 
-<script src="./敷地タイルプランナー_files/pdf.min.js.ダウンロード"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// CDNが使えない環境（オフライン等）ではローカル保存版にフォールバック
+if(typeof pdfjsLib==='undefined'){
+  (function(){
+    var s=document.createElement('script');
+    s.src='./敷地タイルプランナー_files/pdf.min.js.ダウンロード';
+    s.onload=function(){if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}};
+    document.head.appendChild(s);
+  })();
+}
+</script>
 <script>
 if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 var ppm=10,canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
@@ -715,7 +726,7 @@ function loadImageBg(dataUrl){
 }
 
 function loadPdf(data){
-  if(typeof pdfjsLib==='undefined'){alert('PDF.jsライブラリが読み込めませんでした。インターネット接続を確認してください（画像PNG/JPGのドロップは利用できます）。');return;}
+  if(typeof pdfjsLib==='undefined'){alert('PDF表示ライブラリを読み込めませんでした。インターネット接続を確認して、ページを再読み込みしてから再度お試しください（画像PNG/JPGのドロップは接続なしでも利用できます）。');return;}
   pdfjsLib.getDocument({data:data}).promise.then(function(pdf){return pdf.getPage(1);}).then(function(page){
     var vp=page.getViewport({scale:2});
     mapCanvas.width=vp.width;mapCanvas.height=vp.height;
