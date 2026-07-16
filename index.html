@@ -286,7 +286,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
 </div>
 <div id="app">
 <aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.4</div><div class="sb-sub">POLYGON SETBACK EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v9.8</div><div class="sb-sub">AUTO PLANNING EDITION</div></div>
   <details class="sb-sec" data-acc="map" open=""><summary class="lbl">📄 地図・キャリブレーション</summary><div class="sec-body">
     
     <div style="font-size:11px;color:var(--text2);margin-bottom:7px;">右のグレーエリアにPDFをドロップ</div>
@@ -344,6 +344,16 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
     <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:4px 6px;background:var(--surface2);border-radius:5px;border-left:3px solid #dc2626;">🔴道路 / 🟡隣地 ゾーン内は住戸配置不可・駐車OK</div>
   
   </div></details>
+  <details class="sb-sec" data-acc="autoplan" open=""><summary class="lbl">🏗 マンション自動企画（プロ診断）</summary><div class="sec-body">
+    <div class="field"><label>住所・現場メモ（任意）</label><input type="text" id="plan-address" placeholder="例）宇都宮市○○町1-2-3" style="width:100%;height:30px;padding:0 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);outline:none;"></div>
+    <button class="btn-primary" id="btn-north-mode" style="margin-top:6px;background:#16a34a;" onclick="toggleNorthMode()">🧭 北辺を指定する</button>
+    <div id="north-edge-display" style="margin-top:3px;font-size:11px;color:var(--text3);">北辺: 未設定（バルコニー南向き最適化に必要）</div>
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:6px;cursor:pointer;"><input type="checkbox" id="plan-fit-height" checked> 高さ制限内で最大階数に自動調整</label>
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:4px;cursor:pointer;"><input type="checkbox" id="plan-orient" checked> 🌞 バルコニー南向き優先（南→東）で配置</label>
+    <button class="btn-primary" style="margin-top:6px;background:#1a73c7;" onclick="autoMansionPlan()">⚡ この敷地で最適プランを自動作成</button>
+    <div id="plan-diag" style="margin-top:7px;"></div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;padding:4px 6px;background:var(--surface2);border-radius:5px;border-left:3px solid #1a73c7;line-height:1.5;">敷地形状＋用途地域・建蔽率・容積率・高さ制限から、<b>高さ制限内で最大階数</b>を決め、住棟＋<b>平置き駐車を最大化</b>して自動配置し、容積消化率・戸数・駐車充足を<b>プロ視点で診断</b>します。進入辺・北辺が未設定のときは選択をお願いします。<b>🌞南向き優先ON</b>のとき、住棟の開口（バルコニー面）を南→東の優先で選び、バルコニーを自動作図します。上限値は上の「用途地域」プリセットまたは詳細設定を使用します。</div>
+  </div></details>
   <details class="sb-sec" data-acc="autolayout" open=""><summary class="lbl">🤖 自動配置（住棟＋駐車場）</summary><div class="sec-body">
     <button class="btn-primary" id="btn-entry-mode" style="background:#0891b2;" onclick="toggleEntryMode()">🚗 進入辺を指定する</button>
     <div id="entry-edge-display" style="margin-top:4px;font-size:11px;color:var(--text3);">進入辺: 未設定</div>
@@ -396,6 +406,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
     <div class="snap-row"><label>📌 補助線を表示</label><label class="toggle"><input type="checkbox" id="show-guide" checked="" onchange="toggleLayerVis(&#39;guide&#39;)"><span class="tog-sl"></span></label></div>
     <div class="snap-row"><label>🚧 SBゾーンを表示</label><label class="toggle"><input type="checkbox" id="show-sb" checked="" onchange="toggleLayerVis(&#39;sb&#39;)"><span class="tog-sl"></span></label></div>
     <div class="snap-row"><label>🏷 タイルラベル表示</label><label class="toggle"><input type="checkbox" id="show-label" checked="" onchange="toggleLayerVis(&#39;label&#39;)"><span class="tog-sl"></span></label></div>
+    <div class="snap-row"><label>🎨 塗りを消す（枠線のみ）</label><label class="toggle"><input type="checkbox" id="no-fill" onchange="toggleNoFill()"><span class="tog-sl"></span></label></div>
     <div class="slider-row" style="margin-top:4px;"><label>透明度</label><input type="range" id="op-range" min="10" max="95" value="65" oninput="onOpacity()"><span class="slider-val" id="op-val">65%</span></div>
     <div class="slider-row" style="margin-top:4px;"><label>線の太さ</label><input type="range" id="lw-range" min="0.3" max="2.5" step="0.1" value="0.8" oninput="onLineWidth()"><span class="slider-val" id="lw-val">0.8</span></div>
   
@@ -462,10 +473,10 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
         <option value="60,150,north,0.6,12">第1種低層住居 (建60/容150/絶対高さ12m)</option>
         <option value="60,200,north,1.25">第1種中高層住居 (建60/容200)</option>
         <option value="60,300,north,1.25">第2種中高層住居 (建60/容300)</option>
-        <option value="60,400,none,1.5">第1種住居 (建60/容400)</option>
+        <option value="60,400,none,1.5,0,ju1">第1種住居 (建60/容400)</option>
         <option value="80,400,none,1.5">近隣商業 (建80/容400)</option>
         <option value="80,600,none,2.0">商業 (建80/容600)</option>
-        <option value="60,400,none,1.5">準工業 (建60/容400)</option>
+        <option value="60,400,none,1.5,0,jun">準工業 (建60/容400)</option>
       </select>
     </div>
     <div class="slider-row" style="margin-bottom:5px;">
@@ -539,7 +550,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
 <div id="canvas-wrap">
   <div id="drop-hint"><div class="icon">📄</div><div class="text">公図PDF / 画像をここにドロップ</div><div class="sub">PDF・PNG・JPGの地図を読み込んでプランを検討できます</div></div>
   <canvas id="map-canvas"></canvas>
-  <svg id="tile-svg"><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
+  <svg id="tile-svg"><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><defs></defs><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g></svg>
   <div id="mode-badge" class="pan">地図パンモード</div>
   <div id="sel-bar" style="display: none;"></div>
   <div id="hud">1m=<span id="hud-ppm">10.0</span>px | zoom:<span id="hud-zoom">100</span>% | <span id="hud-extra"></span></div>
@@ -611,13 +622,14 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="./敷地タイルプランナー_files/pdf.min.js.ダウンロード"></script>
 <script>
 if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 var ppm=10,canvasZoom=1,panX=0,panY=0,pdfLoaded=false;
 var isPanning=false,panSX=0,panSY=0,panSPX=0,panSPY=0;
 var currentTool=null,currentRot=0,lastRot=0,tileOpacity=0.65;
 var tileLineW=0.8; // タイル枠線の太さ
+var tileNoFill=false; // 枠線のみ表示（塗りなし）モード
 var tiles=[],uid=0,selectedTile=null,selectedTiles=[],copiedTiles=[];
 var groupLocked=false; // 後方互換
 var dragMoved=false; // ドラッグ判定フラグ
@@ -640,18 +652,18 @@ var edgeParkMode=false;
 // 北辺
 var northMode=false,northEdge=-1;
 var DEFS={
-  unit:     {w:6.3, d:11.1,  fill:[29,78,216],   stroke:'#1e40af',label:'住戸',        far:true, floors:'res'},
-  unit1f:   {w:6.3, d:11.1,  fill:[239,68,68],   stroke:'#dc2626',label:'1F住戸',      far:true, floors:'one'},
-  park:     {w:2.5, d:5,  fill:[148,163,184],  stroke:'#64748b',label:'駐車場',      far:false,floors:'none'},
-  driveway: {w:6,   d:6,  fill:[20,184,166],   stroke:'#0d9488',label:'車路',        far:false,floors:'none'},
-  mechpark: {w:12,  d:6.5,fill:[100,116,139],  stroke:'#475569',label:'機械式P',     far:false,floors:'none'},
-  stair:    {w:3,   d:4,  fill:[251,191,36],   stroke:'#d97706',label:'階段',        far:false,floors:'none'},
-  elev:     {w:2,   d:2,  fill:[234,179,8],    stroke:'#a16207',label:'EV',          far:false,floors:'none'},
-  corridor: {w:30,  d:3,  fill:[14,165,233],   stroke:'#0284c7',label:'外廊下',      far:false,floors:'none'},
-  balcony:  {w:10,  d:2,  fill:[51,65,85],     stroke:'#1e293b',label:'バルコニー',  far:false,floors:'none'},
-  garden:   {w:6,   d:6,  fill:[34,197,94],    stroke:'#16a34a',label:'1F庭',        far:false,floors:'none'},
-  entrance: {w:12,  d:15, fill:[249,115,22],   stroke:'#ea580c',label:'エントランス',far:false,floors:'one'},
-  free:     {w:4,   d:4,  fill:[168,85,247],   stroke:'#9333ea',label:'フリー',      far:false,floors:'none'}
+  unit:     {w:6.3, d:11.1,fill:[122,134,150], stroke:'#565f6d',label:'住戸',        far:true, floors:'res'},
+  unit1f:   {w:6.3, d:11.1,fill:[170,142,120], stroke:'#7e6450',label:'1F住戸',      far:true, floors:'one'},
+  park:     {w:2.5, d:5,  fill:[208,206,200],  stroke:'#9c988f',label:'駐車場',      far:false,floors:'none'},
+  driveway: {w:6,   d:6,  fill:[178,184,186],  stroke:'#767c7e',label:'車路',        far:false,floors:'none'},
+  mechpark: {w:12,  d:6.5,fill:[150,156,164],  stroke:'#656b73',label:'機械式P',     far:false,floors:'none'},
+  stair:    {w:3,   d:4,  fill:[206,190,156],  stroke:'#9e8a5c',label:'階段',        far:false,floors:'none'},
+  elev:     {w:2,   d:2,  fill:[186,178,166],  stroke:'#857c6d',label:'EV',          far:false,floors:'none'},
+  corridor: {w:30,  d:3,  fill:[150,170,182],  stroke:'#66808e',label:'外廊下',      far:false,floors:'none'},
+  balcony:  {w:10,  d:2,  fill:[104,116,130],  stroke:'#454e5a',label:'バルコニー',  far:false,floors:'none'},
+  garden:   {w:6,   d:6,  fill:[152,180,146],  stroke:'#6c8a60',label:'1F庭',        far:false,floors:'none'},
+  entrance: {w:12,  d:15, fill:[188,166,124],  stroke:'#927e48',label:'エントランス',far:false,floors:'one'},
+  free:     {w:4,   d:4,  fill:[180,170,180],  stroke:'#7e7482',label:'フリー',      far:false,floors:'none'}
 };
 var wrap=document.getElementById('canvas-wrap');
 var mapCanvas=document.getElementById('map-canvas');
@@ -1246,7 +1258,7 @@ function doRedo(){
 // ── SVGヘルパー ──
 function mkS(tag,attrs){var el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)el.setAttribute(k,attrs[k]);return el;}
 function clearEl(el){while(el.firstChild)el.removeChild(el.firstChild);}
-function fc(def){return'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+','+tileOpacity+')';}
+function fc(def){return tileNoFill?'none':'rgba('+def.fill[0]+','+def.fill[1]+','+def.fill[2]+','+tileOpacity+')';}
 function getTileDef(t){
   var def=Object.assign({},DEFS[t.type]);
   if(t.type==='free'&&t.freeConfig){def.w=t.freeConfig.w;def.d=t.freeConfig.d;def.label=t.freeConfig.name;}
@@ -1283,8 +1295,8 @@ function createTileInternal(cx,cy,type,rot){
   // 住戸タイル専用: 1Fエントランス帯
   var entBar=null,entLbl=null;
   if(type==='unit'){
-    entBar=mkS('rect',{rx:'0',fill:'rgba(30,64,175,0.35)',stroke:'#1d4ed8','stroke-width':'0.5','pointer-events':'none'});g.appendChild(entBar);
-    entLbl=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke',stroke:'#1d4ed8','stroke-width':'2'});
+    entBar=mkS('rect',{rx:'0',fill:'rgba(146,126,72,0.30)',stroke:'#927e48','stroke-width':'0.5','pointer-events':'none'});g.appendChild(entBar);
+    entLbl=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',fill:'#fff','font-weight':'700','font-family':'sans-serif','pointer-events':'none','paint-order':'stroke',stroke:'#927e48','stroke-width':'2'});
     entLbl.textContent='';g.appendChild(entLbl);
   }
   var tile={id:id,g:g,rect:rect,hr:hr,lbl:lbl,dim:dim,rh:rh,rhT:rhT,dh:dh,dhT:dhT,eL1:eL1,eL2:eL2,rsH:rsH,rsHT:rsHT,entBar:entBar,entLbl:entLbl,cx:cx,cy:cy,type:type,rot:rot,freeConfig:savedFree,rW:undefined};
@@ -1352,7 +1364,7 @@ function reposTile(t){
   var totalFloors=Math.max(2,parseInt(document.getElementById('floors-input').value)||10);
   var resFloors=totalFloors-1;
   t.rect.setAttribute('x','0');t.rect.setAttribute('y','0');t.rect.setAttribute('width',pw);t.rect.setAttribute('height',ph);t.rect.setAttribute('fill',fc(def));
-  t.rect.setAttribute('stroke',isSel?'#6366f1':def.stroke);t.rect.setAttribute('stroke-width',isSel?(tileLineW+1.2):tileLineW);t.rect.setAttribute('stroke-opacity',isSel?'1':'0.6');
+  t.rect.setAttribute('stroke',isSel?'#6366f1':def.stroke);t.rect.setAttribute('stroke-width',isSel?(tileLineW+1.2):tileLineW);t.rect.setAttribute('stroke-opacity',isSel?'1':(tileNoFill?'0.95':'0.6'));
   if(t.hr){t.hr.setAttribute('x','0');t.hr.setAttribute('y','0');t.hr.setAttribute('width',pw);t.hr.setAttribute('height',ph);}
   if(t.eL1){t.eL1.setAttribute('x1','0');t.eL1.setAttribute('y1','0');t.eL1.setAttribute('x2',pw);t.eL1.setAttribute('y2',ph);}
   if(t.eL2){t.eL2.setAttribute('x1',pw);t.eL2.setAttribute('y1','0');t.eL2.setAttribute('x2','0');t.eL2.setAttribute('y2',ph);}
@@ -1368,7 +1380,7 @@ function reposTile(t){
       t.dim.setAttribute('x',pw/2);t.dim.setAttribute('y',ph*0.62);t.dim.setAttribute('font-size',Math.max(8,fs*0.75));
       // 1Fバッジ（左上の赤帯）
       if(!t._1fBadge){
-        var badge=mkS('rect',{x:0,y:0,width:pw*0.28,height:ph*0.22,fill:'#dc2626','pointer-events':'none',rx:'0'});
+        var badge=mkS('rect',{x:0,y:0,width:pw*0.28,height:ph*0.22,fill:'#6b5d50','pointer-events':'none',rx:'0'});
         var badgeTxt=mkS('text',{'text-anchor':'middle','dominant-baseline':'middle',
           x:pw*0.14,y:ph*0.11,fill:'#fff','font-size':Math.max(8,fs*0.72),'font-weight':'900',
           'pointer-events':'none','font-family':'sans-serif'});
@@ -1378,6 +1390,10 @@ function reposTile(t){
         t._1fBadge=badge;t._1fBadgeTxt=badgeTxt;
       }
       t._1fBadge.setAttribute('width',pw*0.28);t._1fBadge.setAttribute('height',ph*0.22);
+      t._1fBadge.setAttribute('fill',tileNoFill?'none':'#6b5d50');
+      t._1fBadge.setAttribute('stroke',tileNoFill?'#7e6450':'none');
+      t._1fBadge.setAttribute('stroke-width',tileNoFill?'0.6':'0');
+      t._1fBadgeTxt.setAttribute('fill',tileNoFill?'#7e6450':'#fff');
       t._1fBadgeTxt.setAttribute('x',pw*0.14);t._1fBadgeTxt.setAttribute('y',ph*0.11);
       t._1fBadgeTxt.setAttribute('font-size',Math.max(8,fs*0.72));
     } else {
@@ -1391,6 +1407,7 @@ function reposTile(t){
       var barH=Math.max(14,Math.min(ph*0.24,22));
       t.entBar.setAttribute('x','0');t.entBar.setAttribute('y',ph-barH);
       t.entBar.setAttribute('width',pw);t.entBar.setAttribute('height',barH);
+      t.entBar.setAttribute('fill',tileNoFill?'none':'rgba(146,126,72,0.30)');
     }
     if(t.entLbl){
       var barH2=Math.max(14,Math.min(ph*0.24,22));
@@ -1479,7 +1496,7 @@ function setupResize(h,tile){
   h.addEventListener('mousedown',function(e){
     e.stopPropagation();e.preventDefault();saveTileHistory();
     var def=getTileDef(tile),startW=def.w,sx=e.clientX;
-    function mv(ev){var dx=(ev.clientX-sx)/canvasZoom/ppm,nw=Math.max(0.5,startW+dx);tile.rW=Math.round(nw*2)/2;reposTile(tile);updateMetrics();}
+    function mv(ev){var dx=(ev.clientX-sx)/canvasZoom/ppm,nw=Math.max(0.5,startW+dx);tile.rW=Math.round(nw*2)/2;tile.customW=null;reposTile(tile);updateMetrics();}
     function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
     document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
   });
@@ -1748,6 +1765,11 @@ document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT')return;
   if(e.key==='Escape'){
     currentTool=null;calibMode=false;measureMode=false;guideMode=false;
+    // 辺選択系モードの解除（ボタン表示もトグル関数経由で復元）
+    if(entryMode)toggleEntryMode();
+    if(northMode)toggleNorthMode();
+    if(setbackMode)toggleSetbackMode();
+    _exitEdgeParkMode();
     if(currentFavorite){clearFavGhost();currentFavorite=null;}
     if(!groupLocked){selectedTiles=[];selectedTile=null;tiles.forEach(reposTile);}
     document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
@@ -1818,6 +1840,7 @@ function setRotLast(){setRot(lastRot);}
 function setRotCustom(){var v=parseInt(document.getElementById('rot-custom').value)||0;currentRot=((v%360)+360)%360;document.querySelectorAll('.rot-btn').forEach(function(el){el.classList.remove('active');});}
 function onOpacity(){tileOpacity=parseInt(document.getElementById('op-range').value)/100;document.getElementById('op-val').textContent=Math.round(tileOpacity*100)+'%';tiles.forEach(reposTile);}
 function onLineWidth(){tileLineW=parseFloat(document.getElementById('lw-range').value)||0.8;document.getElementById('lw-val').textContent=tileLineW.toFixed(1);tiles.forEach(reposTile);}
+function toggleNoFill(){tileNoFill=document.getElementById('no-fill').checked;tiles.forEach(reposTile);}
 function updateDefs(){
   DEFS.unit.w=parseFloat(document.getElementById('unit-w').value)||11.5;DEFS.unit.d=parseFloat(document.getElementById('unit-d').value)||6;
   DEFS.unit1f.w=parseFloat(document.getElementById('unit1f-w').value)||11.5;DEFS.unit1f.d=parseFloat(document.getElementById('unit1f-d').value)||6;
@@ -2091,7 +2114,7 @@ function updateMetrics(){
   var roadSlope=parseFloat(document.getElementById('road-slope').value)||1.5;
   var _fr=document.getElementById('floors-range');if(_fr&&parseFloat(_fr.value)!==totalFloors)_fr.value=Math.min(15,Math.max(2,totalFloors));
   var _rr=document.getElementById('road-range');if(_rr&&parseFloat(_rr.value)!==roadW)_rr.value=Math.min(20,Math.max(4,roadW));
-  var u1f=0,farArea=0;
+  var u1f=0,farArea=0,farRes=0,farOne=0,farAll=0;
   tiles.forEach(function(t){
     var def=getTileDef(t),a=def.w*def.d;
     var fl=def.floors||'none';
@@ -2102,9 +2125,9 @@ function updateMetrics(){
     if(t.type==='stair')s++;
     if(t.type==='elev')ev++;
     if(def.far){
-      if(fl==='res') farArea+=a*resFloors;
-      else if(fl==='one') farArea+=a;
-      else if(fl==='all') farArea+=a*totalFloors;
+      if(fl==='res'){ farArea+=a*resFloors; farRes+=a; }
+      else if(fl==='one'){ farArea+=a; farOne+=a; }
+      else if(fl==='all'){ farArea+=a*totalFloors; farAll+=a; }
     }
   });
   var totalUnits=u*resFloors+u1f;
@@ -2326,6 +2349,7 @@ function updateMetrics(){
       showToast('sb-info','info','セットバック設定中',sbInfoList,'');
     }
   }
+  window._planStats={siteArea:siteArea,bcrLimit:bcrLimit,farLimit:farLimit,bcr:bcr,far:far,bA:bA,gfa:totalFloorArea,units:totalUnits,park:p,parkRate:parkRate,floors:totalFloors,floorH:floorH,buildingH:buildingH,hLimit:hLimit,absH0:absH0,parkTarget:parkTarget,farRes:farRes,farOne:farOne,farAll:farAll};
   _updateLegalBadge();
 }
 
@@ -2661,6 +2685,7 @@ function buildProjectData(){
       absHeight:     getVal('abs-height'),
       parkTarget:    getVal('park-target'),
       bizType:       currentBizType,
+      planAddress:   getVal('plan-address'),
       overrideArea:  overrideArea
     },
 
@@ -2683,6 +2708,7 @@ function buildProjectData(){
         rW: t.rW||null,
         customW: t.customW||null,
         customD: t.customD||null,
+        autoGen: t.autoGen||false,
         freeConfig: t.freeConfig?{
           name:t.freeConfig.name,
           w:t.freeConfig.w,
@@ -2699,7 +2725,9 @@ function buildProjectData(){
     // 表示設定
     view:{
       panX:panX, panY:panY, canvasZoom:canvasZoom,
-      showGrid:showGrid, tileOpacity:tileOpacity, tileLineW:tileLineW,
+      showGrid:showGrid, tileOpacity:tileOpacity, tileLineW:tileLineW, tileNoFill:tileNoFill,
+      planFitH:!!(document.getElementById('plan-fit-height')&&document.getElementById('plan-fit-height').checked),
+      planOrient:!!(document.getElementById('plan-orient')&&document.getElementById('plan-orient').checked),
       currentRot:currentRot, lastRot:lastRot,
       snapOn:    document.getElementById('snap-toggle')   ? document.getElementById('snap-toggle').checked   : true,
       overlapOn: document.getElementById('overlap-toggle')? document.getElementById('overlap-toggle').checked : true,
@@ -2792,7 +2820,9 @@ function _applyProjectData(data){
   setVal('far-limit',      s.farLimit);
   setVal('north-slope',    s.northSlope);
   setVal('road-slope',     s.roadSlope);
-  setVal('zone-preset',    s.zonePreset);
+  // 旧バージョン互換: 値が重複していた「第1種住居/準工業」は第1種住居として復元（上限値は個別に復元されるため実害なし）
+  var _zp=(s.zonePreset==='60,400,none,1.5')?'60,400,none,1.5,0,ju1':s.zonePreset;
+  setVal('zone-preset',    _zp);
   setVal('unit-w',         s.unitW);
   setVal('unit-d',         s.unitD);
   setVal('unit1f-w',       s.unit1fW);
@@ -2811,6 +2841,7 @@ function _applyProjectData(data){
   setVal('abs-height',     s.absHeight);
   setVal('park-target',    s.parkTarget);
   if(s.bizType)setBizType(s.bizType,false);
+  if(s.planAddress!==undefined)setVal('plan-address',s.planAddress);
   updatePresetBadge();
   overrideArea=s.overrideArea||null;
 
@@ -2877,6 +2908,7 @@ function _applyProjectData(data){
     showGrid=data.view.showGrid||false;
     tileOpacity=data.view.tileOpacity||0.65;
     tileLineW=(data.view.tileLineW!==undefined)?data.view.tileLineW:0.8;
+    tileNoFill=data.view.tileNoFill||false;
     currentRot=data.view.currentRot||0;
     lastRot=data.view.lastRot||0;
     applyTf();
@@ -2896,6 +2928,9 @@ function _applyProjectData(data){
     restoreToggle('show-guide',     data.view.showGuide,   true);
     restoreToggle('show-sb',        data.view.showSb,      true);
     restoreToggle('show-label',     data.view.showLabel,   true);
+    restoreToggle('no-fill',        data.view.tileNoFill,  false);
+    restoreToggle('plan-fit-height',data.view.planFitH,    true);
+    restoreToggle('plan-orient',    data.view.planOrient,  true);
     // 各レイヤー表示を反映
     toggleLayerVis('measure');toggleLayerVis('guide');
     toggleLayerVis('sb');toggleLayerVis('label');
@@ -2912,6 +2947,7 @@ function _applyProjectData(data){
     northEdge=(data.edges.northEdge!==undefined)?data.edges.northEdge:-1;
     redrawSb(); // 進入辺・北辺をSVGに反映
     if(typeof updateEntryDisplay==='function')updateEntryDisplay();
+    if(typeof updateNorthDisplay==='function')updateNorthDisplay();
   }
 
   // ── フリータイル設定の復元 ──
@@ -3027,6 +3063,55 @@ function updateEntryDisplay(){
   var ej=(entryEdge+1)%polyPts.length;
   var len=(Math.sqrt(Math.pow(polyPts[ej].x-polyPts[entryEdge].x,2)+Math.pow(polyPts[ej].y-polyPts[entryEdge].y,2))/ppm).toFixed(1);
   el.innerHTML='進入辺: <b style="color:#0891b2;">'+(entryEdge+1)+'辺（'+len+'m）</b>';
+}
+function toggleNorthMode(){
+  if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}
+  northMode=!northMode;
+  var btn=document.getElementById('btn-north-mode');
+  if(northMode){
+    entryMode=false;setbackMode=false;_exitEdgeParkMode();
+    var eb=document.getElementById('btn-entry-mode');if(eb){eb.textContent='🚗 進入辺を指定する';eb.style.background='#0891b2';}
+    btn.textContent='北側の辺をクリックしてください';btn.style.background='#dc2626';
+    setBadge('calib','北辺 — 辺をクリック');wrap.style.cursor='crosshair';
+    currentTool=null;document.querySelectorAll('.tool-btn').forEach(function(el){el.classList.remove('active');});
+  }else{
+    btn.textContent='🧭 北辺を指定する';btn.style.background='#16a34a';
+    setBadge('pan','地図パンモード');wrap.style.cursor='';
+  }
+}
+function updateNorthDisplay(){
+  var el=document.getElementById('north-edge-display');if(!el)return;
+  if(northEdge<0||!polyDone){el.textContent='北辺: 未設定（バルコニー南向き最適化に必要）';return;}
+  el.innerHTML='北辺: <b style="color:#16a34a;">'+(northEdge+1)+'辺</b>（南＝この辺の反対方向）';
+}
+// ── 方位ベクトル（北辺の外向き法線＝北、南・東を導出）──
+function _compassVecs(){
+  if(northEdge<0||northEdge>=polyPts.length)return null;
+  var i=northEdge,j=(i+1)%polyPts.length;
+  var dx=polyPts[j].x-polyPts[i].x,dy=polyPts[j].y-polyPts[i].y;
+  var L=Math.sqrt(dx*dx+dy*dy)||1;
+  var nx=-dy/L,ny=dx/L; // 辺の法線（仮）
+  var C=_polyCentroid(),mx=(polyPts[i].x+polyPts[j].x)/2,my=(polyPts[i].y+polyPts[j].y)/2;
+  if((C.x-mx)*nx+(C.y-my)*ny>0){nx=-nx;ny=-ny;} // 外向き＝北
+  var N={x:nx,y:ny};
+  var S={x:-nx,y:-ny};
+  var E={x:-ny,y:nx}; // 画面座標（y下向き）で北を90°時計回り＝東
+  var W={x:ny,y:-nx};
+  return{N:N,S:S,E:E,W:W};
+}
+// 開口（バルコニー面）の方位ランク: 南=0 / 東=1 / 西=2 / 北=3
+function _orientRank(vec,cv){
+  var d=[{k:'南',r:0,v:cv.S},{k:'東',r:1,v:cv.E},{k:'西',r:2,v:cv.W},{k:'北',r:3,v:cv.N}];
+  var best=d[0],bd=-2;
+  d.forEach(function(o){var dd=vec.x*o.v.x+vec.y*o.v.y;if(dd>bd){bd=dd;best=o;}});
+  return{rank:best.r,label:best.k,dot:bd};
+}
+// 8方位ラベル（診断表示用）
+function _orientLabel8(vec,cv){
+  var ang=Math.atan2(vec.x*cv.E.x+vec.y*cv.E.y, vec.x*cv.N.x+vec.y*cv.N.y)*180/Math.PI; // 北=0°基準で東回り
+  ang=((ang%360)+360)%360;
+  var names=['北','北東','東','南東','南','南西','西','北西'];
+  return names[Math.round(ang/45)%8];
 }
 
 // ── 辺沿い駐車（境界線に沿って駐車場を回転配置）──
@@ -3415,7 +3500,7 @@ function _afBetter(a,b,opt){
   if(aOK&&bOK)return a.units!==b.units?a.units>b.units:a.stalls>b.stalls;
   return a.rate!==b.rate?a.rate>b.rate:a.stalls>b.stalls;
 }
-function runAutoLayout(){
+function runAutoLayout(orientPick){
   if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}
   if(entryEdge<0){alert('先に「進入辺を指定する」で車の進入辺をクリックしてください');return;}
   _afBuildObstacles();
@@ -3434,10 +3519,69 @@ function runAutoLayout(){
     document.getElementById('auto-result').innerHTML='<div style="font-size:11px;color:#dc2626;">配置案を生成できませんでした。敷地の奥行・間口、車路幅、キャリブレーションを確認してください。</div>';
     return;
   }
+  // ── 方位優先モード: バルコニー面を南→東で選び、案の優劣も方位ランク優先で判定 ──
+  var cv=(orientPick&&northEdge>=0)?_compassVecs():null;
+  if(cv){
+    if(pA)_afOrient(pA,F,opt,cv,'A');
+    if(pB)_afOrient(pB,F,opt,cv,'B');
+  }
   autoPlans={A:pA,B:pB};
   autoPlans._parkOnly=opt.parkOnly;
-  var bestKey=(pA&&pB)?(_afBetter(pA,pB,opt)?'A':'B'):(pA?'A':'B');
+  var bestKey;
+  if(cv&&pA&&pB&&pA.units>0&&pB.units>0&&pA.orientRank!==pB.orientRank){
+    bestKey=pA.orientRank<pB.orientRank?'A':'B'; // 方位ランク優先（南=0→東=1→西=2→北=3）
+  }else{
+    bestKey=(pA&&pB)?(_afBetter(pA,pB,opt)?'A':'B'):(pA?'A':'B');
+  }
   applyAutoPlan(bestKey);
+}
+// プランにバルコニー面の方位を評価・付与し、置けるバルコニーを生成して追加
+function _afOrient(plan,F,opt,cv,key){
+  if(!plan||plan.units<=0)return;
+  var isA=(key==='A');
+  var facades=isA?[{x:F.nx,y:F.ny},{x:-F.nx,y:-F.ny}]:[{x:F.ux,y:F.uy},{x:-F.ux,y:-F.uy}];
+  var cands=facades.map(function(f){var o=_orientRank(f,cv);return{f:f,o:o};})
+    .sort(function(a,b){return a.o.rank-b.o.rank;}); // 南→東の優先順
+  var bd=DEFS.balcony.d||2,uw=opt.unitW,ud=opt.unitD;
+  // プラン部材の frame-AABB（重複チェック用）
+  var rects=plan.tiles.map(function(s){
+    var du=(s.customW!=null)?s.customW:DEFS[s.type].w;
+    var dv=(s.customD!=null)?s.customD:DEFS[s.type].d;
+    var ru=((s.cx-F.ox)*F.ux+(s.cy-F.oy)*F.uy)/ppm;
+    var rv=((s.cx-F.ox)*F.nx+(s.cy-F.oy)*F.ny)/ppm;
+    return{u0:ru-du/2,u1:ru+du/2,v0:rv-dv/2,v1:rv+dv/2};
+  });
+  function hits(u0,v0,du,dv){
+    var u1=u0+du,v1=v0+dv,eps=0.05;
+    return rects.some(function(r){return u0<r.u1-eps&&u1>r.u0+eps&&v0<r.v1-eps&&v1>r.v0+eps;});
+  }
+  function tryFacade(f){
+    var offM=(ud+bd)/2,made=[];
+    plan.tiles.filter(function(s){return s.type==='unit';}).forEach(function(s){
+      var bx=s.cx+f.x*offM*ppm,by=s.cy+f.y*offM*ppm;
+      var bu=((bx-F.ox)*F.ux+(by-F.oy)*F.uy)/ppm,bv=((bx-F.ox)*F.nx+(by-F.oy)*F.ny)/ppm;
+      var du=isA?uw:bd,dv=isA?bd:uw;
+      var u0=bu-du/2,v0=bv-dv/2;
+      if(!_afCellOK(F,u0,v0,du,dv,true))return;   // 敷地内・SB外・既存タイル非重複
+      if(hits(u0,v0,du,dv))return;                 // プラン内の駐車・車路等と非重複
+      var sp={cx:bx,cy:by,rot:F.theta,type:'balcony'};
+      if(Math.abs(du-DEFS.balcony.w)>0.01)sp.customW=Math.round(du*100)/100;
+      if(Math.abs(dv-DEFS.balcony.d)>0.01)sp.customD=Math.round(dv*100)/100;
+      made.push(sp);
+    });
+    return made;
+  }
+  // 南→東の優先順に試し、物理的に置ける面を採用（両面ゼロなら最優先面の方位のみ記録）
+  var chosen=cands[0],made=tryFacade(cands[0].f);
+  if(made.length===0){
+    var alt=tryFacade(cands[1].f);
+    if(alt.length>0){chosen=cands[1];made=alt;}
+  }
+  plan.orientRank=chosen.o.rank;
+  plan.orientLabel=_orientLabel8(chosen.f,cv);
+  plan.facade=chosen.f;
+  made.forEach(function(sp){plan.tiles.push(sp);});
+  plan.balconies=made.length;
 }
 function applyAutoPlan(key){
   var plan=autoPlans&&autoPlans[key];if(!plan)return;
@@ -3451,6 +3595,7 @@ function applyAutoPlan(key){
   });
   autoAppliedKey=key;
   updateMetrics();renderAutoResult();
+  if(window._planSummaryText&&typeof renderPlanDiag==='function')renderPlanDiag(); // 診断済みなら診断カードも最新化
   var statTxt=plan.units>0?(plan.label+' ／ 駐車'+plan.stalls+'台・'+plan.spans+'スパン・想定'+plan.units+'戸（駐車率'+plan.rate+'%）'):(plan.label+' ／ 駐車'+plan.stalls+'台');
   showToast('auto-ok','ok','自動配置を適用',statTxt,'タイルは個別に移動・削除できます。Ctrl+Zで取消');
 }
@@ -3462,7 +3607,7 @@ function renderAutoResult(){
     if(!p){html+='<div style="font-size:10px;color:#a8a49e;padding:3px 0;">'+k+'案: 生成不可</div>';return;}
     var on=autoAppliedKey===k;
     var stat=p.units>0
-      ?('駐車'+p.stalls+'台 ／ '+p.spans+'スパン×'+(p.units/p.spans)+'F＝'+p.units+'戸 ／ 駐車率<b style="color:'+(p.rate>=100?'#16a34a':p.rate>=70?'#d97706':'#dc2626')+';">'+p.rate+'%</b>')
+      ?('駐車'+p.stalls+'台 ／ '+p.spans+'スパン×'+(p.units/p.spans)+'F＝'+p.units+'戸 ／ 駐車率<b style="color:'+(p.rate>=100?'#16a34a':p.rate>=70?'#d97706':'#dc2626')+';">'+p.rate+'%</b>'+(p.orientLabel?'<br>🌞 開口: <b>'+p.orientLabel+'向き</b>'+(p.balconies?'（バルコニー'+p.balconies+'戸分）':''):''))
       :('駐車<b style="color:#16a34a;">'+p.stalls+'台</b>（住棟なし）');
     html+='<div style="border:1.5px solid '+(on?'#16a34a':'var(--border)')+';border-radius:7px;padding:5px 7px;margin-bottom:4px;background:'+(on?'#f0fdf4':'var(--surface2)')+';">'
       +'<div style="font-size:10px;font-weight:800;color:var(--text2);">'+p.label+(on?' <span style="color:#16a34a;">✓適用中</span>':'')+'</div>'
@@ -3471,6 +3616,167 @@ function renderAutoResult(){
       +'</div>';
   });
   el.innerHTML=html;
+}
+
+// ── マンション自動企画（プロ診断）──
+function autoMansionPlan(){
+  if(!polyDone){alert('先に敷地ポリゴンを描いて閉じてください');return;}
+  if(ppm<=0){alert('先にスケール（縮尺）をキャリブレーションしてください');return;}
+  // 事業タイプをマンションに（用途地域の上限値は保持したいので applyDefaults=false）
+  setBizType('mansion',false);
+  // 住棟あり配置に（駐車場のみモードを解除）
+  var poCk=document.getElementById('auto-park-only');if(poCk)poCk.checked=false;
+  // 進入辺が未設定なら、勝手に決めず選択をお願いする
+  if(entryEdge<0){
+    var pd=document.getElementById('plan-diag');
+    if(pd)pd.innerHTML='<div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:8px;padding:8px 9px;font-size:11px;color:#78350f;line-height:1.6;">🚗 <b>進入辺（車の出入口にする辺）を選んでください。</b><br>地図上で辺をクリック → もう一度「⚡ この敷地で最適プランを自動作成」を押してください。</div>';
+    if(!entryMode)toggleEntryMode(); // 進入辺の選択モードに入る
+    return;
+  }
+  // 南向き優先ON かつ 北辺未設定 → 北辺の選択をお願いする
+  var orientOn=!!(document.getElementById('plan-orient')&&document.getElementById('plan-orient').checked);
+  if(orientOn&&northEdge<0){
+    var pd2=document.getElementById('plan-diag');
+    if(pd2)pd2.innerHTML='<div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:8px;padding:8px 9px;font-size:11px;color:#78350f;line-height:1.6;">🧭 <b>北辺（敷地の北側の辺）を選んでください。</b><br>バルコニー南向き優先の判定に方位が必要です。地図上で北側の辺をクリック → もう一度実行してください。<br><span style="font-size:10px;color:#92400e;">※ 方位を使わない場合は「🌞 バルコニー南向き優先」のチェックを外してください。</span></div>';
+    if(!northMode)toggleNorthMode(); // 北辺の選択モードに入る
+    return;
+  }
+  // ① 高さ制限内で最大階数に調整
+  var fitH=document.getElementById('plan-fit-height');
+  if(!fitH||fitH.checked){
+    updateMetrics();
+    var st0=window._planStats||{};
+    var fh=parseFloat(document.getElementById('floor-height').value)||3;
+    if(st0.hLimit>0){var maxFh=Math.max(2,Math.floor((st0.hLimit+0.01)/fh));syncFloors(maxFh);}
+  }
+  // ② 住棟＋平置き駐車を自動配置（方位優先ONなら南→東でバルコニー面を最適化）
+  runAutoLayout(orientOn);
+  updateMetrics();
+  // ③ 容積率上限で階数を頭打ち（配置後の住戸フットプリントから逆算）
+  var st=window._planStats||{};
+  if(fitH&&fitH.checked&&st.siteArea>0&&st.farLimit>0&&(st.farRes>0||st.farAll>0)){
+    var maxGFA=st.siteArea*st.farLimit/100;
+    var denom=st.farRes+st.farAll;
+    if(denom>0){
+      var maxFfar=Math.floor((maxGFA-st.farOne+st.farRes)/denom);
+      if(maxFfar>=2&&maxFfar<st.floors){
+        syncFloors(maxFfar);updateMetrics();
+        // A/B案カードの戸数・駐車率を新しい階数で再計算して表示を最新化
+        var newRes=Math.max(1,maxFfar-1);
+        ['A','B'].forEach(function(k){
+          var pl=autoPlans&&autoPlans[k];
+          if(pl&&pl.spans>0){pl.units=pl.spans*newRes;pl.rate=pl.units>0?Math.round(pl.stalls/pl.units*100):0;}
+        });
+        renderAutoResult();
+      }
+    }
+  }
+  renderPlanDiag();
+}
+function renderPlanDiag(){
+  var el=document.getElementById('plan-diag');if(!el)return;
+  var st=window._planStats;
+  if(!st||!(st.siteArea>0)){el.innerHTML='<div style="font-size:11px;color:#dc2626;">敷地面積を取得できません。ポリゴンとスケールを確認してください。</div>';return;}
+  var zoneSel=document.getElementById('zone-preset');
+  var zoneTxt=(zoneSel&&zoneSel.value&&zoneSel.options[zoneSel.selectedIndex])?zoneSel.options[zoneSel.selectedIndex].text:'カスタム（詳細設定の上限値）';
+  var addr=(document.getElementById('plan-address')||{value:''}).value.trim();
+  var tsubo=st.siteArea/3.30578;
+  var volUse=st.farLimit>0?st.far/st.farLimit*100:0;
+  var bcrUse=st.bcrLimit>0?st.bcr/st.bcrLimit*100:0;
+  var hOK=st.buildingH<=st.hLimit+0.05;
+  var farOK=st.far<=st.farLimit+0.5;
+  var bcrOK=st.bcr<=st.bcrLimit+0.5;
+  var pTarget=st.parkTarget>0?st.parkTarget:0;
+  var parkOK=pTarget<=0||st.parkRate>=pTarget;
+  // 総合判定
+  var verdict,vcol,vbg;
+  if(!farOK||!hOK||!bcrOK){verdict='要調整';vcol='#dc2626';vbg='#fef2f2';}
+  else if(volUse>=90&&parkOK){verdict='◎ 良好';vcol='#15803d';vbg='#f0fdf4';}
+  else if(volUse>=70&&(pTarget<=0||st.parkRate>=pTarget*0.7)){verdict='○ 概ね良好';vcol='#0f6e56';vbg='#f0fdf4';}
+  else{verdict='△ 検討余地';vcol='#d97706';vbg='#fffbeb';}
+  function row(label,val,sub,ok){
+    var c=ok===false?'#dc2626':ok===true?'#15803d':'var(--text)';
+    return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px solid var(--border);">'+
+      '<span style="font-size:10px;color:var(--text2);">'+label+'</span>'+
+      '<span style="font-size:12px;font-weight:700;color:'+c+';">'+val+(sub?' <span style="font-size:9px;font-weight:400;color:var(--text3);">'+sub+'</span>':'')+'</span></div>';
+  }
+  // 提案コメント（ルールベース）
+  var tips=[];
+  var lowZone=(st.absH0>0&&st.absH0<=12)||st.farLimit<=150;
+  if(lowZone)tips.push('この用途地域は低層向き。中高層マンションより<b>戸建て分譲・低層アパート</b>が適する可能性が高い。');
+  if(st.units===0)tips.push('住棟が配置できていない。間口・奥行や車路幅を見直すか、住戸寸法を小さめに調整。');
+  if(!hOK)tips.push('高さ制限を超過。階数を下げるか道路斜線（前面道路幅・道路SB）を確認。');
+  if(!farOK)tips.push('容積率超過。階数またはスパン数を削減。');
+  if(!bcrOK)tips.push('建蔽率超過。住棟の奥行・スパン数を削減。');
+  if(st.units>0&&volUse<70&&hOK&&farOK)tips.push('容積消化が'+Math.round(volUse)+'%と伸び代あり。<b>住棟形状（L型・コの字）やスパン増</b>、または機械式駐車で平置きを圧縮し住棟面積を確保すると戸数を伸ばせる。');
+  if(st.units>0&&!parkOK)tips.push('平置き駐車が'+st.parkRate+'%（目標'+pTarget+'%）。不足分は<b>機械式・自走式立体駐車</b>で補完、または戸数調整。');
+  if(st.units>0&&volUse>=90&&parkOK)tips.push('容積・高さとも上限近くまで消化し、平置きも充足。効率的なボリューム。');
+  var ap2=(autoPlans&&autoAppliedKey)?autoPlans[autoAppliedKey]:null;
+  if(ap2&&ap2.orientRank!==undefined){
+    if(ap2.orientRank>=2)tips.push('敷地形状と進入辺の関係で開口が<b>'+ap2.orientLabel+'向き</b>になっています。南・東面を取るには進入辺の変更や住棟の手動回転を検討。');
+    else if(ap2.balconies===0&&st.units>0)tips.push('開口は'+ap2.orientLabel+'向きですが、駐車・車路と干渉するためバルコニーは自動作図できませんでした（上階の張り出しは実務上可能なケースあり）。手動でバルコニータイルを追加してください。');
+  }
+  if(!tips.length)tips.push('数値を確認し、必要に応じて住戸寸法・車路幅・進入辺を調整して再実行してください。');
+
+  var html='<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden;">';
+  html+='<div style="background:'+vbg+';padding:7px 9px;border-bottom:1px solid var(--border);">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">'+
+    '<span style="font-size:11px;font-weight:800;color:var(--text);">マンション企画診断</span>'+
+    '<span style="display:flex;align-items:center;gap:6px;"><button onclick="updateMetrics();renderPlanDiag();" title="現在の設定値で診断を再計算" style="height:20px;padding:0 7px;font-size:9px;font-weight:700;background:var(--surface);border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--text2);">↻ 再診断</button><button onclick="copyPlanSummary()" title="診断結果をテキストでコピー（社内共有用）" style="height:20px;padding:0 7px;font-size:9px;font-weight:700;background:var(--surface);border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--text2);">📋 コピー</button>'+
+    '<span style="font-size:13px;font-weight:800;color:'+vcol+';">'+verdict+'</span></span></div>'+
+    (addr?'<div style="font-size:10px;color:var(--text2);margin-top:2px;">'+addr.replace(/</g,'&lt;')+'</div>':'')+
+    '<div style="font-size:10px;color:var(--text3);margin-top:1px;">'+zoneTxt+'</div></div>';
+  html+='<div style="padding:6px 9px;">';
+  html+=row('敷地面積',Math.round(st.siteArea).toLocaleString()+'㎡',tsubo.toFixed(1)+'坪');
+  html+=row('階数 / 建物高さ',st.floors+'F ・ '+st.buildingH.toFixed(1)+'m','制限'+st.hLimit.toFixed(1)+'m',hOK);
+  html+=row('建築面積',Math.round(st.bA).toLocaleString()+'㎡','建蔽率'+st.bcr.toFixed(1)+'%（消化'+Math.round(bcrUse)+'%）',bcrOK);
+  html+=row('延床（住戸）',Math.round(st.gfa).toLocaleString()+'㎡','容積率'+st.far.toFixed(1)+'%（消化'+Math.round(volUse)+'%）',farOK);
+  html+=row('総戸数',st.units+'戸','');
+  var ap=(autoPlans&&autoAppliedKey)?autoPlans[autoAppliedKey]:null;
+  if(ap&&ap.orientLabel!==undefined){
+    var oOK=ap.orientRank<=1; // 南・東ならOK
+    html+=row('開口方位（バルコニー面）',ap.orientLabel+'向き',(ap.balconies?('バルコニー'+ap.balconies+'戸分 自動作図'):'バルコニー作図なし'),oOK);
+  }
+  html+=row('平置き駐車',st.park+'台',(pTarget>0?'充足'+st.parkRate+'%/目標'+pTarget+'%':'充足'+st.parkRate+'%'),parkOK);
+  html+='</div>';
+  html+='<div style="padding:6px 9px;background:var(--surface2);border-top:1px solid var(--border);">'+
+    '<div style="font-size:9px;font-weight:700;color:var(--text3);margin-bottom:3px;">📋 プロの所見</div>'+
+    tips.map(function(t){return '<div style="font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:3px;">・'+t+'</div>';}).join('')+
+    '</div>';
+  html+='<div style="padding:4px 9px;font-size:8.5px;color:var(--text3);line-height:1.45;background:var(--surface2);border-top:1px solid var(--border);">'+
+    '※高さは道路斜線・絶対高さベースの概算。北側斜線・日影・天空率は「法規メモ」で別途確認。延床は住戸専有ベースで共用部・PS等は含みません。'+
+    '</div>';
+  html+='</div>';
+  el.innerHTML=html;
+  // ── テキスト要約（社内共有用コピー）──
+  var ap3=(autoPlans&&autoAppliedKey)?autoPlans[autoAppliedKey]:null;
+  var lines=[];
+  lines.push('■ マンション企画診断（敷地タイルプランナー）  総合判定: '+verdict);
+  if(addr)lines.push('住所: '+addr);
+  lines.push('用途地域: '+zoneTxt);
+  lines.push('敷地面積: '+Math.round(st.siteArea).toLocaleString()+'㎡（'+tsubo.toFixed(1)+'坪）');
+  lines.push('階数/高さ: '+st.floors+'F・'+st.buildingH.toFixed(1)+'m（制限'+st.hLimit.toFixed(1)+'m）'+(hOK?'':' ←超過'));
+  lines.push('建築面積: '+Math.round(st.bA).toLocaleString()+'㎡ 建蔽率'+st.bcr.toFixed(1)+'%/上限'+st.bcrLimit+'%（消化'+Math.round(bcrUse)+'%）'+(bcrOK?'':' ←超過'));
+  lines.push('延床(住戸): '+Math.round(st.gfa).toLocaleString()+'㎡ 容積率'+st.far.toFixed(1)+'%/上限'+st.farLimit+'%（消化'+Math.round(volUse)+'%）'+(farOK?'':' ←超過'));
+  lines.push('総戸数: '+st.units+'戸');
+  if(ap3&&ap3.orientLabel!==undefined)lines.push('開口方位: '+ap3.orientLabel+'向き'+(ap3.balconies?('（バルコニー'+ap3.balconies+'戸分 自動作図）'):''));
+  lines.push('平置き駐車: '+st.park+'台（充足'+st.parkRate+'%'+(pTarget>0?'/目標'+pTarget+'%':'')+'）'+(parkOK?'':' ←不足'));
+  lines.push('― 所見 ―');
+  tips.forEach(function(t){lines.push('・'+t.replace(/<[^>]+>/g,''));});
+  lines.push('※高さは道路斜線・絶対高さベースの概算。北側斜線・日影・天空率は別途確認。');
+  window._planSummaryText=lines.join('\n');
+}
+function copyPlanSummary(){
+  var txt=window._planSummaryText;
+  if(!txt){alert('先に「⚡ この敷地で最適プランを自動作成」を実行してください');return;}
+  function done(){var el=document.getElementById('plan-diag');var b=el&&el.querySelector('button[onclick="copyPlanSummary()"]');if(b){b.textContent='✓ コピー済';setTimeout(function(){b.textContent='📋 コピー';},1500);}}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done,function(){_copyFallback(txt);done();});
+  }else{_copyFallback(txt);done();}
+}
+function _copyFallback(txt){
+  var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);
 }
 
 // ── 自動保存（localStorage / 5秒間隔）──
@@ -3569,6 +3875,7 @@ function onLimitEdit(){
 try{var _bz=localStorage.getItem('stp_biz_v1');if(_bz&&BIZ_PRESETS[_bz])setBizType(_bz,false);}catch(e){}
 updatePresetBadge();
 </script>
+
 
 
 
