@@ -382,7 +382,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
 </div>
 <div id="app">
 <aside id="sidebar"><div id="drawer-handle" style="display:none;"></div>
-  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v10.8</div><div class="sb-sub">PRO PLANNING EDITION</div></div>
+  <div class="sb-head"><div class="sb-title">敷地タイルプランナー v10.9</div><div class="sb-sub">PRO PLANNING EDITION</div></div>
   <details class="sb-sec" data-acc="map" open=""><summary class="lbl">① 地図・キャリブレーション</summary><div class="sec-body">
     
     <button class="btn-primary" style="background:#475569;" onclick="document.getElementById('map-input').click()">📂 公図PDF・画像を開く</button>
@@ -543,7 +543,7 @@ details.sb-sec>.sec-body>.lbl{margin-top:8px;}
         </div>
         <div class="row2">
           <div class="field"><label>機械式P 1基の収容台数</label><input type="number" id="mechpark-cap" value="16" min="1" max="200" step="1" oninput="updateMetrics()"></div>
-          <div class="field" title="住戸タイルの下（1階）を「駐車場（ピロティ）」にしたとき、1スパン（住戸1戸分の間口）に入る台数。柱があるので通常は1台"><label>ピロティ駐車 1スパンの台数</label><input type="number" id="piloti-per" value="1" min="0" max="4" step="1" oninput="tiles.forEach(reposTile);updateMetrics()"></div>
+          <div class="field" style="font-size:9px;color:var(--text3);line-height:1.45;padding-top:4px;">ピロティ駐車の台数（1台／2台）は、住戸を選んで選択バーの「1階：」で住戸ごとに決めます</div>
         </div>
         <div class="row2">
           <div class="field" title="日影規制の規制時間（敷地境界から5m超10m以内／10m超）。自治体の条例で用途地域ごとに決まっています"><label>日影規制（5〜10m／10m超）</label><select id="shadow-rule" onchange="updateMetrics()" style="width:100%;height:28px;padding:0 6px;font-size:11px;border:1px solid var(--border);border-radius:6px;"><option value="auto">用途地域から目安</option><option value="3-2">3時間／2時間</option><option value="4-2.5">4時間／2.5時間</option><option value="5-3">5時間／3時間</option><option value="none">なし（対象外）</option></select></div>
@@ -1876,7 +1876,7 @@ function reposTile(t){
       t.entLbl.setAttribute('x',pw/2);t.entLbl.setAttribute('y',ph-barH2/2);
       t.entLbl.setAttribute('font-size',Math.max(7,barH2*0.52));
       t.entLbl.setAttribute('stroke',G1C);
-      t.entLbl.textContent='1F '+((G1_USES[g1]||G1_USES.pass).short)+(g1==='park'?(' '+getLegalParams().pilotiPer+'台'):'');
+      t.entLbl.textContent='1F '+((G1_USES[g1]||G1_USES.pass).short)+(g1Cars(t)?(' '+g1Cars(t)+'台'):'');
     }
   } else {
     var fs2=Math.max(8,Math.min(14,Math.min(pw,ph)/3.5));
@@ -2912,8 +2912,11 @@ function _composeExport(cb){
 // 駐輪場の台数の目安（1台あたり約1.2㎡：幅0.6m×奥行1.9m＋出し入れの余裕）
 function bikeCap(area){return Math.floor(area/1.2+1e-6);}
 // 住戸タイル（2階以上）の下＝1階の使い方。pass＝通り抜けできるピロティ（初期値）
-var G1_USES={pass:{label:'通路（ピロティ）',short:'通路',block:false},park:{label:'駐車場（ピロティ）',short:'駐車場',block:true},entrance:{label:'エントランス',short:'エントランス',block:true},
+var G1_USES={pass:{label:'通路（ピロティ）',short:'通路',block:false},park:{label:'駐車場（ピロティ・1台）',short:'駐車場',block:true,cars:1},park2:{label:'駐車場（ピロティ・2台）',short:'駐車場',block:true,cars:2},entrance:{label:'エントランス',short:'エントランス',block:true},
   bike:{label:'駐輪場',short:'駐輪場',block:true},trash:{label:'ゴミ置場',short:'ゴミ置場',block:true},unit1f:{label:'1F住戸',short:'1F住戸',block:true},common:{label:'その他の共用部（管理室など）',short:'共用部',block:true}};
+// 住戸の下に入るピロティ駐車の台数（1台／2台）
+function g1Cars(t){var u=t&&t.type==='unit'&&G1_USES[t.g1];return u&&u.cars?u.cars:0;}
+function isPilotiPark(t){return g1Cars(t)>0;}
 var BLDG_TYPES={unit:1,unit1f:1,entrance:1,corridor:1,stair:1,elev:1,balcony:1};
 function _num(id,def){var el=document.getElementById(id);if(!el)return def;var v=parseFloat(el.value);return isNaN(v)?def:v;}
 function getLegalParams(){
@@ -2932,7 +2935,7 @@ function getLegalParams(){
     farDesig:_num('far-limit',200)>0?_num('far-limit',200):200,
     parkTarget:_num('park-target',100),
     mechCap:Math.max(1,_num('mechpark-cap',16)),
-    pilotiPer:Math.max(0,Math.min(4,Math.round(_num('piloti-per',1))))
+    pilotiPer:1
   };
 }
 // 道路斜線の適用距離（別表第3）
@@ -2983,7 +2986,7 @@ function evalLayout(list,floors,P){
     var aa=t.w*t.d;
     // 住戸（2階以上）の下の1階の使い方
     if(t.type==='unit'&&t.g1&&t.g1!=='pass'){
-      if(t.g1==='park'){pil.parkSpans++;pil.park+=P.pilotiPer;p+=P.pilotiPer;}
+      if(t.g1==='park'||t.g1==='park2'){var nc=t.g1==='park2'?2:1;pil.parkSpans++;pil.park+=nc;p+=nc;if(nc===2&&t.w<5.5)pil.narrow2=(pil.narrow2||0)+1;}
       else if(t.g1==='unit1f'){pil.unit1f++;u1f++;farOne+=aa;}
       else if(t.g1==='entrance'){pil.entrance+=aa;entA+=aa;}
       else if(t.g1==='common'){pil.common+=aa;comA+=aa;}
@@ -3687,6 +3690,7 @@ function updateMetrics(){
     RG.issues.forEach(function(x,ix){var tx=x.replace(/^⚠\s*/,''),m=tx.match(/^(【[^】]*】)?([^:：]+)[:：]\s*(.*)$/);showToast('region-ng-'+ix,'warn',m?((m[1]||'')+m[2]):tx,m?m[3]:'','');});
     RG.ok.forEach(function(x){legalOk.push(x);});RG.memo.forEach(function(x){legalOk.push(x);});
     var rl=document.getElementById('region-detected');if(rl)rl.textContent=RG.label?('→ '+RG.label):'';
+    if(E.piloti&&E.piloti.narrow2){legalIssues.push('⚠ ピロティ駐車2台: 間口5.5m未満の住戸が'+E.piloti.narrow2+'戸あります。柱を考えると2台並ばない可能性があります（2.5m×2台＋柱）');showToast('piloti-narrow','warn','ピロティ駐車2台の間口が狭い',E.piloti.narrow2+'戸の間口が5.5m未満','2台並べるには 2.5m×2台＋柱の幅が要ります');}
     if(E.piloti&&(E.piloti.park||E.piloti.bike))legalOk.push('📋 ピロティの駐車場・駐輪場（'+(E.piloti.park?'車'+E.piloti.park+'台':'')+(E.piloti.bike?' 駐輪'+Math.round(E.piloti.bike)+'㎡':'')+'）: 床面積に入るかと、容積率の緩和（自動車・自転車の車庫等は延べ面積の1/5まで容積に入れない・令2条1項4号、3項）は別途確認。ここでは延床・容積に入れていません');
     // 参考メモ（📋＝自動では判定していない「確認が必要な項目」）
     if(E.dist&&E.dist.neighbor!=null&&E.dist.neighbor<0.495){legalIssues.push('⚠ 隣地境界まで'+E.dist.neighbor.toFixed(2)+'m：50cm未満（民法234条）');
@@ -3903,10 +3907,9 @@ function _buildPlanSheetInner(opt){
       var rid=R.indexOf(row);pts.forEach(function(o){pnMap[o.t.id]=++no;pnRow[o.t.id]=rid;});
     });
     // ピロティ駐車場（住戸の下）は平置きの続きの番号（図面の上→下・左→右）
-    var per=getLegalParams().pilotiPer;
-    tiles.filter(function(t){return t.type==='unit'&&t.g1==='park';}).map(function(t){return{t:t,q:P({x:t.cx,y:t.cy})};})
+    tiles.filter(function(t){return isPilotiPark(t);}).map(function(t){return{t:t,q:P({x:t.cx,y:t.cy})};})
       .sort(function(a,b){var d=Math.round(a.q.y/band)-Math.round(b.q.y/band);return d!==0?d:a.q.x-b.q.x;})
-      .forEach(function(o){var ns=[];for(var k2=0;k2<per;k2++)ns.push(++no);pnMap['g1:'+o.t.id]=ns;});
+      .forEach(function(o){var ns=[],per=g1Cars(o.t);for(var k2=0;k2<per;k2++)ns.push(++no);pnMap['g1:'+o.t.id]=ns;});
   })();
   // ══════ CAD風（白黒・建築図面の体裁）══════
   if(opt.style!=='color'){
@@ -4006,7 +4009,7 @@ function _buildPlanSheetInner(opt){
   });
   // ── 建物（外周は太線・間仕切りは細線・柱）──
   // 1階平面図では、上階の住戸の下で壁のない部分（ピロティ通路・ピロティ駐車場）は「上階の外形」として点線で描く
-  var PIL=function(t){return opt.pane==='1F'&&t.type==='unit'&&(!t.g1||t.g1==='pass'||t.g1==='park');};
+  var PIL=function(t){return opt.pane==='1F'&&t.type==='unit'&&(!t.g1||t.g1==='pass'||isPilotiPark(t));};
   var wall=tiles.filter(function(t){return(t.type==='unit'||t.type==='unit1f'||t.type==='corridor'||t.type==='stair'||t.type==='elev'||t.type==='entrance')&&!PIL(t);});
   var bal=tiles.filter(function(t){return t.type==='balcony';});
   bal.forEach(function(t){var d=getTileDef(t),C=_rectCorners(t.cx,t.cy,d.w*ppm,d.d*ppm,t.rot);pathOf(C);c.fillStyle='#fff';c.fill();c.strokeStyle='#111';c.lineWidth=mm(0.15);c.stroke();});
@@ -4014,9 +4017,11 @@ function _buildPlanSheetInner(opt){
   wall.forEach(function(t){var d=getTileDef(t);pathOf(_rectCorners(t.cx,t.cy,d.w*ppm,d.d*ppm,t.rot));c.fillStyle='#fff';c.fill();});
   wall.forEach(function(t){var d=getTileDef(t);pathOf(_rectCorners(t.cx,t.cy,d.w*ppm,d.d*ppm,t.rot));c.strokeStyle='#111';c.lineWidth=mm(0.13);c.stroke();});
   tiles.filter(PIL).forEach(function(t){var d=getTileDef(t);pathOf(_rectCorners(t.cx,t.cy,d.w*ppm,d.d*ppm,t.rot));c.strokeStyle='#111';c.lineWidth=mm(0.22);c.setLineDash([mm(2),mm(1)]);c.stroke();c.setLineDash([]);
-    if(t.g1==='park'){ // ピロティ駐車の区画（点線）と番号
-      var per=Math.max(0,getLegalParams().pilotiPer),r=t.rot*Math.PI/180,ux=Math.cos(r),uy=Math.sin(r),sw=Math.min(2.5,d.w/Math.max(1,per)),sd=Math.min(5,d.d*0.9),ns=pnMap['g1:'+t.id]||[];
-      for(var q=0;q<per;q++){var o=(q-(per-1)/2)*sw*ppm,cx=t.cx+ux*o,cy=t.cy+uy*o;pathOf(_rectCorners(cx,cy,sw*ppm,sd*ppm,t.rot));c.strokeStyle='#111';c.lineWidth=mm(0.13);c.setLineDash([mm(0.9),mm(0.6)]);c.stroke();c.setLineDash([]);
+    if(isPilotiPark(t)){ // ピロティ駐車の区画（点線）と番号
+      var per=g1Cars(t),r=t.rot*Math.PI/180,ux=Math.cos(r),uy=Math.sin(r),sw=Math.min(2.5,d.w/Math.max(1,per)),sd=Math.min(5,d.d*0.9),ns=pnMap['g1:'+t.id]||[];
+      var qs=[];for(var q0=0;q0<per;q0++){var o0=(q0-(per-1)/2)*sw*ppm;qs.push({x:t.cx+ux*o0,y:t.cy+uy*o0});}
+      qs.sort(function(a,b){var pa=P(a),pb=P(b);return Math.abs(pa.x-pb.x)>1?pa.x-pb.x:pa.y-pb.y;}); // 番号は図面の左→右（上→下）
+      for(var q=0;q<per;q++){var cx=qs[q].x,cy=qs[q].y;pathOf(_rectCorners(cx,cy,sw*ppm,sd*ppm,t.rot));c.strokeStyle='#111';c.lineWidth=mm(0.13);c.setLineDash([mm(0.9),mm(0.6)]);c.stroke();c.setLineDash([]);
         if(opt.parkNo!==false&&ns[q])textAt(String(ns[q]),P({x:cx,y:cy}),0,2.2,'#111',false,'center',false);}
     }
   });
@@ -4055,14 +4060,14 @@ function _buildPlanSheetInner(opt){
       var g1=t.g1||'pass',wmm=d.w*1000/S*0.9,fz=function(str,mx){return Math.min(mx,wmm/Math.max(1,str.length));};
       if(minSide<=4)return;
       if(g1==='pass')two('ピロティ','（通路）',fz('ピロティ',2.6),0);
-      else if(g1==='park')textAt('ピロティ駐車場',{x:cp.x,y:cp.y-mm(d.d*1000/S*0.36)},0,fz('ピロティ駐車場',2.4),'#111',true,'center',true);
+      else if(G1_USES[g1].cars)textAt('ピロティ駐車場',{x:cp.x,y:cp.y-mm(d.d*1000/S*0.36)},0,fz('ピロティ駐車場',2.4),'#111',true,'center',true);
       else two(G1_USES[g1].short,fmtA(a),fz(fmtA(a),2.6),0);
       return;
     }
     if(t.type==='unit'||t.type==='unit1f'){var nm=unitName[Math.round(t.cx)+','+Math.round(t.cy)]||'';if(minSide>5)two((t.type==='unit1f'?'1F住戸':'住戸')+nm,fmtA(a),Math.min(3.2,minSide/4.2),0);
       // 1階の使い方（どれか1つでも設定してあれば全住戸に表示）
       if(t.type==='unit'&&anyG1&&minSide>5){var g1=t.g1||'pass',lab='1F：'+G1_USES[g1].short+(g1==='pass'?'（ピロティ）':'');
-        if(g1==='park'){var ns=pnMap['g1:'+t.id]||[];lab+=ns.length?(' No.'+ns.join('・')):'';}
+        if(G1_USES[g1].cars){var ns=pnMap['g1:'+t.id]||[];lab+=ns.length?(' No.'+ns.join('・')):'';}
         textAt(lab,{x:cp.x,y:cp.y-mm(Math.min(3.2,minSide/4.2)*2.3)},0,Math.min(2.4,minSide/5),'#111',g1!=='pass','center',true);}}
     else if(t.type==='balcony'){var sz=Math.min(2.8,minSide/2.4);if(sz>=1.4&&maxSide>18)two('バルコニー',fmtA(a),sz,longAng);else if(maxSide>12&&minSide>1.4)textAt('バルコニー',cp,longAng,Math.min(2.4,minSide/1.4),'#111',false,'center',true);}
     else if(t.type==='corridor'){var sz2=Math.min(2.8,minSide/1.3);if(maxSide>20&&sz2>=1.4)textAt('廊下'+fmtA(a),cp,longAng,sz2,'#111',false,'center',true);}
@@ -4950,7 +4955,7 @@ var SETTING_FIELDS={
   unitW:'unit-w',unitD:'unit-d',unit1fW:'unit1f-w',unit1fD:'unit1f-d',parkW:'park-w',parkD:'park-d',stairW:'stair-w',stairD:'stair-d',
   elevW:'elev-w',elevD:'elev-d',corridorD:'corridor-d',corridorW:'corridor-w',balconyD:'balcony-d',balconyW:'balcony-w',
   gardenW:'garden-w',gardenD:'garden-d',bikeW:'bike-w',bikeD:'bike-d',trashW:'trash-w',trashD:'trash-d',entranceW:'entrance-w',entranceD:'entrance-d',
-  gridSize:'grid-size',actualArea:'actual-area-input',absHeight:'abs-height',parkTarget:'park-target',mechCap:'mechpark-cap',mechPreset:'mech-preset',pilotiPer:'piloti-per',
+  gridSize:'grid-size',actualArea:'actual-area-input',absHeight:'abs-height',parkTarget:'park-target',mechCap:'mechpark-cap',mechPreset:'mech-preset',
   planAddress:'plan-address',calibDist:'calib-dist',landPrice:'land-price',shadowRule:'shadow-rule',shadowPlane:'shadow-plane',shadowLat:'shadow-lat',sheetTitle:'sheet-title',sheetStyle:'sheet-style',
   sheetCompany:'sheet-company',regionRule:'region-rule',sheetAuthor:'sheet-author',sheetNo:'sheet-no',sheetDate:'sheet-date',
   autoAisleW:'auto-aisle-w',autoMaxSpan:'auto-max-span',autoClear:'auto-clear',autoWallGap:'auto-wall-gap',autoShape:'auto-shape',autoRowGap:'auto-row-gap',
@@ -5142,6 +5147,8 @@ function _applyProjectDataInner(data){
     _restoreMech(t,td);
     if(td.autoGen)t.autoGen=true; // 自動配置タイルの印も復元（再実行で二重にならない）
     if(tmp)freeConfig=tmp;
+    // 旧版（ピロティ駐車の台数を全体で1つ設定していた）で2台以上にしていたファイルは「2台」に読み替える
+    if(td.g1==='park'&&data.settings&&+data.settings.pilotiPer>=2)t.g1='park2';
     t._oldId=td.id;
   });
   // ── グループ（IDを付け替え）──
